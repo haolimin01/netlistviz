@@ -50,3 +50,13 @@ compile_commands.json
 
 # QtCreator local machine specific files for imported projects
 *creator.user*
+
+# macOS
+*DS_Store
+
+# netlistviz
+netlistviz
+netlistviz.app
+
+# vscode
+*.vscode
