@@ -28,9 +28,10 @@ public:
 	QRectF boundingRect() const override;
 	// QPainterPath shape() const override;
 
-	// SchematicNode* GetStartNode() const { return myStartNode; }
-	// SchematicNode* GetEndNode()   const { return myEndNode; } 
+	SchematicNode* GetStartNode() const { return m_startNode; }
+	SchematicNode* GetEndNode()   const { return m_endNode; }
 
+	int type() const override { return Type; }
 	void UpdatePosition();
 
 protected:

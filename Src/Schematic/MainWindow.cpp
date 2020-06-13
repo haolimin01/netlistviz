@@ -62,8 +62,22 @@ void MainWindow::ButtonGroupClicked(int id)
 void MainWindow::DeleteItem()
 {
     QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
-    for (QGraphicsItem *item : qAsConst(selectedItems))
-    {
+    for (QGraphicsItem *item : qAsConst(selectedItems)) {
+        // m_scene->removeItem(item);
+        // delete item;
+        if (item->type() == SchematicDevice::Type) {
+            m_scene->removeItem(item);
+            SchematicDevice *dev = qgraphicsitem_cast<SchematicDevice*>(item);
+            dev->GetStartNode()->RemoveDevice(dev);
+            dev->GetEndNode()->RemoveDevice(dev);
+            delete item;
+        }
+    }
+    selectedItems = m_scene->selectedItems();
+    for (QGraphicsItem *item : qAsConst(selectedItems)) {
+        if (item->type() == SchematicNode::Type) {
+            qgraphicsitem_cast<SchematicNode*>(item)->RemoveDevices();
+        }
         m_scene->removeItem(item);
         delete item;
     }
