@@ -202,7 +202,7 @@ void MainWindow::HandleFontChange()
     font.setItalic(m_italicAction->isChecked());
     font.setUnderline(m_underlineAction->isChecked());
 
-    m_scene->setFont(font);
+    m_scene->SetFont(font);
 }
 
 
@@ -348,7 +348,7 @@ void MainWindow::CreateToolbars()
 
     m_fontSizeCombo = new QComboBox;
     m_fontSizeCombo->setEditable(true);
-    for (int i = 8; i < 30; i = i + 2)
+    for (int i = 8; i < 50; i = i + 2)
         m_fontSizeCombo->addItem(QString().setNum(i));
     QIntValidator *validator = new QIntValidator(2, 64, this);
     m_fontSizeCombo->setValidator(validator);
