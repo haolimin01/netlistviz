@@ -11,6 +11,7 @@ QT += widgets
 requires(qtConfig(fontcombobox)))
 
 INCLUDEPATH += ./Src ./Src/Schematic
+# DEFINES += QT_NO_DEBUG_OUTPUT
 
 CONFIG += debug
 CONFIG -= app_bundle

@@ -1,8 +1,9 @@
 #include "SchematicNode.h"
-
 #include <QPainterPath>
 #include <QPainter>
 #include <QTransform>
+#include <QGraphicsScene>
+#include "SchematicDevice.h"
 
 const qreal NodeSize = 20;
 
@@ -49,4 +50,28 @@ QPixmap SchematicNode::GetImage() const
 {
 	QPixmap image(":images/schematicnode.png");
 	return image;
+}
+
+
+void SchematicNode::AddDevice(SchematicDevice *device)
+{
+	m_devices.append(device);
+}
+
+
+void SchematicNode::RemoveDevice(SchematicDevice *device)
+{
+	m_devices.removeAll(device);
+}
+
+
+void SchematicNode::RemoveDevices()
+{
+	const auto devicesCopy = m_devices;
+	for (SchematicDevice *device : devicesCopy) {
+		device->GetStartNode()->RemoveDevice(device);
+		device->GetEndNode()->RemoveDevice(device);
+		scene()->removeItem(device);
+		delete device;
+	}
 }

@@ -138,14 +138,15 @@ void SchematicScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
         if (startItems.count() > 0 && endItems.count() > 0 &&
             startItems.first()->type() == SchematicNode::Type &&
             endItems.first()->type() == SchematicNode::Type &&
-            startItems.first() != endItems.first())
-        {
-            SchematicNode *startNode = qgraphicsitem_cast<SchematicNode *>(startItems.first());
-            SchematicNode *endNode = qgraphicsitem_cast<SchematicNode *>(endItems.first());
-            SchematicDevice *dev = new SchematicDevice(SchematicDevice::Resistor, startNode, endNode, nullptr);
-            dev->setZValue(-1000.0);
-            addItem(dev);
-            dev->UpdatePosition();
+            startItems.first() != endItems.first()) {
+                SchematicNode *startNode = qgraphicsitem_cast<SchematicNode *>(startItems.first());
+                SchematicNode *endNode = qgraphicsitem_cast<SchematicNode *>(endItems.first());
+                SchematicDevice *dev = new SchematicDevice(SchematicDevice::Resistor, startNode, endNode, nullptr);
+                dev->setZValue(-1000.0);
+                addItem(dev);
+                dev->UpdatePosition();
+                dev->GetStartNode()->AddDevice(dev);
+                dev->GetEndNode()->AddDevice(dev);
         }
     }
 
