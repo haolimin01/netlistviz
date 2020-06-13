@@ -46,11 +46,14 @@ private slots:
     void BringToFront();
     void SendToBack();
 
-    /* Text insterted */
+    /* Text inserted */
     void TextInserted(QGraphicsTextItem *item);
 
-    /* Node insterted */
+    /* Node inserted */
     void NodeInserted(SchematicNode *node);
+
+    /* Device inserted */
+    void DeviceInserted(SchematicDevice *device);
 
     /* Font format */
     void CurrentFontChanged(const QFont &font);
@@ -91,7 +94,7 @@ private:
     void CreateMenus();
 
     /* Reset button in ToolBox and cursor */
-    void ResetButtonAndCursor();
+    // void ResetButtonAndCursor();
 
     /* Create MainWindow toolbars */
     void CreateToolbars();

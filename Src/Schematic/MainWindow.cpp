@@ -22,6 +22,9 @@ MainWindow::MainWindow()
 
     connect(m_scene, &SchematicScene::NodeInserted,
             this, &MainWindow::NodeInserted);
+        
+    connect(m_scene, &SchematicScene::DeviceInserted,
+            this, &MainWindow::DeviceInserted);
 
     CreateToolbars();
 
@@ -141,6 +144,16 @@ void MainWindow::NodeInserted(SchematicNode *)
     m_scene->SetMode(SchematicScene::BaseMode);
 
     m_buttonGroup->button(InsertNodeButton)->setChecked(false);
+}
+
+
+void MainWindow::DeviceInserted(SchematicDevice *device)
+{
+    m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
+    m_pointerGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
+    m_scene->SetMode(SchematicScene::BaseMode);
+
+    m_buttonGroup->button((int)(device->GetDeviceType()))->setChecked(false);
 }
 
 
@@ -493,7 +506,7 @@ QIcon MainWindow::CreateColorIcon(QColor color)
 }
 
 
-void MainWindow::ResetButtonAndCursor()
-{
+// void MainWindow::ResetButtonAndCursor()
+// {
 
-}
+// }

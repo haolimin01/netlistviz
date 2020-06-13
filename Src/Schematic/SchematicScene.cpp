@@ -84,35 +84,35 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
         return;
 
     switch (m_mode) {
-    case InsertDeviceMode:
-        m_line = new QGraphicsLineItem(QLineF(mouseEvent->scenePos(),
-                                            mouseEvent->scenePos()));
-        m_line->setPen(QPen(SchematicDevice::GetColorFromDeviceType(m_deviceType), 2));
-        addItem(m_line);
-        break;
+        case InsertDeviceMode:
+            m_line = new QGraphicsLineItem(QLineF(mouseEvent->scenePos(),
+                                                mouseEvent->scenePos()));
+            m_line->setPen(QPen(SchematicDevice::GetColorFromDeviceType(m_deviceType), 2));
+            addItem(m_line);
+            break;
 
-    case InsertTextMode:
-        m_text = new SchematicTextItem();
-        m_text->setFont(m_font);
-        m_text->setTextInteractionFlags(Qt::TextEditorInteraction);
-        m_text->setZValue(1000.0);
-        connect(m_text, &SchematicTextItem::LostFocus,
-                this, &SchematicScene::EditorLostFocus);
-        addItem(m_text);
-        m_text->setDefaultTextColor(m_textColor);
-        m_text->setPos(mouseEvent->scenePos());
-        emit TextInserted(m_text);
-        break;
+        case InsertTextMode:
+            m_text = new SchematicTextItem();
+            m_text->setFont(m_font);
+            m_text->setTextInteractionFlags(Qt::TextEditorInteraction);
+            m_text->setZValue(1000.0);
+            connect(m_text, &SchematicTextItem::LostFocus,
+                    this, &SchematicScene::EditorLostFocus);
+            addItem(m_text);
+            m_text->setDefaultTextColor(m_textColor);
+            m_text->setPos(mouseEvent->scenePos());
+            emit TextInserted(m_text);
+            break;
 
-    case InsertNodeMode:
-        m_node = new SchematicNode(m_itemMenu);
-        m_node->setBrush(m_nodeColor);
-        addItem(m_node);
-        m_node->setPos(mouseEvent->scenePos());
-        emit NodeInserted(m_node);
-        break;
+        case InsertNodeMode:
+            m_node = new SchematicNode(m_itemMenu);
+            m_node->setBrush(m_nodeColor);
+            addItem(m_node);
+            m_node->setPos(mouseEvent->scenePos());
+            emit NodeInserted(m_node);
+            break;
 
-    default:;
+        default:;
     }
 
     QGraphicsScene::mousePressEvent(mouseEvent);
@@ -155,6 +155,7 @@ void SchematicScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
                 dev->UpdatePosition();
                 dev->GetStartNode()->AddDevice(dev);
                 dev->GetEndNode()->AddDevice(dev);
+                emit DeviceInserted(dev);
         }
     }
 

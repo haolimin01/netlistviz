@@ -44,6 +44,7 @@ public slots:
 
 signals:
     void NodeInserted(SchematicNode *item);
+    void DeviceInserted(SchematicDevice *item);
     void TextInserted(QGraphicsTextItem *item);
 
 protected:

@@ -30,6 +30,8 @@ public:
 	SchematicNode* GetStartNode() const { return m_startNode; }
 	SchematicNode* GetEndNode()   const { return m_endNode; }
 
+	DeviceType GetDeviceType() const { return m_deviceType; }
+
 	int  type() const override { return Type; }
 	void UpdatePosition();
 
