@@ -16,6 +16,7 @@ SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
     m_textColor = Qt::black;
     m_nodeColor = Qt::black;
     m_deviceType = SchematicDevice::Resistor;
+    m_nodeColor = SchematicDevice::GetColorFromDeviceType(m_deviceType);
 }
 
 
@@ -86,7 +87,7 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
     case InsertDeviceMode:
         m_line = new QGraphicsLineItem(QLineF(mouseEvent->scenePos(),
                                             mouseEvent->scenePos()));
-        m_line->setPen(QPen(Qt::black, 2));
+        m_line->setPen(QPen(SchematicDevice::GetColorFromDeviceType(m_deviceType), 2));
         addItem(m_line);
         break;
 
@@ -148,7 +149,7 @@ void SchematicScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
             startItems.first() != endItems.first()) {
                 SchematicNode *startNode = qgraphicsitem_cast<SchematicNode *>(startItems.first());
                 SchematicNode *endNode = qgraphicsitem_cast<SchematicNode *>(endItems.first());
-                SchematicDevice *dev = new SchematicDevice(SchematicDevice::Resistor, startNode, endNode, nullptr);
+                SchematicDevice *dev = new SchematicDevice(m_deviceType, startNode, endNode, nullptr);
                 dev->setZValue(-1000.0);
                 addItem(dev);
                 dev->UpdatePosition();
