@@ -6,7 +6,6 @@
 #include <QVector>
 
 QT_BEGIN_NAMESPACE
-class QColor;
 class QMenu;
 class QGraphicsScene;
 class QGraphicsItem;

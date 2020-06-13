@@ -178,7 +178,12 @@ void MainWindow::TextColorChanged()
 
 void MainWindow::NodeColorChanged()
 {
-
+    // node color changed
+    m_nodeAction = qobject_cast<QAction *>(sender());
+    m_nodeColorToolButton->setIcon(CreateColorToolButtonIcon(
+        ":/images/floodfill.png",
+        qvariant_cast<QColor>(m_nodeAction->data())));
+    NodeButtonTriggered();
 }
 
 
@@ -188,9 +193,9 @@ void MainWindow::TextButtonTriggered()
 }
 
 
-void MainWindow::FillButtonTriggered()
+void MainWindow::NodeButtonTriggered()
 {
-    // scene->setItemColor(qvariant_cast<QColor>(fillAction->data()));
+    m_scene->SetNodeColor(qvariant_cast<QColor>(m_nodeAction->data()));
 }
 
 
@@ -265,7 +270,6 @@ void MainWindow::CreateToolBox()
     QWidget *itemWidget = new QWidget;
     itemWidget->setLayout(layout);
 
-    //! [22]
     m_toolBox = new QToolBox;
     m_toolBox->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Ignored));
     m_toolBox->setMinimumWidth(itemWidget->sizeHint().width());
@@ -364,15 +368,14 @@ void MainWindow::CreateToolbars()
     connect(m_fontColorToolButton, &QAbstractButton::clicked,
             this, &MainWindow::TextButtonTriggered);
 
-
-    // m_fillColorToolButton = new QToolButton;
-    // m_fillColorToolButton->setPopupMode(QToolButton::MenuButtonPopup);
-    // m_fillColorToolButton->setMenu(CreateColorMenu(SLOT(itemColorChanged()), Qt::white));
-    // m_fillAction = m_fillColorToolButton->menu()->defaultAction();
-    // m_fillColorToolButton->setIcon(CreateColorToolButtonIcon(
-    //     ":/images/floodfill.png", Qt::white));
-    // connect(m_fillColorToolButton, &QAbstractButton::clicked,
-    //         this, &MainWindow::FillButtonTriggered);
+    m_nodeColorToolButton = new QToolButton;
+    m_nodeColorToolButton->setPopupMode(QToolButton::MenuButtonPopup);
+    m_nodeColorToolButton->setMenu(CreateColorMenu(SLOT(NodeColorChanged()), Qt::black));
+    m_nodeColorToolButton->setIcon(CreateColorToolButtonIcon(
+        ":/images/floodfill.png", Qt::black));
+    m_nodeAction = m_nodeColorToolButton->menu()->defaultAction();
+    connect(m_nodeColorToolButton, &QAbstractButton::clicked,
+        this, &MainWindow::NodeButtonTriggered);
 
     m_textToolBar = addToolBar(tr("Font"));
     m_textToolBar->addWidget(m_fontCombo);
@@ -383,7 +386,7 @@ void MainWindow::CreateToolbars()
 
     m_colorToolBar = addToolBar(tr("Color"));
     m_colorToolBar->addWidget(m_fontColorToolButton);
-    // m_colorToolBar->addWidget(m_fillColorToolButton);
+    m_colorToolBar->addWidget(m_nodeColorToolButton);
 
     QToolButton *baseModePointerButton = new QToolButton;
     baseModePointerButton->setCheckable(true);

@@ -69,7 +69,7 @@ private slots:
     void TextButtonTriggered();
 
     /* Fill Button triggered */
-    void FillButtonTriggered();
+    void NodeButtonTriggered();
 
     /* Handle Font change */
     void HandleFontChange();
@@ -131,8 +131,6 @@ private:
     QToolBar *m_pointerToolbar;
 
     QComboBox *m_sceneScaleCombo;
-    QComboBox *m_nodeColorCombo;
-    QComboBox *m_textColorCombo;
     QComboBox *m_fontSizeCombo;
     QFontComboBox *m_fontCombo;
 
@@ -146,13 +144,13 @@ private:
     QButtonGroup *m_pointerGroup;
 
     QToolButton *m_fontColorToolButton;
-    QToolButton *m_fillColorToolButton;
+    QToolButton *m_nodeColorToolButton;
 
     QAction *m_boldAction;
     QAction *m_underlineAction;
     QAction *m_italicAction;
     QAction *m_textAction;
-    QAction *m_fillAction;
+    QAction *m_nodeAction;
 };
 //! [0]
 
