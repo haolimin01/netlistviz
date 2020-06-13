@@ -1,6 +1,7 @@
 #include "SchematicDevice.h"
 #include <QPainter>
 #include <QPen>
+#include <QDebug>
 #include "SchematicNode.h"
 
 
@@ -11,7 +12,9 @@ SchematicDevice::SchematicDevice(DeviceType type, SchematicNode *startNode, Sche
     m_startNode = startNode;
     m_endNode = endNode;
     setFlag(QGraphicsItem::ItemIsSelectable, true);
-    setPen(QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    m_contextMenu = nullptr;
+    m_color = GetColorFromDeviceType(m_deviceType);
+    setPen(QPen(m_color, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
 
@@ -68,20 +71,35 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
                   QWidget *)
 {
     QPen myPen = pen();
-    myPen.setColor(Qt::black);
+    myPen.setColor(m_color);
     painter->setPen(myPen);
-    painter->setBrush(Qt::black);
+    painter->setBrush(m_color);
     setLine(QLineF(m_startNode->pos(), m_endNode->pos()));
     painter->drawLine(line());
 
     if (isSelected()) {
-        painter->setPen(QPen(Qt::black, 1, Qt::DashLine));
+        painter->setPen(QPen(m_color, 1, Qt::DashLine));
         QLineF myLine = line();
         myLine.translate(0, 4.0);
         painter->drawLine(myLine);
         myLine.translate(0,-8.0);
         painter->drawLine(myLine);
     }
+}
+
+
+QColor SchematicDevice::GetColorFromDeviceType(DeviceType type)
+{
+    QColor color = Qt::black;
+    switch (type) {
+        case Resistor:  color = Qt::black;  break;
+        case Capacitor: color = Qt::blue;   break;
+        case Inductor:  color = Qt::yellow; break;
+        case Isrc:      color = Qt::green;  break;
+        case Vsrc:      color = Qt::red;    break;
+        default:;
+    }
+    return color;
 }
 
 

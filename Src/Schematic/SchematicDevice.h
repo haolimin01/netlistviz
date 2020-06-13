@@ -26,13 +26,16 @@ public:
 	QPixmap GetImage() const;
 
 	QRectF boundingRect() const override;
-	// QPainterPath shape() const override;
 
 	SchematicNode* GetStartNode() const { return m_startNode; }
 	SchematicNode* GetEndNode()   const { return m_endNode; }
 
-	int type() const override { return Type; }
+	DeviceType GetDeviceType() const { return m_deviceType; }
+
+	int  type() const override { return Type; }
 	void UpdatePosition();
+
+	static QColor GetColorFromDeviceType(DeviceType type);
 
 protected:
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
@@ -40,12 +43,15 @@ protected:
 
 private:
 	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+	// void SetColorFromDeviceType(DeviceType type);
 
 	SchematicNode  *m_startNode;
 	SchematicNode  *m_endNode;
 
 	DeviceType      m_deviceType;
 	QMenu          *m_contextMenu;
+
+	QColor			m_color;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H

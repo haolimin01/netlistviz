@@ -5,9 +5,7 @@
 #include "SchematicTextItem.h"
 #include "SchematicNode.h"
 
-const int InsertTextButton = 10;
 const int InsertNodeButton = 20;
-const int InsertDeviceButton = 30;
 
 
 MainWindow::MainWindow()
@@ -24,6 +22,9 @@ MainWindow::MainWindow()
 
     connect(m_scene, &SchematicScene::NodeInserted,
             this, &MainWindow::NodeInserted);
+        
+    connect(m_scene, &SchematicScene::DeviceInserted,
+            this, &MainWindow::DeviceInserted);
 
     CreateToolbars();
 
@@ -49,11 +50,14 @@ void MainWindow::ButtonGroupClicked(int id)
             button->setChecked(false);
     }
 
+    /* InsertNodeButton clicked */
     if (id == InsertNodeButton) {
         m_scene->SetMode(SchematicScene::InsertNodeMode);
-
-    } else if (id == InsertDeviceButton) {
+    
+    /* InsertDeviceButton clicked */
+    } else {
         m_scene->SetMode(SchematicScene::InsertDeviceMode);
+        m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
     }
 
 }
@@ -63,8 +67,6 @@ void MainWindow::DeleteItem()
 {
     QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
     for (QGraphicsItem *item : qAsConst(selectedItems)) {
-        // m_scene->removeItem(item);
-        // delete item;
         if (item->type() == SchematicDevice::Type) {
             m_scene->removeItem(item);
             SchematicDevice *dev = qgraphicsitem_cast<SchematicDevice*>(item);
@@ -145,6 +147,16 @@ void MainWindow::NodeInserted(SchematicNode *)
 }
 
 
+void MainWindow::DeviceInserted(SchematicDevice *device)
+{
+    m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
+    m_pointerGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
+    m_scene->SetMode(SchematicScene::BaseMode);
+
+    m_buttonGroup->button((int)(device->GetDeviceType()))->setChecked(false);
+}
+
+
 void MainWindow::CurrentFontChanged(const QFont &)
 {
     HandleFontChange();
@@ -179,7 +191,12 @@ void MainWindow::TextColorChanged()
 
 void MainWindow::NodeColorChanged()
 {
-
+    // node color changed
+    m_nodeAction = qobject_cast<QAction *>(sender());
+    m_nodeColorToolButton->setIcon(CreateColorToolButtonIcon(
+        ":/images/floodfill.png",
+        qvariant_cast<QColor>(m_nodeAction->data())));
+    NodeButtonTriggered();
 }
 
 
@@ -189,9 +206,9 @@ void MainWindow::TextButtonTriggered()
 }
 
 
-void MainWindow::FillButtonTriggered()
+void MainWindow::NodeButtonTriggered()
 {
-    // scene->setItemColor(qvariant_cast<QColor>(fillAction->data()));
+    m_scene->SetNodeColor(qvariant_cast<QColor>(m_nodeAction->data()));
 }
 
 
@@ -203,7 +220,7 @@ void MainWindow::HandleFontChange()
     font.setItalic(m_italicAction->isChecked());
     font.setUnderline(m_underlineAction->isChecked());
 
-    m_scene->setFont(font);
+    m_scene->SetFont(font);
 }
 
 
@@ -266,7 +283,6 @@ void MainWindow::CreateToolBox()
     QWidget *itemWidget = new QWidget;
     itemWidget->setLayout(layout);
 
-    //! [22]
     m_toolBox = new QToolBox;
     m_toolBox->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Ignored));
     m_toolBox->setMinimumWidth(itemWidget->sizeHint().width());
@@ -349,7 +365,7 @@ void MainWindow::CreateToolbars()
 
     m_fontSizeCombo = new QComboBox;
     m_fontSizeCombo->setEditable(true);
-    for (int i = 8; i < 30; i = i + 2)
+    for (int i = 8; i < 50; i = i + 2)
         m_fontSizeCombo->addItem(QString().setNum(i));
     QIntValidator *validator = new QIntValidator(2, 64, this);
     m_fontSizeCombo->setValidator(validator);
@@ -365,15 +381,14 @@ void MainWindow::CreateToolbars()
     connect(m_fontColorToolButton, &QAbstractButton::clicked,
             this, &MainWindow::TextButtonTriggered);
 
-
-    // m_fillColorToolButton = new QToolButton;
-    // m_fillColorToolButton->setPopupMode(QToolButton::MenuButtonPopup);
-    // m_fillColorToolButton->setMenu(CreateColorMenu(SLOT(itemColorChanged()), Qt::white));
-    // m_fillAction = m_fillColorToolButton->menu()->defaultAction();
-    // m_fillColorToolButton->setIcon(CreateColorToolButtonIcon(
-    //     ":/images/floodfill.png", Qt::white));
-    // connect(m_fillColorToolButton, &QAbstractButton::clicked,
-    //         this, &MainWindow::FillButtonTriggered);
+    m_nodeColorToolButton = new QToolButton;
+    m_nodeColorToolButton->setPopupMode(QToolButton::MenuButtonPopup);
+    m_nodeColorToolButton->setMenu(CreateColorMenu(SLOT(NodeColorChanged()), Qt::black));
+    m_nodeColorToolButton->setIcon(CreateColorToolButtonIcon(
+        ":/images/floodfill.png", Qt::black));
+    m_nodeAction = m_nodeColorToolButton->menu()->defaultAction();
+    connect(m_nodeColorToolButton, &QAbstractButton::clicked,
+        this, &MainWindow::NodeButtonTriggered);
 
     m_textToolBar = addToolBar(tr("Font"));
     m_textToolBar->addWidget(m_fontCombo);
@@ -384,7 +399,7 @@ void MainWindow::CreateToolbars()
 
     m_colorToolBar = addToolBar(tr("Color"));
     m_colorToolBar->addWidget(m_fontColorToolButton);
-    // m_colorToolBar->addWidget(m_fillColorToolButton);
+    m_colorToolBar->addWidget(m_nodeColorToolButton);
 
     QToolButton *baseModePointerButton = new QToolButton;
     baseModePointerButton->setCheckable(true);
@@ -427,7 +442,8 @@ QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::Devi
     button->setIcon(icon);
     button->setIconSize(QSize(50, 50));
     button->setCheckable(true);
-    m_buttonGroup->addButton(button, InsertDeviceButton);
+    // m_buttonGroup->addButton(button, InsertDeviceButton);
+    m_buttonGroup->addButton(button, type);
 
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(button, 0, 0, Qt::AlignHCenter);
@@ -490,7 +506,7 @@ QIcon MainWindow::CreateColorIcon(QColor color)
 }
 
 
-void MainWindow::ResetButtonAndCursor()
-{
+// void MainWindow::ResetButtonAndCursor()
+// {
 
-}
+// }
