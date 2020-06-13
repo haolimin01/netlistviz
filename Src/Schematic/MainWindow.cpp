@@ -5,9 +5,7 @@
 #include "SchematicTextItem.h"
 #include "SchematicNode.h"
 
-const int InsertTextButton = 10;
 const int InsertNodeButton = 20;
-const int InsertDeviceButton = 30;
 
 
 MainWindow::MainWindow()
@@ -49,11 +47,14 @@ void MainWindow::ButtonGroupClicked(int id)
             button->setChecked(false);
     }
 
+    /* InsertNodeButton clicked */
     if (id == InsertNodeButton) {
         m_scene->SetMode(SchematicScene::InsertNodeMode);
-
-    } else if (id == InsertDeviceButton) {
+    
+    /* InsertDeviceButton clicked */
+    } else {
         m_scene->SetMode(SchematicScene::InsertDeviceMode);
+        m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
     }
 
 }
@@ -63,8 +64,6 @@ void MainWindow::DeleteItem()
 {
     QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
     for (QGraphicsItem *item : qAsConst(selectedItems)) {
-        // m_scene->removeItem(item);
-        // delete item;
         if (item->type() == SchematicDevice::Type) {
             m_scene->removeItem(item);
             SchematicDevice *dev = qgraphicsitem_cast<SchematicDevice*>(item);
@@ -427,7 +426,8 @@ QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::Devi
     button->setIcon(icon);
     button->setIconSize(QSize(50, 50));
     button->setCheckable(true);
-    m_buttonGroup->addButton(button, InsertDeviceButton);
+    // m_buttonGroup->addButton(button, InsertDeviceButton);
+    m_buttonGroup->addButton(button, type);
 
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(button, 0, 0, Qt::AlignHCenter);

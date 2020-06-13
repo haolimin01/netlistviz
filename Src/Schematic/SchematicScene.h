@@ -36,6 +36,7 @@ public:
     void SetTextColor(const QColor &color);
     void SetNodeColor(const QColor &color);
     void SetFont(const QFont &font);
+    void SetDeviceType(SchematicDevice::DeviceType type);
 
 public slots:
     void SetMode(Mode mode);
@@ -63,6 +64,8 @@ private:
     SchematicNode     *m_node;
     SchematicDevice   *m_device;
     QGraphicsLineItem *m_line;
+
+    SchematicDevice::DeviceType m_deviceType;
 
     QColor             m_textColor;
     QColor             m_nodeColor;

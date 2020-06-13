@@ -15,6 +15,7 @@ SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
     m_line = nullptr;
     m_textColor = Qt::black;
     m_nodeColor = Qt::black;
+    m_deviceType = SchematicDevice::Resistor;
 }
 
 
@@ -48,6 +49,12 @@ void SchematicScene::SetFont(const QFont &font)
         if (item)
             item->setFont(m_font);
     }
+}
+
+
+void SchematicScene::SetDeviceType(SchematicDevice::DeviceType type)
+{
+    m_deviceType = type;
 }
 
 
