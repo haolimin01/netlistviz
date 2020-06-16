@@ -60,3 +60,12 @@ netlistviz.app
 
 # vscode
 *.vscode
+
+# Parser
+Src/Parser/CktScanner.cpp
+Src/Parser/CktParser.hpp
+Src/Parser/CktParser.cpp
+Src/Parser/CktParser.output
+Src/parser/location.hh
+Src/Parser/position.hh
+Src/Parser/stack.hh

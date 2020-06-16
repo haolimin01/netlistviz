@@ -1,0 +1,44 @@
+#!/bin/bash
+
+CURR_PATH=`pwd`
+PROJECT_PATH=${CURR_PATH%/Script}
+PARSER_PATH=${PROJECT_PATH}/Src/Parser
+
+
+function compile()
+{
+    cd ${PARSER_PATH} && make
+    cd ${PROJECT_PATH} && qmake . && make
+}
+
+
+function clean()
+{
+    cd ${PROJECT_PATH} && make clean
+    cd ${PARSER_PATH} && make clean
+}
+
+
+function distclean()
+{
+    cd ${PROJECT_PATH} && make distclean
+    cd ${PARSER_PATH} && make distclean
+}
+
+
+if [ $# == 0 ];then
+    compile
+    exit 0
+fi
+
+if [ $# == 1 ];then
+    if [ $1 == "clean" ];then
+        clean
+    elif [ $1 == "distclean" ];then
+        distclean
+    else
+        echo "wrong arg"
+    fi
+else
+    echo "wrong arg"
+fi
