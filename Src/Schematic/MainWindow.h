@@ -7,8 +7,10 @@
 class SchematicScene;
 class SchematicNode;
 class SchematicDevice;
+class NetlistDialog;
 
 QT_BEGIN_NAMESPACE
+class QString;
 class QAction;
 class QToolBox;
 class QSpinBox;
@@ -83,7 +85,13 @@ private slots:
     /* Project information */
     void About();
 
+    /* Open netlist */
+    void OpenNetlist();
+
 private:
+    /* Initialize variables */
+    void InitVariables();
+
     /* Create Device, Node */
     void CreateToolBox();
 
@@ -108,6 +116,8 @@ private:
     QIcon CreateColorToolButtonIcon(const QString &image, QColor color);
     QIcon CreateColorIcon(QColor color);
 
+    void ShowNetlistFile(const QString &netlist);
+
 
     /* m menas member in class */
 
@@ -128,6 +138,7 @@ private:
     QMenu *m_itemMenu;
     QMenu *m_aboutMenu;
 
+    QToolBar *m_fileToolbar;
     QToolBar *m_textToolBar;
     QToolBar *m_editToolBar;
     QToolBar *m_colorToolBar;
@@ -154,6 +165,14 @@ private:
     QAction *m_italicAction;
     QAction *m_textAction;
     QAction *m_nodeAction;
+
+    QAction *m_openNetlistAction;
+
+    QString m_curNetlistPath;
+    QString m_curNetlistFile;
+
+    NetlistDialog *m_netlistDialog;
+
 };
 //! [0]
 

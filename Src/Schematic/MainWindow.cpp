@@ -1,15 +1,22 @@
 #include "MainWindow.h"
+#include <iostream>
 #include <QtWidgets>
+#include <QFileDialog>
+#include <QString>
 #include <QDebug>
 #include "SchematicScene.h"
 #include "SchematicTextItem.h"
 #include "SchematicNode.h"
+#include "Define/Define.h"
+#include "NetlistDialog.h"
 
 const int InsertNodeButton = 20;
 
 
 MainWindow::MainWindow()
 {
+    InitVariables();
+
     CreateActions();
     CreateToolBox();
     CreateMenus();
@@ -39,6 +46,15 @@ MainWindow::MainWindow()
     setCentralWidget(widget);
     setWindowTitle(tr("netlistviz"));
     setUnifiedTitleAndToolBarOnMac(true);
+}
+
+
+void MainWindow::InitVariables()
+{
+    m_curNetlistPath = ".";
+    m_curNetlistFile = "";
+
+    m_netlistDialog = new NetlistDialog(this);
 }
 
 
@@ -333,12 +349,17 @@ void MainWindow::CreateActions()
     m_aboutAction = new QAction(tr("A&bout"), this);
     m_aboutAction->setShortcut(tr("F1"));
     connect(m_aboutAction, &QAction::triggered, this, &MainWindow::About);
+
+    m_openNetlistAction = new QAction(QIcon(":/images/opennetlist.png"), tr("N&etlist"), this);
+    m_openNetlistAction->setShortcut(tr("Ctrl+N"));
+    connect(m_openNetlistAction, &QAction::triggered, this, &MainWindow::OpenNetlist);
 }
 
 
 void MainWindow::CreateMenus()
 {
     m_fileMenu = menuBar()->addMenu(tr("&File"));
+    m_fileMenu->addAction(m_openNetlistAction);
     m_fileMenu->addAction(m_exitAction);
 
     m_itemMenu = menuBar()->addMenu(tr("&Item"));
@@ -354,6 +375,9 @@ void MainWindow::CreateMenus()
 
 void MainWindow::CreateToolbars()
 {
+    m_fileToolbar = addToolBar(tr("File"));
+    m_fileToolbar->addAction(m_openNetlistAction);
+
     m_editToolBar = addToolBar(tr("Edit"));
     m_editToolBar->addAction(m_deleteAction);
     m_editToolBar->addAction(m_toFrontAction);
@@ -506,7 +530,41 @@ QIcon MainWindow::CreateColorIcon(QColor color)
 }
 
 
-// void MainWindow::ResetButtonAndCursor()
-// {
+void MainWindow::OpenNetlist()
+{
+#ifdef TRACE
+    std::cout << LINE_INFO << std::endl;
+#endif
 
-// }
+    // QFileDialog fileDialog(this, tr("Open Netlist..."));
+    // fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
+    // fileDialog.setFileMode(QFileDialog::ExistingFile);
+    // fileDialog.setNameFilter(tr("Netlist (*.sp)"));
+    // fileDialog.show();
+
+    // if (fileDialog.exec() != QDialog::Accepted) {
+    //     return;
+    // }
+
+    QString fileName;
+    QString fileFilters;
+    fileFilters = tr("Netlist files (*.sp)\n" "All files (*)");
+
+    fileName = QFileDialog::getOpenFileName(this, tr("Open Netlist..."),
+                            m_curNetlistPath, fileFilters);
+    
+    if (fileName.isEmpty())
+        return;
+
+    m_curNetlistPath = QFileInfo(fileName).path();
+    m_curNetlistFile = fileName;
+
+    ShowNetlistFile(m_curNetlistFile);
+}
+
+
+void MainWindow::ShowNetlistFile(const QString &netlist)
+{
+    m_netlistDialog->SetNetlistFile(netlist);
+    m_netlistDialog->show();
+}

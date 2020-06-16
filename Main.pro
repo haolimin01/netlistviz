@@ -15,6 +15,7 @@ CONFIG += debug
 
 macx {
     CONFIG -= app_bundle
+    CONFIG += console
 }
 
 CONFIG(debug, debug|release) {
@@ -22,7 +23,7 @@ CONFIG(debug, debug|release) {
 }
 
 CONFIG(release, ddebug|release) {
-    DEFINES += TRACE QT_NO_DEBUG_OUTPUT
+#    DEFINES += TRACE QT_NO_DEBUG_OUTPUT
 }
 
 MOC_DIR = ./build
@@ -41,6 +42,7 @@ HEADERS += ./Src/Schematic/MainWindow.h\
            ./Src/Schematic/SchematicScene.h\
            ./Src/Schematic/SchematicNode.h\
            ./Src/Schematic/SchematicDevice.h\
+           ./Src/Schematic/NetlistDialog.h\
            ./Src/Parser/CktParser.hpp\
            ./Src/Parser/MyParser.h
 
@@ -51,6 +53,7 @@ SOURCES += ./Src/Main/Main.cpp\
            ./Src/Schematic/SchematicScene.cpp\
            ./Src/Schematic/SchematicNode.cpp\
            ./Src/Schematic/SchematicDevice.cpp\
+           ./Src/Schematic/NetlistDialog.cpp\
            ./Src/Parser/CktScanner.cpp\
            ./Src/Parser/CktParser.cpp\
            ./Src/Parser/MyParser.cpp
