@@ -23,6 +23,7 @@ public:
 public:
 	SchematicNode(QMenu *contextMenu, QTransform itemTransform = QTransform(),
 		QGraphicsItem *parent = nullptr);
+	SchematicNode();
 
 	~SchematicNode();
 
@@ -36,14 +37,27 @@ public:
 	void    RemoveDevice(SchematicDevice *device);
 	void    RemoveDevices();
 
+	void    SetId(int id)          { m_id = id; }
+	void    SetName(QString name)  { m_name = name; }
+	void    SetGnd(bool isGnd)     { m_isGnd = isGnd; }
+	QString GetName() const        { return m_name; }
+
+	void    Print() const;
+
 private:
-	void DrawNode();
-	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+	void    InitVariables();
+	void    DrawNode();
+	void    contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
 	QMenu   *m_contextMenu;
 	qreal    m_nodeSize;
 
 	QVector<SchematicDevice*> m_devices;
+
+	/* For Cktparser */
+	int     m_id;
+	QString m_name;
+	bool    m_isGnd;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICNODE_H

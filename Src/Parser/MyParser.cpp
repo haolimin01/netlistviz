@@ -26,15 +26,16 @@ MyParser::~MyParser()
 }
 
 
-int MyParser::ParseNetlist(char *netlist)
+int MyParser::ParseNetlist(const std::string &netlist, SchematicData *data)
 {
+    assert(data);
 #ifdef TRACE
     std::cout << LINE_INFO << std::endl;
 #endif
 
-    yyin = fopen(netlist, "r");
+    yyin = fopen(netlist.c_str(), "r");
     if (!yyin) {
-        printf("Open %s failed.\n", netlist);
+        std::cout << "Open " << netlist << " failed.\n" << std::endl;
         fclose(yyin);
         return ERROR;
     }
@@ -43,7 +44,7 @@ int MyParser::ParseNetlist(char *netlist)
         delete m_cktParser;
     }
 
-    m_cktParser = new yy::CktParser();
+    m_cktParser = new yy::CktParser(data);
     m_cktParser->parse();
 
     fclose(yyin);

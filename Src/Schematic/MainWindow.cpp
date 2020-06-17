@@ -3,12 +3,14 @@
 #include <QtWidgets>
 #include <QFileDialog>
 #include <QString>
+#include <QMessageBox>
 #include <QDebug>
 #include "SchematicScene.h"
 #include "SchematicTextItem.h"
 #include "SchematicNode.h"
 #include "Define/Define.h"
 #include "NetlistDialog.h"
+#include "Parser/MyParser.h"
 
 const int InsertNodeButton = 20;
 
@@ -49,12 +51,24 @@ MainWindow::MainWindow()
 }
 
 
+MainWindow::~MainWindow()
+{
+    if (m_data) {
+        delete m_data;
+        m_data = nullptr;
+    }
+}
+
+
 void MainWindow::InitVariables()
 {
     m_curNetlistPath = ".";
     m_curNetlistFile = "";
 
     m_netlistDialog = new NetlistDialog(this);
+    connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::PlotNetlistFile);
+
+    m_data = nullptr;
 }
 
 
@@ -536,16 +550,6 @@ void MainWindow::OpenNetlist()
     std::cout << LINE_INFO << std::endl;
 #endif
 
-    // QFileDialog fileDialog(this, tr("Open Netlist..."));
-    // fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
-    // fileDialog.setFileMode(QFileDialog::ExistingFile);
-    // fileDialog.setNameFilter(tr("Netlist (*.sp)"));
-    // fileDialog.show();
-
-    // if (fileDialog.exec() != QDialog::Accepted) {
-    //     return;
-    // }
-
     QString fileName;
     QString fileFilters;
     fileFilters = tr("Netlist files (*.sp)\n" "All files (*)");
@@ -567,4 +571,40 @@ void MainWindow::ShowNetlistFile(const QString &netlist)
 {
     m_netlistDialog->SetNetlistFile(netlist);
     m_netlistDialog->show();
+}
+
+
+void MainWindow::PlotNetlistFile()
+{
+#ifdef TRACE
+    qDebug() << LINE_INFO;
+#endif
+    ParseNetlist();
+}
+
+
+void MainWindow::ParseNetlist()
+{
+#ifdef TRACE
+    qDebug() << LINE_INFO;
+#endif
+    MyParser parser;
+    m_data = new SchematicData();
+    int error = parser.ParseNetlist(m_curNetlistFile.toStdString(), m_data);
+    if (error) {
+        delete m_data;
+        m_data = nullptr;
+        ShowCriticalMsg(tr("Parse Netlist failed."));
+    }
+
+#ifdef DEBUG
+    m_data->PrintNodeAndDevice();
+#endif
+
+}
+
+
+void MainWindow::ShowCriticalMsg(const QString &msg)
+{
+    QMessageBox::critical(this, tr("Critical Message"), msg);
 }

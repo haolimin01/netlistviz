@@ -17,7 +17,7 @@ NetlistDialog::NetlistDialog(QWidget *parent)
 
     m_buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
-    connect(m_buttonBox, &QDialogButtonBox::accepted, this, &NetlistDialog::accept);
+    connect(m_buttonBox, &QDialogButtonBox::accepted, this, &NetlistDialog::OkButtonClicked);
     connect(m_buttonBox, &QDialogButtonBox::rejected, this, &NetlistDialog::reject);
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
@@ -58,5 +58,11 @@ int NetlistDialog::ReadNetlist()
     return OKAY;
 }
 
+
+void NetlistDialog::OkButtonClicked()
+{
+    accept();
+    emit Accepted();
+}
 
 

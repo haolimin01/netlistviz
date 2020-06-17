@@ -14,17 +14,23 @@
     #include <iostream>
     #include <vector>
     #include "Define/Define.h"
+    #include "Schematic/SchematicData.h"
 
     using std::cout;
     using std::endl;
     using std::vector;
+    using std::string;
 
     extern FILE *yyin;
     vector<char*> nodes;
+
+    void PrintDevice(char*, const vector<char*> &, double);
 %}
 
 %output "CktParser.cpp"
 %verbose
+
+%parse-param { SchematicData *data }
 
 %union {
     int n;
@@ -34,7 +40,7 @@
 
 %token<f> VALUE
 %token<s> STRING
-%token<s> RESISTOR ISOURCE COMMENT
+%token<s> CAPACITOR ISOURCE INDUCTOR RESISTOR VSOURCE COMMENT
 %token<n> INTEGER
 
 %type<s> node
@@ -70,8 +76,11 @@ line: component EOL
     | EOL
 ;
 
-component: resistor
+component: capacitor
          | isource
+         | inductor
+         | resistor
+         | vsource
 ;
 
 analysis: op
@@ -80,17 +89,70 @@ analysis: op
 ignore: COMMENT
 ;
 
-resistor: RESISTOR nodeList value
-        {
-            printf("Resistor %s\n", $1);
-        }
+capacitor: CAPACITOR nodeList value
+         {
+            if ($2 != 2 || nodes.size() != 2) {
+                printf("Parse %s failed.\n", $1);
+                EXIT;
+            }
+
+            data->ParseC($1, nodes.at(0), nodes.at(1), $3);
+
+            nodes.clear();
+         }
 ;
 
 isource: ISOURCE nodeList value
        {
-           printf("ISource %s\n", $1);
+            if ($2 != 2 || nodes.size() != 2) {
+                printf("Parse %s failed.\n", $1);
+                EXIT;
+            }
+
+            data->ParseI($1, nodes.at(0), nodes.at(1), $3);
+
+            nodes.clear();
        }
 ;
+
+inductor: INDUCTOR nodeList value
+        {
+            if ($2 != 2 || nodes.size() != 2) {
+                printf("Parse %s failed.\n", $1);
+                EXIT;
+            }
+
+            data->ParseL($1, nodes.at(0), nodes.at(1), $3);
+
+            nodes.clear();
+        }
+
+resistor: RESISTOR nodeList value
+        {
+            if ($2 != 2 || nodes.size() != 2) {
+                printf("Parse %s failed.\n", $1);
+                EXIT;
+            }
+
+            data->ParseR($1, nodes.at(0), nodes.at(1), $3);
+
+            nodes.clear();
+        }
+;
+
+vsource: VSOURCE nodeList value
+       {
+            if ($2 != 2 || nodes.size() != 2) {
+                printf("Parse %s failed.\n", $1);
+                EXIT;
+            }
+
+            data->ParseV($1, nodes.at(0), nodes.at(1), $3);
+
+            nodes.clear();
+       }
+;
+
 
 op: DOTOP
 ;
@@ -143,5 +205,14 @@ namespace yy
         std::cerr << "Error : " << s << std::endl;
         EXIT;
     }
+
 }
 
+void PrintDevice(char *name, const vector<char*> &nodes, double value)
+{
+    printf("%s ", name);
+    for (size_t i = 0; i < nodes.size(); ++ i) {
+        printf("%s ", nodes.at(i));
+    }
+    printf("%lf\n", value);
+}

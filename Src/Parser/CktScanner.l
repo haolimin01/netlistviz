@@ -5,6 +5,7 @@
     /************** Scanner for Netlist *************/
     #include <stdio.h>
     #include <stdlib.h>
+    #include "Schematic/SchematicData.h"
     #include "CktParser.hpp"
     #include "Define/Define.h"
 
@@ -30,8 +31,11 @@ FLOAT       [-+]?{DIGIT}*\.{DIGIT}+([Ee][-+]?{DIGIT}+)?
 UNIT        ([Ff]|[Pp]|[Nn]|[Uu]|[Mm]|[Kk]|[Mm][Ee][Gg]|[Gg]|[Tt])\s*([Hh][Zz]|[Ss]|[Hh])?
 VALUE       ({INTEGER}|{FLOAT})\s*{UNIT}?
 
-RESISTOR    ^[Rr]{STRING}
+CAPACITOR   ^[Cc]{STRING}
 ISOURCE     ^[Ii]{STRING}
+INDUCTOR    ^[Ll]{STRING}
+RESISTOR    ^[Rr]{STRING}
+VSOURCE     ^[Vv]{STRING}
 
 DOTOP       ^[\.][Oo][Pp]
 
@@ -50,11 +54,11 @@ DOTEND      ^[\.][Ee][Nn][Dd][Ss]?
 {INTEGER}       {yylval->n = atoi(yytext); return token::INTEGER;}
 {VALUE}         {yylval->f = CvtStrToValue(yytext); return token::VALUE;}
 
-{RESISTOR}      {
+{CAPACITOR}     {
                 yylval->s = (char*)malloc((strlen(yytext)+1) * sizeof(char));
                 strcpy(yylval->s, yytext);
                 yylval->s[strlen(yytext)] = '\0';
-                return token::RESISTOR;
+                return token::CAPACITOR;
                 }
 
 {ISOURCE}       {
@@ -62,6 +66,27 @@ DOTEND      ^[\.][Ee][Nn][Dd][Ss]?
                 strcpy(yylval->s, yytext);
                 yylval->s[strlen(yytext)] = '\0';
                 return token::ISOURCE;
+                }
+
+{INDUCTOR}      {
+                yylval->s = (char*)malloc((strlen(yytext)+1) * sizeof(char));
+                strcpy(yylval->s, yytext);
+                yylval->s[strlen(yytext)] = '\0';
+                return token::INDUCTOR;
+                }
+
+{RESISTOR}      {
+                yylval->s = (char*)malloc((strlen(yytext)+1) * sizeof(char));
+                strcpy(yylval->s, yytext);
+                yylval->s[strlen(yytext)] = '\0';
+                return token::RESISTOR;
+                }
+
+{VSOURCE}       {
+                yylval->s = (char*)malloc((strlen(yytext)+1) * sizeof(char));
+                strcpy(yylval->s, yytext);
+                yylval->s[strlen(yytext)] = '\0';
+                return token::VSOURCE;
                 }
 
 {DOTOP}         {return token::DOTOP;}
@@ -82,7 +107,7 @@ DOTEND      ^[\.][Ee][Nn][Dd][Ss]?
 
 {EOL}           {
                 lineno++;
-                printf("line number : %d\n", lineno);
+                // printf("line number : %d\n", lineno);
                 return token::EOL;
                 }
 {DOTEND}        {printf(".end"); return token::DOTEND;}

@@ -16,7 +16,14 @@ public:
 
     void SetNetlistFile(const QString &netlist);
 
+signals:
+    void Accepted();
+
+private slots:
+    void OkButtonClicked();
+
 private:
+
     int ReadNetlist();
 
     QString    m_netlist;

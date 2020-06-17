@@ -8,6 +8,7 @@ class SchematicScene;
 class SchematicNode;
 class SchematicDevice;
 class NetlistDialog;
+class SchematicData;
 
 QT_BEGIN_NAMESPACE
 class QString;
@@ -33,6 +34,7 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow();
+    ~MainWindow();
 
 private slots:
     /* Device, Node, Text */
@@ -88,6 +90,9 @@ private slots:
     /* Open netlist */
     void OpenNetlist();
 
+    /* Plot Netlist to SchematicScene */
+    void PlotNetlistFile();
+
 private:
     /* Initialize variables */
     void InitVariables();
@@ -118,6 +123,11 @@ private:
 
     void ShowNetlistFile(const QString &netlist);
 
+    /* Parse Netlist to m_data */
+    void ParseNetlist();
+
+    /* Critical Dialog */
+    void ShowCriticalMsg(const QString &msg);
 
     /* m menas member in class */
 
@@ -172,6 +182,8 @@ private:
     QString m_curNetlistFile;
 
     NetlistDialog *m_netlistDialog;
+
+    SchematicData *m_data;
 
 };
 //! [0]
