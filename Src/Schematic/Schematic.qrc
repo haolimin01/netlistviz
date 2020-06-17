@@ -15,6 +15,7 @@
     <file>images/ind.png</file>
     <file>images/isrc.png</file>
     <file>images/vsrc.png</file>
+    <file>images/opennetlist.png</file>
 </qresource>
 </RCC>
 

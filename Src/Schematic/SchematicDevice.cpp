@@ -103,6 +103,12 @@ QColor SchematicDevice::GetColorFromDeviceType(DeviceType type)
 }
 
 
+ void SchematicDevice::Print() const
+ {
+    qInfo().noquote().nospace() << m_name << " type(" << m_deviceType << ") posName("
+            << m_startNode->GetName() << ") negName("
+            << m_endNode->GetName() << ") value(" << m_value << ")" << endl;
+ }
 
 
 

@@ -37,11 +37,17 @@ public:
 
 	static QColor GetColorFromDeviceType(DeviceType type);
 
+	void SetName(QString name) { m_name = name; }
+	void SetValue(double value) { m_value = value; }
+
+	void Print() const;
+
 protected:
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 			QWidget *widget = nullptr) override;
 
 private:
+	void InitVariables();
 	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 	// void SetColorFromDeviceType(DeviceType type);
 
@@ -52,6 +58,12 @@ private:
 	QMenu          *m_contextMenu;
 
 	QColor			m_color;
+
+	/* For CktParser */
+	QString         m_name;
+	double          m_value;
+	/* posNode -> m_startNode */
+	/* negNode -> m_endNode */
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H
