@@ -70,9 +70,9 @@ void SchematicDevice::UpdatePosition()
 void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
                   QWidget *)
 {
-    QPen myPen = pen();
-    myPen.setColor(m_color);
-    painter->setPen(myPen);
+    QPen tPen = pen();
+    tPen.setColor(m_color);
+    painter->setPen(tPen);
     painter->setBrush(m_color);
     setLine(QLineF(m_startNode->pos(), m_endNode->pos()));
     painter->drawLine(line());
@@ -109,6 +109,4 @@ QColor SchematicDevice::GetColorFromDeviceType(DeviceType type)
             << m_startNode->GetName() << ") negName("
             << m_endNode->GetName() << ") value(" << m_value << ")" << endl;
  }
-
-
 

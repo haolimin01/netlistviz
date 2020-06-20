@@ -42,7 +42,8 @@ void SchematicScene::SetNodeColor(const QColor &color)
     m_nodeColor = color;
     if (IsItemChange(SchematicNode::Type)) {
         SchematicNode *item = qgraphicsitem_cast<SchematicNode *>(selectedItems().first());
-        item->setBrush(m_nodeColor);
+        item->SetNodeColor(m_nodeColor);
+        item->update();
     }
 }
 

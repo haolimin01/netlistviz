@@ -38,6 +38,7 @@ public:
 	void    RemoveDevices();
 
     void    SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
+	void    SetNodeColor(const QColor &color)  { m_color = color; }
 
 	void    SetId(int id)          { m_id = id; }
 	void    SetName(QString name)  { m_name = name; }
@@ -47,17 +48,19 @@ public:
 	void    Print() const;
 
 protected:
-	void    paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr) override;
+	void    paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *widget = nullptr) override;
 
 private:
 	void    InitVariables();
-	void    DrawNode();
+	// void    DrawNode();
 	void    contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
 	QMenu   *m_contextMenu;
 	qreal    m_nodeSize;
 
 	QVector<SchematicDevice*> m_devices;
+
+	QColor   m_color;
 
 	/* For Cktparser */
 	int     m_id;
