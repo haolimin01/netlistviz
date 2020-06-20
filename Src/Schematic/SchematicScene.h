@@ -16,6 +16,8 @@ class QFont;
 class QGraphicsTextItem;
 class QColor;
 QT_END_NAMESPACE
+class SchematicData;
+class SchematicLayout;
 
 
 class SchematicScene : public QGraphicsScene
@@ -37,6 +39,8 @@ public:
     void SetNodeColor(const QColor &color);
     void SetFont(const QFont &font);
     void SetDeviceType(SchematicDevice::DeviceType type);
+
+    void RenderSchematicData(SchematicData *data);
 
 public slots:
     void SetMode(Mode mode);
@@ -70,6 +74,9 @@ private:
 
     QColor             m_textColor;
     QColor             m_nodeColor;
+
+    SchematicData     *m_data;
+    SchematicLayout   *m_schLayout;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H

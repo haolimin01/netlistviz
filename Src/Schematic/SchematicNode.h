@@ -37,12 +37,17 @@ public:
 	void    RemoveDevice(SchematicDevice *device);
 	void    RemoveDevices();
 
+    void    SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
+
 	void    SetId(int id)          { m_id = id; }
 	void    SetName(QString name)  { m_name = name; }
 	void    SetGnd(bool isGnd)     { m_isGnd = isGnd; }
 	QString GetName() const        { return m_name; }
 
 	void    Print() const;
+
+protected:
+	void    paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr) override;
 
 private:
 	void    InitVariables();

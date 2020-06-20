@@ -2,6 +2,10 @@
 
 #include <QGraphicsSceneMouseEvent>
 #include <QTextCursor>
+#include <QDebug>
+
+#include "SchematicData.h"
+#include "SchematicLayout.h"
 
 
 SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
@@ -17,6 +21,9 @@ SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
     m_nodeColor = Qt::black;
     m_deviceType = SchematicDevice::Resistor;
     m_nodeColor = SchematicDevice::GetColorFromDeviceType(m_deviceType);
+
+    m_data = nullptr;
+    m_schLayout = new SchematicLayout;
 }
 
 
@@ -56,6 +63,39 @@ void SchematicScene::SetFont(const QFont &font)
 void SchematicScene::SetDeviceType(SchematicDevice::DeviceType type)
 {
     m_deviceType = type;
+}
+
+
+void SchematicScene::RenderSchematicData(SchematicData *data)
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+    if (m_data) {
+        delete m_data;
+        m_data = nullptr;
+    }
+
+    m_data = data;
+
+    m_schLayout->GeneratePos(m_data, SchematicLayout::Square);
+
+    /* t => temp */
+    SchematicNode *tNode = nullptr;
+    SchematicDevice *tDev = nullptr;
+
+    for (int i = 0; i < m_data->m_nodeList.size(); ++ i) {
+        tNode = m_data->m_nodeList.at(i);
+        tNode->SetContextMenu(m_itemMenu);
+        addItem(tNode);
+    }
+
+    for (int i = 0; i < m_data->m_deviceList.size(); ++ i) {
+        tDev = m_data->m_deviceList.at(i);
+        tDev->SetContextMenu(m_itemMenu);
+        tDev->UpdatePosition();
+        addItem(tDev);
+    }
 }
 
 

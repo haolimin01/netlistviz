@@ -30,4 +30,12 @@
 #define OKAY  0
 #define ERROR 1
 
+/* SchematicScene */
+const int StartX = 600;
+const int StartY = 600;
+const int Width  = 1200;
+const int Height = 900;
+const int CenterX = StartX + Width / 4;
+const int CenterY = StartY + Height / 4;
+
 #endif //NETLISTVIZ_DEFINE_DEFINE_H
