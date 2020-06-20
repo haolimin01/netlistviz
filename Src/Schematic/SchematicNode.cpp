@@ -108,3 +108,9 @@ void SchematicNode::Print() const
 		<< m_isGnd << ")" << endl;
 
 }
+
+
+void SchematicNode::paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *)
+{
+	qInfo() << "Node paint" << endl;
+}

@@ -91,7 +91,7 @@ private slots:
     void OpenNetlist();
 
     /* Plot Netlist to SchematicScene */
-    void PlotNetlistFile();
+    void RenderNetlistFile();
 
 private:
     /* Initialize variables */
@@ -124,7 +124,7 @@ private:
     void ShowNetlistFile(const QString &netlist);
 
     /* Parse Netlist to m_data */
-    void ParseNetlist();
+    SchematicData* ParseNetlist();
 
     /* Critical Dialog */
     void ShowCriticalMsg(const QString &msg);
@@ -182,8 +182,6 @@ private:
     QString m_curNetlistFile;
 
     NetlistDialog *m_netlistDialog;
-
-    SchematicData *m_data;
 
 };
 //! [0]

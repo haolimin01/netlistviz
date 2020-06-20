@@ -39,6 +39,8 @@ public:
 
 	void SetName(QString name) { m_name = name; }
 	void SetValue(double value) { m_value = value; }
+	
+	void SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
 
 	void Print() const;
 

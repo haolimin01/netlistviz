@@ -1,5 +1,4 @@
 #include "MainWindow.h"
-#include <iostream>
 #include <QtWidgets>
 #include <QFileDialog>
 #include <QString>
@@ -53,10 +52,7 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
-    if (m_data) {
-        delete m_data;
-        m_data = nullptr;
-    }
+
 }
 
 
@@ -66,9 +62,7 @@ void MainWindow::InitVariables()
     m_curNetlistFile = "";
 
     m_netlistDialog = new NetlistDialog(this);
-    connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::PlotNetlistFile);
-
-    m_data = nullptr;
+    connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::RenderNetlistFile);
 }
 
 
@@ -547,7 +541,7 @@ QIcon MainWindow::CreateColorIcon(QColor color)
 void MainWindow::OpenNetlist()
 {
 #ifdef TRACE
-    std::cout << LINE_INFO << std::endl;
+    qInfo() << LINE_INFO << endl;
 #endif
 
     QString fileName;
@@ -574,33 +568,40 @@ void MainWindow::ShowNetlistFile(const QString &netlist)
 }
 
 
-void MainWindow::PlotNetlistFile()
+void MainWindow::RenderNetlistFile()
 {
 #ifdef TRACE
-    qDebug() << LINE_INFO;
+    qInfo() << LINE_INFO << endl;
 #endif
-    ParseNetlist();
+    SchematicData *data = ParseNetlist();
+    if (data) {
+        m_view->centerOn(CenterX, CenterY);
+        m_scene->RenderSchematicData(data);
+        m_scene->SetMode(SchematicScene::BaseMode);
+        m_scene->update();
+    }
 }
 
 
-void MainWindow::ParseNetlist()
+SchematicData* MainWindow::ParseNetlist()
 {
 #ifdef TRACE
-    qDebug() << LINE_INFO;
+    qInfo() << LINE_INFO << endl;
 #endif
     MyParser parser;
-    m_data = new SchematicData();
-    int error = parser.ParseNetlist(m_curNetlistFile.toStdString(), m_data);
+    SchematicData *data = new SchematicData();
+    int error = parser.ParseNetlist(m_curNetlistFile.toStdString(), data);
     if (error) {
-        delete m_data;
-        m_data = nullptr;
+        delete data;
         ShowCriticalMsg(tr("Parse Netlist failed."));
+        return nullptr;
     }
 
 #ifdef DEBUG
-    m_data->PrintNodeAndDevice();
+    // data->PrintNodeAndDevice();
 #endif
 
+    return data;
 }
 
 

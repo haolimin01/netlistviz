@@ -13,7 +13,19 @@ SchematicData::SchematicData()
 
 SchematicData::~SchematicData()
 {
+    for (int i = 0; i < m_nodeList.size(); ++ i) {
+        delete m_nodeList.at(i);
+    }
 
+    for (int i = 0; i < m_deviceList.size(); ++ i) {
+        delete m_deviceList.at(i);
+    }
+
+    m_nodeList.clear();
+    m_deviceList.clear();
+
+    m_nodeTable.clear();
+    m_deviceTable.clear();
 }
 
 
@@ -80,7 +92,7 @@ void SchematicData::ParseR(QString name, QString posName, QString negName, doubl
 
     SchematicNode *posNode = GetAddNode(posName);
     SchematicNode *negNode = GetAddNode(negName);
-    SchematicDevice *r = new SchematicDevice(SchematicDevice::Vsrc, posNode, negNode);
+    SchematicDevice *r = new SchematicDevice(SchematicDevice::Resistor, posNode, negNode);
     r->SetName(name);
     r->SetValue(value);
 

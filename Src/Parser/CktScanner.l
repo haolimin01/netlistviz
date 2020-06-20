@@ -110,7 +110,7 @@ DOTEND      ^[\.][Ee][Nn][Dd][Ss]?
                 // printf("line number : %d\n", lineno);
                 return token::EOL;
                 }
-{DOTEND}        {printf(".end"); return token::DOTEND;}
+{DOTEND}        {return token::DOTEND;}
 {DELIMITER}     {}
 
 
