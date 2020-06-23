@@ -3,6 +3,7 @@
 #include <QDebug>
 #include "SchematicNode.h"
 #include "SchematicDevice.h"
+#include "SchematicTextItem.h"
 
 
 SchematicData::SchematicData()

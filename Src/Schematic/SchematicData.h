@@ -16,6 +16,7 @@
 
 class SchematicNode;
 class SchematicDevice;
+class SchematicTextItem;
 class SchematicLayout;
 class SchematicScene;
 
@@ -49,6 +50,8 @@ private:
     SchematicNode* GetAddNode(const QString &name);
     bool           IsGnd(const QString &name) const;
 
+    /* Only use in CktParser */
+    /* Do not contain the complete data */
     NodeTable   m_nodeTable;
     DeviceTable m_deviceTable;
 

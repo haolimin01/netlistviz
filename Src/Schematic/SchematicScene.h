@@ -34,6 +34,7 @@ public:
     };
 
     explicit SchematicScene(QMenu *itemMenu, QObject *parent = nullptr);
+    ~SchematicScene();
 
     void SetTextColor(const QColor &color);
     void SetNodeColor(const QColor &color);
@@ -41,6 +42,10 @@ public:
     void SetDeviceType(SchematicDevice::DeviceType type);
 
     void RenderSchematicData(SchematicData *data);
+
+    /* Add and Remove Item */
+    // void AddItem(QGraphicsItem *);
+    // void RemoveItem(QGraphicsItem *);
 
 public slots:
     void SetMode(Mode mode);
@@ -57,7 +62,12 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
 
+    void InsertSchematicDevice(SchematicDevice::DeviceType, SchematicNode *, SchematicNode *);
+    void InsertSchematicNode(const QPointF &);
+    void InsertSchematicTextItem(const QPointF &);
+
 private:
+    void InitVariables();
     bool IsItemChange(int type) const;
 
     QMenu             *m_itemMenu;
@@ -75,7 +85,6 @@ private:
     QColor             m_textColor;
     QColor             m_nodeColor;
 
-    SchematicData     *m_data;
     SchematicLayout   *m_schLayout;
 };
 

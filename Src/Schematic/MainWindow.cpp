@@ -70,8 +70,10 @@ void MainWindow::ButtonGroupClicked(int id)
 {
     const QList<QAbstractButton *> buttons = m_buttonGroup->buttons();
     for (QAbstractButton *button : buttons) {
-        if (m_buttonGroup->button(id) != button)
+        if (m_buttonGroup->button(id) != button) {
             button->setChecked(false);
+            qInfo() << button << " set false" << endl;
+        }
     }
 
     /* InsertNodeButton clicked */
@@ -358,9 +360,17 @@ void MainWindow::CreateActions()
     m_aboutAction->setShortcut(tr("F1"));
     connect(m_aboutAction, &QAction::triggered, this, &MainWindow::About);
 
-    m_openNetlistAction = new QAction(QIcon(":/images/opennetlist.png"), tr("N&etlist"), this);
-    m_openNetlistAction->setShortcut(tr("Ctrl+N"));
+    m_openNetlistAction = new QAction(QIcon(":/images/opennetlist.png"), tr("Open N&etlist"), this);
+    m_openNetlistAction->setShortcut(QKeySequence::Open);
     connect(m_openNetlistAction, &QAction::triggered, this, &MainWindow::OpenNetlist);
+
+    m_saveSchematicFileAction = new QAction(QIcon(":/images/save_schematic.png"), tr("S&ave Schematic"), this);
+    m_saveSchematicFileAction->setShortcut(QKeySequence::Save);
+    connect(m_saveSchematicFileAction, &QAction::triggered, this, &MainWindow::SaveSchematicFile);
+
+    m_saveAsSchematicFileAction = new QAction(QIcon(":/images/saveas_schematic.png"), tr("SaveA&s Schematic"), this);
+    connect(m_saveAsSchematicFileAction, &QAction::triggered, this, &MainWindow::SaveAsSchematicFile);
+
 }
 
 
@@ -368,6 +378,9 @@ void MainWindow::CreateMenus()
 {
     m_fileMenu = menuBar()->addMenu(tr("&File"));
     m_fileMenu->addAction(m_openNetlistAction);
+    m_fileMenu->addAction(m_saveSchematicFileAction);
+    m_fileMenu->addAction(m_saveAsSchematicFileAction);
+    m_fileMenu->addSeparator();
     m_fileMenu->addAction(m_exitAction);
 
     m_itemMenu = menuBar()->addMenu(tr("&Item"));
@@ -385,6 +398,8 @@ void MainWindow::CreateToolbars()
 {
     m_fileToolbar = addToolBar(tr("File"));
     m_fileToolbar->addAction(m_openNetlistAction);
+    m_fileToolbar->addAction(m_saveSchematicFileAction);
+    m_fileToolbar->addAction(m_saveAsSchematicFileAction);
 
     m_editToolBar = addToolBar(tr("Edit"));
     m_editToolBar->addAction(m_deleteAction);
@@ -561,6 +576,18 @@ void MainWindow::OpenNetlist()
 }
 
 
+void MainWindow::SaveSchematicFile() const
+{
+
+}
+
+
+void MainWindow::SaveAsSchematicFile() const
+{
+
+}
+
+
 void MainWindow::ShowNetlistFile(const QString &netlist)
 {
     m_netlistDialog->SetNetlistFile(netlist);
@@ -608,4 +635,11 @@ SchematicData* MainWindow::ParseNetlist()
 void MainWindow::ShowCriticalMsg(const QString &msg)
 {
     QMessageBox::critical(this, tr("Critical Message"), msg);
+}
+
+
+void MainWindow::WriteSchematicToFile() const
+{
+    
+
 }

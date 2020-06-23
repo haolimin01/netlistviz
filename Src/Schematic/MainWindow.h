@@ -93,6 +93,11 @@ private slots:
     /* Plot Netlist to SchematicScene */
     void RenderNetlistFile();
 
+    /* Save and SaveAs SchenaticFile */
+    void SaveSchematicFile() const;
+    void SaveAsSchematicFile() const;
+
+
 private:
     /* Initialize variables */
     void InitVariables();
@@ -128,6 +133,11 @@ private:
 
     /* Critical Dialog */
     void ShowCriticalMsg(const QString &msg);
+
+    /* Write Schematic to File */
+    void WriteSchematicToFile() const;
+
+
 
     /* m menas member in class */
 
@@ -178,8 +188,15 @@ private:
 
     QAction *m_openNetlistAction;
 
+    /* Save and SaveAs Schematic File */
+    QAction *m_saveSchematicFileAction;
+    QAction *m_saveAsSchematicFileAction;
+
     QString m_curNetlistPath;
     QString m_curNetlistFile;
+
+    QString m_curSchematicPath;
+    QString m_curSchematicFile;
 
     NetlistDialog *m_netlistDialog;
 
