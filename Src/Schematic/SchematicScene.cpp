@@ -12,6 +12,20 @@ SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
     : QGraphicsScene(parent)
 {
     m_itemMenu = itemMenu;
+
+    InitVariables();
+    m_schLayout = new SchematicLayout;
+}
+
+
+SchematicScene::~SchematicScene()
+{
+}
+
+
+/* Do NOT handle m_data */
+void SchematicScene::InitVariables()
+{
     m_mode = BaseMode;
     m_text = nullptr;
     m_node = nullptr;
@@ -21,9 +35,6 @@ SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
     m_nodeColor = Qt::black;
     m_deviceType = SchematicDevice::Resistor;
     m_nodeColor = SchematicDevice::GetColorFromDeviceType(m_deviceType);
-
-    m_data = nullptr;
-    m_schLayout = new SchematicLayout;
 }
 
 
@@ -42,7 +53,8 @@ void SchematicScene::SetNodeColor(const QColor &color)
     m_nodeColor = color;
     if (IsItemChange(SchematicNode::Type)) {
         SchematicNode *item = qgraphicsitem_cast<SchematicNode *>(selectedItems().first());
-        item->setBrush(m_nodeColor);
+        item->SetNodeColor(m_nodeColor);
+        item->update();
     }
 }
 
@@ -71,27 +83,26 @@ void SchematicScene::RenderSchematicData(SchematicData *data)
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-    if (m_data) {
-        delete m_data;
-        m_data = nullptr;
-    }
+    Q_ASSERT(data);
+    InitVariables();
 
-    m_data = data;
+    /* Remove and Delete all items */
+    clear();
 
-    m_schLayout->GeneratePos(m_data, SchematicLayout::Square);
+    m_schLayout->GeneratePos(data, SchematicLayout::Square);
 
     /* t => temp */
     SchematicNode *tNode = nullptr;
     SchematicDevice *tDev = nullptr;
 
-    for (int i = 0; i < m_data->m_nodeList.size(); ++ i) {
-        tNode = m_data->m_nodeList.at(i);
+    for (int i = 0; i < data->m_nodeList.size(); ++ i) {
+        tNode = data->m_nodeList.at(i);
         tNode->SetContextMenu(m_itemMenu);
         addItem(tNode);
     }
 
-    for (int i = 0; i < m_data->m_deviceList.size(); ++ i) {
-        tDev = m_data->m_deviceList.at(i);
+    for (int i = 0; i < data->m_deviceList.size(); ++ i) {
+        tDev = data->m_deviceList.at(i);
         tDev->SetContextMenu(m_itemMenu);
         tDev->UpdatePosition();
         addItem(tDev);
@@ -125,6 +136,7 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
     switch (m_mode) {
         case InsertDeviceMode:
+            /* Insert temp line */
             m_line = new QGraphicsLineItem(QLineF(mouseEvent->scenePos(),
                                                 mouseEvent->scenePos()));
             m_line->setPen(QPen(SchematicDevice::GetColorFromDeviceType(m_deviceType), 2));
@@ -132,24 +144,11 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
             break;
 
         case InsertTextMode:
-            m_text = new SchematicTextItem();
-            m_text->setFont(m_font);
-            m_text->setTextInteractionFlags(Qt::TextEditorInteraction);
-            m_text->setZValue(1000.0);
-            connect(m_text, &SchematicTextItem::LostFocus,
-                    this, &SchematicScene::EditorLostFocus);
-            addItem(m_text);
-            m_text->setDefaultTextColor(m_textColor);
-            m_text->setPos(mouseEvent->scenePos());
-            emit TextInserted(m_text);
+            InsertSchematicTextItem(mouseEvent->scenePos());
             break;
 
         case InsertNodeMode:
-            m_node = new SchematicNode(m_itemMenu);
-            m_node->setBrush(m_nodeColor);
-            addItem(m_node);
-            m_node->setPos(mouseEvent->scenePos());
-            emit NodeInserted(m_node);
+            InsertSchematicNode(mouseEvent->scenePos());
             break;
 
         default:;
@@ -189,19 +188,52 @@ void SchematicScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
             startItems.first() != endItems.first()) {
                 SchematicNode *startNode = qgraphicsitem_cast<SchematicNode *>(startItems.first());
                 SchematicNode *endNode = qgraphicsitem_cast<SchematicNode *>(endItems.first());
-                SchematicDevice *dev = new SchematicDevice(m_deviceType, startNode, endNode, nullptr);
-                dev->setZValue(-1000.0);
-                addItem(dev);
-                dev->UpdatePosition();
-                dev->GetStartNode()->AddDevice(dev);
-                dev->GetEndNode()->AddDevice(dev);
-                emit DeviceInserted(dev);
+                InsertSchematicDevice(m_deviceType, startNode, endNode);
         }
     }
 
     m_line = nullptr;
     QGraphicsScene::mouseReleaseEvent(mouseEvent);
 }
+
+
+void SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
+        SchematicNode *startNode, SchematicNode *endNode)
+{
+    SchematicDevice *dev = new SchematicDevice(type, startNode, endNode, nullptr);
+    dev->setZValue(-1000.0);
+    addItem(dev);
+    dev->UpdatePosition();
+    startNode->AddDevice(dev);
+    endNode->AddDevice(dev);
+    emit DeviceInserted(dev);
+}
+
+
+void SchematicScene::InsertSchematicNode(const QPointF &pos)
+{
+    m_node = new SchematicNode(m_itemMenu);
+    m_node->setBrush(m_nodeColor);
+    addItem(m_node);
+    m_node->setPos(pos);
+    emit NodeInserted(m_node);
+}
+
+
+void SchematicScene::InsertSchematicTextItem(const QPointF &pos)
+{
+    m_text = new SchematicTextItem();
+    m_text->setFont(m_font);
+    m_text->setTextInteractionFlags(Qt::TextEditorInteraction);
+    m_text->setZValue(1000.0);
+    connect(m_text, &SchematicTextItem::LostFocus,
+            this, &SchematicScene::EditorLostFocus);
+    addItem(m_text);
+    m_text->setDefaultTextColor(m_textColor);
+    m_text->setPos(pos);
+    emit TextInserted(m_text);
+}
+
 
 bool SchematicScene::IsItemChange(int type) const
 {

@@ -16,6 +16,8 @@
     <file>images/isrc.png</file>
     <file>images/vsrc.png</file>
     <file>images/opennetlist.png</file>
+    <file>images/save_schematic.png</file>
+    <file>images/saveas_schematic.png</file>
 </qresource>
 </RCC>
 

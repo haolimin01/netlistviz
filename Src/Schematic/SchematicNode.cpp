@@ -18,7 +18,8 @@ SchematicNode::SchematicNode(QMenu *contextMenu, QTransform itemTransform,
 	setTransform(itemTransform);
 	m_contextMenu = contextMenu;
 
-	DrawNode();
+	// DrawNode();
+	m_color = Qt::black;
 
 	setFlag(QGraphicsItem::ItemIsMovable, true);
 	setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -32,7 +33,7 @@ SchematicNode::SchematicNode()
 	setTransform(QTransform());
 	m_contextMenu = nullptr;
 
-	DrawNode();
+	// DrawNode();
 
 	setFlag(QGraphicsItem::ItemIsMovable, true);
 	setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -58,16 +59,6 @@ void SchematicNode::InitVariables()
 void SchematicNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
 	// empty
-}
-
-
-void SchematicNode::DrawNode()
-{
-	QPainterPath path;
-	qreal startX = - m_nodeSize / 2;
-	qreal startY = - m_nodeSize / 2;
-	path.addEllipse(startX, startY, m_nodeSize, m_nodeSize);
-	setPath(path);
 }
 
 
@@ -110,7 +101,24 @@ void SchematicNode::Print() const
 }
 
 
-void SchematicNode::paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *)
+void SchematicNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-	qInfo() << "Node paint" << endl;
+	QPen tPen = pen();
+	tPen.setColor(m_color);
+	painter->setPen(tPen);
+	painter->setBrush(m_color);
+
+	QPainterPath path;
+	qreal startX = - m_nodeSize / 2;
+	qreal startY = - m_nodeSize / 2;
+	path.addEllipse(startX, startY, m_nodeSize, m_nodeSize);
+	setPath(path);
+	painter->drawPath(path);
+
+	if (isSelected()) {
+		painter->setPen(QPen(Qt::black, 1, Qt::DashLine));
+		painter->setBrush(Qt::NoBrush);
+		painter->drawRect(startX, startY, m_nodeSize, m_nodeSize);
+	}
+
 }
