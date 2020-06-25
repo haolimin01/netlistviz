@@ -30,6 +30,9 @@ public:
 	SchematicNode* GetStartNode() const { return m_startNode; }
 	SchematicNode* GetEndNode()   const { return m_endNode; }
 
+    int GetStartNodeId() const;
+    int GetEndNodeId() const;
+
 	DeviceType GetDeviceType() const { return m_deviceType; }
 
 	int  type() const override { return Type; }
@@ -39,6 +42,8 @@ public:
 
 	void SetName(QString name) { m_name = name; }
 	void SetValue(double value) { m_value = value; }
+    QString GetName() const { return m_name; }
+	double GetValue() const { return m_value; }
 	
 	void SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
 

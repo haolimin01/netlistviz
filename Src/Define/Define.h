@@ -22,6 +22,9 @@
     TypeName(const TypeName &);            \
     TypeName &operator=(const TypeName &)
 
+#ifndef NOT
+#define NOT !
+#endif
 
 /* exit */
 #define EXIT exit(1)

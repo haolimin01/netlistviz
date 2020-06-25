@@ -29,7 +29,7 @@ public:
 
 	/* For QToolButton in MainWindow's ToolBox */
 	QPixmap GetImage() const;
-	void    SetNodeSize(qreal nodeSize) { m_nodeSize = nodeSize; }
+	void    SetSize(qreal nodeSize) { m_nodeSize = nodeSize; }
 
 	int     type() const override { return Type; }
 
@@ -38,12 +38,18 @@ public:
 	void    RemoveDevices();
 
     void    SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
-	void    SetNodeColor(const QColor &color)  { m_color = color; }
+	void    SetColor(const QColor &color)  { m_color = color; }
 
+    /* For Parse Netlist, Read and Write SchematicFile */
 	void    SetId(int id)          { m_id = id; }
 	void    SetName(QString name)  { m_name = name; }
 	void    SetGnd(bool isGnd)     { m_isGnd = isGnd; }
 	QString GetName() const        { return m_name; }
+    int     GetId() const          { return m_id; }
+    bool    IsGnd() const          { return m_isGnd; }
+	QString GetColorName() const   { return m_color.name(); }
+	qreal   GetSize() const        { return m_nodeSize; }
+	QPointF GetPos() const         { return pos(); }
 
 	void    Print() const;
 

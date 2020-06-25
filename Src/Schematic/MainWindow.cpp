@@ -4,6 +4,8 @@
 #include <QString>
 #include <QMessageBox>
 #include <QDebug>
+#include <QRectF>
+#include <QList>
 #include "SchematicScene.h"
 #include "SchematicTextItem.h"
 #include "SchematicNode.h"
@@ -33,6 +35,9 @@ MainWindow::MainWindow()
         
     connect(m_scene, &SchematicScene::DeviceInserted,
             this, &MainWindow::DeviceInserted);
+    
+    connect(m_scene, &SchematicScene::changed,
+            this, &MainWindow::UpdateWindowTitle);
 
     CreateToolbars();
 
@@ -60,6 +65,8 @@ void MainWindow::InitVariables()
 {
     m_curNetlistPath = ".";
     m_curNetlistFile = "";
+    m_curSchematicPath = ".";
+    m_curSchematicFile = "";
 
     m_netlistDialog = new NetlistDialog(this);
     connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::RenderNetlistFile);
@@ -72,7 +79,7 @@ void MainWindow::ButtonGroupClicked(int id)
     for (QAbstractButton *button : buttons) {
         if (m_buttonGroup->button(id) != button) {
             button->setChecked(false);
-            qInfo() << button << " set false" << endl;
+            // qInfo() << button << " set false" << endl;
         }
     }
 
@@ -576,15 +583,80 @@ void MainWindow::OpenNetlist()
 }
 
 
-void MainWindow::SaveSchematicFile() const
+void MainWindow::UpdateWindowTitle(const QList<QRectF> &)
 {
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+    if (m_curSchematicFile.isEmpty()) {
+        setWindowTitle(tr("netlistviz"));
+        return;
+    }
 
+    QString dispName = "*";
+    dispName += QFileInfo(m_curSchematicFile).fileName();
+    setWindowTitle(dispName);
 }
 
 
-void MainWindow::SaveAsSchematicFile() const
+void MainWindow::SaveSchematicFile() 
 {
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+    if (m_curSchematicFile.isEmpty())
+        return SaveAsSchematicFile();
 
+    QFile file(m_curSchematicFile);
+    bool ok = file.open(QIODevice::WriteOnly);
+    if (NOT ok) {
+        QString errMsg = "Open " + m_curSchematicFile + " failed.";
+        ShowCriticalMsg(errMsg);
+        return;
+    }
+    QTextStream stream(&file);
+    m_scene->WriteSchematicToStream(stream);
+    file.close();
+
+    QString dispName = QFileInfo(m_curSchematicFile).fileName();
+    setWindowTitle(dispName);
+
+#ifdef DEBUG
+    qInfo() << "Save to " << m_curSchematicFile << endl;
+#endif
+}
+
+
+void MainWindow::SaveAsSchematicFile()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Schematic As"),
+                                    m_curSchematicPath, tr("Schematic files (*.sch)"));
+    
+    /* Cancel clicked */
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    m_curSchematicPath = QFileInfo(fileName).path();
+    m_curSchematicFile = fileName;
+
+    QFile file(fileName);
+    bool ok = file.open(QIODevice::WriteOnly);
+    if (NOT ok) {
+        QString errMsg = "Open " + m_curSchematicFile + " failed.";
+        ShowCriticalMsg(errMsg);
+        return;
+    }
+
+    QTextStream stream(&file);
+    m_scene->WriteSchematicToStream(stream);
+    file.close();
+
+    QString dispName = QFileInfo(m_curSchematicFile).fileName();
+    setWindowTitle(dispName);
 }
 
 
