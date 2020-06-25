@@ -15,7 +15,6 @@ CONFIG += debug
 
 macx {
     CONFIG -= app_bundle
-    CONFIG += console
 }
 
 CONFIG(debug, debug|release) {

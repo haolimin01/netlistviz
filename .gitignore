@@ -54,6 +54,9 @@ compile_commands.json
 # macOS
 *DS_Store
 
+# OBJ
+build
+
 # netlistviz
 netlistviz
 netlistviz.app
@@ -69,3 +72,9 @@ Src/Parser/CktParser.output
 Src/parser/location.hh
 Src/Parser/position.hh
 Src/Parser/stack.hh
+
+# Xcode
+netlistviz.xcodeproj
+
+# Test files
+SchematicFile

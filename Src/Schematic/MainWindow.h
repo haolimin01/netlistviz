@@ -25,6 +25,7 @@ class QFont;
 class QToolButton;
 class QAbstractButton;
 class QGraphicsView;
+class QRectF;
 QT_END_NAMESPACE
 
 
@@ -94,8 +95,11 @@ private slots:
     void RenderNetlistFile();
 
     /* Save and SaveAs SchenaticFile */
-    void SaveSchematicFile() const;
-    void SaveAsSchematicFile() const;
+    void SaveSchematicFile();
+    void SaveAsSchematicFile();
+
+    /* Update Window Title when scene changed */
+    void UpdateWindowTitle(const QList<QRectF> &);
 
 
 private:

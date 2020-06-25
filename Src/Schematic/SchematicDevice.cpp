@@ -37,6 +37,20 @@ QPixmap SchematicDevice::GetImage() const
 }
 
 
+int SchematicDevice::GetStartNodeId() const
+{
+    assert(m_startNode);
+    return m_startNode->GetId();
+}
+
+
+int SchematicDevice::GetEndNodeId() const
+{
+    assert(m_endNode);
+    return m_endNode->GetId();
+}
+
+
 void SchematicDevice::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     // do nothing now.

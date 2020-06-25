@@ -15,6 +15,7 @@ class QGraphicsLineItem;
 class QFont;
 class QGraphicsTextItem;
 class QColor;
+class QTextStream;
 QT_END_NAMESPACE
 class SchematicData;
 class SchematicLayout;
@@ -43,9 +44,8 @@ public:
 
     void RenderSchematicData(SchematicData *data);
 
-    /* Add and Remove Item */
-    // void AddItem(QGraphicsItem *);
-    // void RemoveItem(QGraphicsItem *);
+    /* Write Schematic items to stream */
+    void WriteSchematicToStream(QTextStream &stream) const;
 
 public slots:
     void SetMode(Mode mode);
@@ -86,6 +86,14 @@ private:
     QColor             m_nodeColor;
 
     SchematicLayout   *m_schLayout;
+
+    /* Node number, assign to added node */
+    /* Start from 0 */
+    int                m_nodeNumber;
+
+    /* Device number, assign to added device */
+    /* Start fron 0 */
+    int                m_deviceNumber;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H

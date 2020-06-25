@@ -2,6 +2,7 @@
 #define NETLISTVIZ_SCHEMATIC_SCHEMATICTEXTITEM_H
 
 #include <QGraphicsTextItem>
+#include <QFont>
 
 QT_BEGIN_NAMESPACE
 class QGraphicsSceneMouseEvent;
@@ -18,6 +19,14 @@ public:
     explicit SchematicTextItem(QGraphicsItem *parent = nullptr);
 
     int type() const override { return Type; }
+
+    QString GetText() const { return toPlainText();}
+    QString GetColorName() const { return defaultTextColor().name(); }
+    QString GetFontFamily() const { return font().family(); }
+    int     GetSize() const { return font().pointSize(); }
+    bool    IsBold() const { return font().bold(); }
+    bool    IsItalic() const { return font().italic(); }
+    bool    IsUnderline() const { return font().underline(); }
 
 signals:
     void LostFocus(SchematicTextItem *item);
