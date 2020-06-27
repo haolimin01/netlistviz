@@ -8,7 +8,7 @@ PARSER_PATH=${PROJECT_PATH}/Src/Parser
 function compile()
 {
     cd ${PARSER_PATH} && make
-    cd ${PROJECT_PATH} && qmake . && make
+    cd ${PROJECT_PATH} && qmake . && make -j4
 }
 
 

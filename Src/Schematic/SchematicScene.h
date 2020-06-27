@@ -47,8 +47,11 @@ public:
     /* Write Schematic items to stream */
     void WriteSchematicToStream(QTextStream &stream) const;
 
+    /* Load Schematic from stream to scene */
+    void LoadSchematicFromStream(QTextStream &stream);
+
 public slots:
-    void SetMode(Mode mode);
+    void SetMode(Mode mode)  { m_mode = mode; }
     void EditorLostFocus(SchematicTextItem *item);
 
 signals:

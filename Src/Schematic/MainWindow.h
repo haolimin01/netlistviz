@@ -91,6 +91,9 @@ private slots:
     /* Open netlist */
     void OpenNetlist();
 
+    /* Open Schematic */
+    void OpenSchematic();
+
     /* Plot Netlist to SchematicScene */
     void RenderNetlistFile();
 
@@ -195,6 +198,9 @@ private:
     /* Save and SaveAs Schematic File */
     QAction *m_saveSchematicFileAction;
     QAction *m_saveAsSchematicFileAction;
+
+    /* Open Schematic File */
+    QAction *m_openSchematicFileAction;
 
     QString m_curNetlistPath;
     QString m_curNetlistFile;

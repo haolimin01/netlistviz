@@ -3,6 +3,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QTextCursor>
 #include <QApplication>
+#include <QMap>
 #include <QDebug>
 
 #include "SchematicData.h"
@@ -121,13 +122,20 @@ void SchematicScene::WriteSchematicToStream(QTextStream &stream) const
 {
     /* Node   : type name id isGnd color size pos*/
     /* Device : type device_type name start_node_id end_node_id value */
-    /* Text   : type text color family bold italic underline size pos */
+    /* Text   : type text color (family x) bold italic underline size pos */
+
+    /* Device must handle lastly for loading */
+
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
     SchematicNode *tNode = nullptr;
     SchematicDevice *tDev = nullptr;
     SchematicTextItem *tText = nullptr;
 
+    /* Node and TextItem */
     foreach (QGraphicsItem *item, items()) {
         if (item->type() == SchematicNode::Type) {
             stream << item->type() << ' ';
@@ -138,21 +146,12 @@ void SchematicScene::WriteSchematicToStream(QTextStream &stream) const
             stream << tNode->GetColorName() << ' ';
             stream << tNode->GetSize() << ' ';
             stream << tNode->x() << ' ' << tNode->y() << '\n';
-        }
-        else if (item->type() == SchematicDevice::Type) {
-            stream << item->type() << ' ';
-            tDev = qgraphicsitem_cast<SchematicDevice *>(item);
-            stream << tDev->GetDeviceType() << ' ';
-            stream << tDev->GetName() << ' ';
-            stream << tDev->GetStartNodeId() << ' ';
-            stream << tDev->GetEndNodeId() << ' ';
-            stream << tDev->GetValue() << ' ' << '\n';
         } else if (item->type() == SchematicTextItem::Type) {
             stream << item->type() << ' ';
             tText = qgraphicsitem_cast<SchematicTextItem *>(item);
             stream << tText->GetText() << ' ';
             stream << tText->GetColorName() << ' '; 
-            stream << tText->GetFontFamily() << ' ';
+            // stream << tText->GetFontFamily() << ' ';
             stream << tText->IsBold() << ' ';
             stream << tText->IsItalic() << ' ';
             stream << tText->IsUnderline() << ' ';
@@ -160,15 +159,129 @@ void SchematicScene::WriteSchematicToStream(QTextStream &stream) const
             stream << tText->x() << ' ' << tText->y() << '\n';
         }
     }
+
+    /* Device */
+    foreach (QGraphicsItem *item, items()) {
+        if (item->type() == SchematicDevice::Type) {
+            stream << item->type() << ' ';
+            tDev = qgraphicsitem_cast<SchematicDevice *>(item);
+            stream << tDev->GetDeviceType() << ' ';
+            stream << tDev->GetName() << ' ';
+            stream << tDev->GetStartNodeId() << ' ';
+            stream << tDev->GetEndNodeId() << ' ';
+            stream << tDev->GetValue() << ' ' << '\n';
+        }
+    }
+
     QApplication::setOverrideCursor(Qt::ArrowCursor);
 }
 
 
-void SchematicScene::SetMode(Mode mode)
+void SchematicScene::LoadSchematicFromStream(QTextStream &stream)
 {
-    m_mode = mode;
-}
+    /* Node   : type name id isGnd color size pos*/
+    /* Device : type device_type name start_node_id end_node_id value */
+    /* Text   : type text color (family x) bold italic underline size pos */
 
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    InitVariables();
+
+    /* Remove and Delete all items */
+    clear();
+
+    QString name, text, fontFamily, colorName;
+    qreal x = 0, y = 0, size = 0, value = 0;
+    int itemType = 0, deviceType = 0, id = 0;
+    int startNodeId = 0, endNodeId = 0;
+    int bold, italic, underline, isGnd;
+
+    SchematicNode *tNode = nullptr;
+    SchematicDevice *tDev = nullptr;
+    SchematicTextItem *tText = nullptr;
+
+    SchematicNode *tStartNode = nullptr, *tEndNode = nullptr;
+
+    /* Used to store node id and node ptr temporarily */
+    QMap<int, SchematicNode*> tNodeMap;
+
+    while (NOT stream.atEnd()) {
+        stream >> itemType;
+        if (itemType == SchematicNode::Type) {
+#ifdef DEBUG
+            qDebug() << "Read SchematicNode";
+#endif
+            stream >> name >> id >> isGnd >> colorName >> size >> x >> y;
+
+            tNode = new SchematicNode(m_itemMenu);
+            tNode->SetName(name);
+            tNode->SetId(id);
+            tNode->SetId(isGnd);
+            tNode->SetColor(QColor(colorName));
+            tNode->SetSize(size);
+            tNode->setPos(x, y);
+            addItem(tNode);
+            m_nodeNumber++;
+
+            tNodeMap.insert(id, tNode);
+
+        } else if (itemType == SchematicDevice::Type) {
+#ifdef DEBUG
+            qDebug() << "Read SchematicDevice";
+#endif
+            stream >> deviceType >> name >> startNodeId >> endNodeId >> value;
+
+            tStartNode = tNodeMap.value(startNodeId, /* default */nullptr);
+            tEndNode = tNodeMap.value(endNodeId, /* default */nullptr);
+            Q_ASSERT(tStartNode AND tEndNode);
+
+            tDev = new SchematicDevice((SchematicDevice::DeviceType)deviceType, tStartNode, tEndNode);
+            tDev->SetName(name);
+            tDev->SetValue(value);
+
+            addItem(tDev);
+            tDev->UpdatePosition();
+
+            tStartNode->AddDevice(tDev);
+            tEndNode->AddDevice(tDev);
+
+            m_deviceNumber++;
+
+        } else if (itemType == SchematicTextItem::Type) {
+#ifdef DEBUG
+            qDebug() << "Read SchematicTextItem";
+#endif
+            // stream >> text >> colorName >> fontFamily
+            //        >> bold >> italic >> underline >> size >> x >> y;
+            stream >> text >> colorName
+                   >> bold >> italic >> underline >> size >> x >> y;
+            
+            tText = new SchematicTextItem();
+            tText->setPlainText(text);
+            tText->setDefaultTextColor(QColor(colorName));
+
+            /* TextItem font */
+            QFont font;
+            font.setFamily(fontFamily);
+            font.setBold(bold);
+            font.setItalic(italic);
+            font.setUnderline(underline);
+            font.setPointSize(size);
+
+            tText->setFont(font);
+            tText->setPos(x, y);
+            
+            addItem(tText);
+
+        }
+        // else {
+        //     qCritical() << "[ERROR] Unknown item type: " << itemType << endl;
+        //     EXIT;
+        // }
+    }
+}
 
 void SchematicScene::EditorLostFocus(SchematicTextItem *item)
 {

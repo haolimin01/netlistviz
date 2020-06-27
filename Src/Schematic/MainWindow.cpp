@@ -367,8 +367,8 @@ void MainWindow::CreateActions()
     m_aboutAction->setShortcut(tr("F1"));
     connect(m_aboutAction, &QAction::triggered, this, &MainWindow::About);
 
-    m_openNetlistAction = new QAction(QIcon(":/images/opennetlist.png"), tr("Open N&etlist"), this);
-    m_openNetlistAction->setShortcut(QKeySequence::Open);
+    m_openNetlistAction = new QAction(QIcon(":/images/open_netlist.png"), tr("Open N&etlist"), this);
+    m_openNetlistAction->setShortcut(tr("Ctrl+N"));
     connect(m_openNetlistAction, &QAction::triggered, this, &MainWindow::OpenNetlist);
 
     m_saveSchematicFileAction = new QAction(QIcon(":/images/save_schematic.png"), tr("S&ave Schematic"), this);
@@ -378,6 +378,9 @@ void MainWindow::CreateActions()
     m_saveAsSchematicFileAction = new QAction(QIcon(":/images/saveas_schematic.png"), tr("SaveA&s Schematic"), this);
     connect(m_saveAsSchematicFileAction, &QAction::triggered, this, &MainWindow::SaveAsSchematicFile);
 
+    m_openSchematicFileAction = new QAction(QIcon(":/images/open_schematic.png"), tr("Open S&chematic"), this);
+    m_openSchematicFileAction->setShortcut(QKeySequence::Open);
+    connect(m_openSchematicFileAction, &QAction::triggered, this, &MainWindow::OpenSchematic);
 }
 
 
@@ -385,6 +388,7 @@ void MainWindow::CreateMenus()
 {
     m_fileMenu = menuBar()->addMenu(tr("&File"));
     m_fileMenu->addAction(m_openNetlistAction);
+    m_fileMenu->addAction(m_openSchematicFileAction);
     m_fileMenu->addAction(m_saveSchematicFileAction);
     m_fileMenu->addAction(m_saveAsSchematicFileAction);
     m_fileMenu->addSeparator();
@@ -405,6 +409,7 @@ void MainWindow::CreateToolbars()
 {
     m_fileToolbar = addToolBar(tr("File"));
     m_fileToolbar->addAction(m_openNetlistAction);
+    m_fileToolbar->addAction(m_openSchematicFileAction);
     m_fileToolbar->addAction(m_saveSchematicFileAction);
     m_fileToolbar->addAction(m_saveAsSchematicFileAction);
 
@@ -580,6 +585,41 @@ void MainWindow::OpenNetlist()
     m_curNetlistFile = fileName;
 
     ShowNetlistFile(m_curNetlistFile);
+}
+
+
+void MainWindow::OpenSchematic()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif 
+
+    QString fileName;
+    QString fileFilters;
+    fileFilters = tr("Schematic files (*.sch)\n" "All files(*)");
+
+    fileName = QFileDialog::getOpenFileName(this, tr("OPen Schematic..."),
+                            m_curSchematicPath, fileFilters);
+    
+    if (fileName.isEmpty())
+        return;
+
+    m_curSchematicPath = QFileInfo(fileName).path();
+    m_curSchematicFile = fileName;
+
+    QFile file(m_curSchematicFile);
+    bool ok = file.open(QIODevice::ReadOnly);
+    if (NOT ok) {
+        QString errMsg = "Open " + m_curSchematicFile + " failed.";
+        ShowCriticalMsg(errMsg);
+        return;
+    }
+    QTextStream stream(&file);
+    m_scene->LoadSchematicFromStream(stream);
+    file.close();
+
+    QString dispName = QFileInfo(m_curSchematicFile).fileName();
+    setWindowTitle(dispName);
 }
 
 

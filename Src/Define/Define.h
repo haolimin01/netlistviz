@@ -10,7 +10,7 @@
 
 
 /* For trace and debug */
-#define LINE_INFO "\n[" << __FILE__ << " : line " << __LINE__ << " : " << __FUNCTION__ << "()]"
+#define LINE_INFO "\n[" << __FILE__ << " : line " << __LINE__ << " : " << __FUNCTION__ << "() ]"
 
 
 /* unused param */
@@ -24,6 +24,10 @@
 
 #ifndef NOT
 #define NOT !
+#endif
+
+#ifndef AND
+#define AND &&
 #endif
 
 /* exit */
