@@ -104,6 +104,9 @@ private slots:
     /* Update Window Title when scene changed */
     void UpdateWindowTitle(const QList<QRectF> &);
 
+    /* Scroll action toggled */
+    void ScrollActionToggled(bool checked);
+
 
 private:
     /* Initialize variables */
@@ -140,9 +143,6 @@ private:
 
     /* Critical Dialog */
     void ShowCriticalMsg(const QString &msg);
-
-    /* Write Schematic to File */
-    void WriteSchematicToFile() const;
 
 
 
@@ -192,6 +192,8 @@ private:
     QAction *m_italicAction;
     QAction *m_textAction;
     QAction *m_nodeAction;
+
+    QAction *m_scrollPointerAction;
 
     QAction *m_openNetlistAction;
 

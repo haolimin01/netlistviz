@@ -44,6 +44,7 @@ MainWindow::MainWindow()
     QHBoxLayout *layout = new QHBoxLayout;
     layout->addWidget(m_toolBox);
     m_view = new QGraphicsView(m_scene);
+    m_view->setDragMode(QGraphicsView::RubberBandDrag);
     layout->addWidget(m_view);
 
     QWidget *widget = new QWidget;
@@ -338,12 +339,12 @@ void MainWindow::CreateActions()
 
     m_deleteAction = new QAction(QIcon(":/images/delete.png"), tr("&Delete"), this);
     m_deleteAction->setShortcut(tr("Delete"));
-    m_deleteAction->setStatusTip(tr("Delete item from diagram"));
+    m_deleteAction->setStatusTip(tr("Delete item from Scene"));
     connect(m_deleteAction, &QAction::triggered, this, &MainWindow::DeleteItem);
 
     m_exitAction = new QAction(tr("E&xit"), this);
     m_exitAction->setShortcuts(QKeySequence::Quit);
-    m_exitAction->setStatusTip(tr("Quit Scenediagram example"));
+    m_exitAction->setStatusTip(tr("Quit netlisviz"));
     connect(m_exitAction, &QAction::triggered, this, &QWidget::close);
 
     m_boldAction = new QAction(tr("Bold"), this);
@@ -381,6 +382,11 @@ void MainWindow::CreateActions()
     m_openSchematicFileAction = new QAction(QIcon(":/images/open_schematic.png"), tr("Open S&chematic"), this);
     m_openSchematicFileAction->setShortcut(QKeySequence::Open);
     connect(m_openSchematicFileAction, &QAction::triggered, this, &MainWindow::OpenSchematic);
+
+    m_scrollPointerAction = new QAction(QIcon(":/images/scroll.png"), tr("Scroll Pointer"), this);
+    m_scrollPointerAction->setCheckable(true);
+    m_scrollPointerAction->setChecked(false);
+    connect(m_scrollPointerAction, &QAction::toggled, this, &MainWindow::ScrollActionToggled);
 }
 
 
@@ -486,6 +492,7 @@ void MainWindow::CreateToolbars()
 
     m_pointerToolbar = addToolBar(tr("Pointer type"));
     m_pointerToolbar->addWidget(baseModePointerButton);
+    m_pointerToolbar->addAction(m_scrollPointerAction);
     m_pointerToolbar->addWidget(insertTextPointerButton);
     m_pointerToolbar->addWidget(m_sceneScaleCombo);
 }
@@ -750,8 +757,15 @@ void MainWindow::ShowCriticalMsg(const QString &msg)
 }
 
 
-void MainWindow::WriteSchematicToFile() const
+void MainWindow::ScrollActionToggled(bool checked)
 {
-    
+    if (checked) {
+        m_view->setDragMode(QGraphicsView::ScrollHandDrag);
+        m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(false);
+    } else {
+        m_view->setDragMode(QGraphicsView::RubberBandDrag);
+        m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
+    }
 
+    m_pointerGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
 }
