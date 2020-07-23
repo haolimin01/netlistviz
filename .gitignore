@@ -72,6 +72,7 @@ Src/Parser/CktParser.output
 Src/parser/location.hh
 Src/Parser/position.hh
 Src/Parser/stack.hh
+!Src/Parser/Makefile
 
 # Xcode
 netlistviz.xcodeproj
