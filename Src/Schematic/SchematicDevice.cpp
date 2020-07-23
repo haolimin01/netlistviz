@@ -46,6 +46,7 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     }
 
     m_imag = nullptr;
+    m_showNodeFlag = false;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -123,6 +124,12 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     painter->setRenderHint(QPainter::Antialiasing);
 
     painter->drawPath(path());
+
+    if (m_showNodeFlag) {
+        painter->setBrush(QBrush(m_color));
+        painter->setPen(Qt::NoPen);
+        painter->drawRects(m_terRects);
+    }
 
     if (isSelected()) {
 

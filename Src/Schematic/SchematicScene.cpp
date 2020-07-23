@@ -18,6 +18,7 @@ SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
 
     InitVariables();
     m_schLayout = new SchematicLayout;
+    m_showNodeFlag = false;
 }
 
 
@@ -312,7 +313,7 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
 void SchematicScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
 
@@ -336,11 +337,27 @@ void SchematicScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 }
 
 
+void SchematicScene::SetShowNodeFlag(bool show)
+{
+    m_showNodeFlag = show;
+
+    SchematicDevice *device = nullptr;
+    foreach (QGraphicsItem *item, items()) {
+        if (item->type() == SchematicDevice::Type) {
+            device = qgraphicsitem_cast<SchematicDevice*> (item);
+            device->SetShowNodeFlag(show);
+            device->update(); 
+        }
+    }
+}
+
+
 void SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
                                            const QPointF &pos)
 {
     SchematicDevice *dev = new SchematicDevice(type, m_itemMenu);
     dev->setPos(pos);
+    dev->SetShowNodeFlag(m_showNodeFlag);
     addItem(dev);
 
     QString name;
@@ -405,7 +422,7 @@ bool SchematicScene::IsItemChange(int type) const
    Called by mouseMoveEvent() to detect a device port */
 void SchematicScene::SenseDeviceTerminal(const QPointF &scenePos) const
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
     QGraphicsItem *item;

@@ -50,6 +50,8 @@ public:
     /* Load Schematic from stream to scene */
     void LoadSchematicFromStream(QTextStream &stream);
 
+    void SetShowNodeFlag(bool show);
+
 public slots:
     void SetMode(Mode mode)  { m_mode = mode; }
     void EditorLostFocus(SchematicTextItem *item);
@@ -89,6 +91,8 @@ private:
     /* Device number, assign to added device */
     /* Start from 0 */
     int                m_deviceNumber;
+
+    bool               m_showNodeFlag;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H

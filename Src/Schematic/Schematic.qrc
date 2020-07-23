@@ -15,6 +15,7 @@
     <file>images/save_schematic.png</file>
     <file>images/saveas_schematic.png</file>
     <file>images/scroll.png</file>
+    <file>images/show_node.png</file>
 </qresource>
 </RCC>
 

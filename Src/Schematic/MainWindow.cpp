@@ -406,6 +406,11 @@ void MainWindow::CreateActions()
     m_scrollPointerAction->setCheckable(true);
     m_scrollPointerAction->setChecked(false);
     connect(m_scrollPointerAction, &QAction::toggled, this, &MainWindow::ScrollActionToggled);
+
+    m_showNodeAction = new QAction(QIcon(":/images/show_node.png"), tr("Show Node"), this);
+    m_showNodeAction->setCheckable(true);
+    m_showNodeAction->setChecked(false);
+    connect(m_showNodeAction, &QAction::toggled, this, &MainWindow::ShowItemNodeToggled);
 }
 
 
@@ -427,6 +432,7 @@ void MainWindow::CreateMenus()
 
     m_viewMenu = menuBar()->addMenu(tr("&View"));
     m_viewMenu->addAction(m_devicePanelDockWidget->toggleViewAction());
+    m_viewMenu->addAction(m_showNodeAction);
 
     m_aboutMenu = menuBar()->addMenu(tr("&Help"));
     m_aboutMenu->addAction(m_aboutAction);
@@ -445,6 +451,7 @@ void MainWindow::CreateToolbars()
     m_editToolBar->addAction(m_deleteAction);
     m_editToolBar->addAction(m_toFrontAction);
     m_editToolBar->addAction(m_sendBackAction);
+    m_editToolBar->addAction(m_showNodeAction);
 
     m_fontCombo = new QFontComboBox();
     connect(m_fontCombo, &QFontComboBox::currentFontChanged,
@@ -591,6 +598,12 @@ QIcon MainWindow::CreateColorIcon(QColor color)
     painter.fillRect(QRect(0, 0, 20, 20), color);
 
     return QIcon(pixmap);
+}
+
+
+void MainWindow::ShowItemNodeToggled(bool show)
+{
+    m_scene->SetShowNodeFlag(show);
 }
 
 

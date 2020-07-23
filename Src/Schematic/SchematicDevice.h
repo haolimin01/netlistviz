@@ -52,6 +52,8 @@ public:
 
 	QVector<QRectF>  GetTerminalRects() const;
 
+	void SetShowNodeFlag(bool show = true)  { m_showNodeFlag = show; }
+
 	void Print() const;
 
 protected:
@@ -79,6 +81,7 @@ private:
 	Orientation     m_devOrien;   // device orientation
 	int             m_terNumber;  // terminal number
 	QPixmap        *m_imag;       // device image
+	bool            m_showNodeFlag;
 
 	QVector<QRectF> m_terRects;
 
