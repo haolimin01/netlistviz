@@ -29,7 +29,7 @@ public:
     enum Mode
     {
         BaseMode,
-        InsertNodeMode,
+        InsertWireMode,
         InsertDeviceMode, // line
         InsertTextMode
     };
@@ -38,7 +38,7 @@ public:
     ~SchematicScene();
 
     void SetTextColor(const QColor &color);
-    void SetNodeColor(const QColor &color);
+    // void SetNodeColor(const QColor &color);
     void SetFont(const QFont &font);
     void SetDeviceType(SchematicDevice::DeviceType type);
 
@@ -55,7 +55,6 @@ public slots:
     void EditorLostFocus(SchematicTextItem *item);
 
 signals:
-    void NodeInserted(SchematicNode *item);
     void DeviceInserted(SchematicDevice *item);
     void TextInserted(QGraphicsTextItem *item);
 
@@ -65,8 +64,7 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
 
-    void InsertSchematicDevice(SchematicDevice::DeviceType, SchematicNode *, SchematicNode *);
-    void InsertSchematicNode(const QPointF &);
+    void InsertSchematicDevice(SchematicDevice::DeviceType, const QPointF &);
     void InsertSchematicTextItem(const QPointF &);
 
 private:
@@ -75,27 +73,20 @@ private:
 
     QMenu             *m_itemMenu;
     Mode               m_mode;
-    QPointF            m_startPoint;
     QFont              m_font;
 
     SchematicTextItem *m_text;
-    SchematicNode     *m_node;
     SchematicDevice   *m_device;
-    QGraphicsLineItem *m_line;
 
     SchematicDevice::DeviceType m_deviceType;
 
     QColor             m_textColor;
-    QColor             m_nodeColor;
+    QColor             m_deviceColor;
 
     SchematicLayout   *m_schLayout;
 
-    /* Node number, assign to added node */
-    /* Start from 0 */
-    int                m_nodeNumber;
-
     /* Device number, assign to added device */
-    /* Start fron 0 */
+    /* Start from 0 */
     int                m_deviceNumber;
 };
 
