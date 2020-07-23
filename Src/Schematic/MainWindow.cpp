@@ -62,6 +62,7 @@ void MainWindow::CreateSchematicScene()
 {
     m_scene = new SchematicScene(m_editMenu, this);
     m_scene->setSceneRect(QRectF(0, 0, 5000, 5000));
+    m_scene->setFocus(Qt::MouseFocusReason);
 
     connect(m_scene, &SchematicScene::TextInserted,
             this, &MainWindow::TextInserted);
@@ -76,7 +77,11 @@ void MainWindow::CreateCenterWidget()
 {
     QHBoxLayout *layout = new QHBoxLayout;
     m_view = new QGraphicsView(m_scene);
+    m_view->setRenderHints(QPainter::Antialiasing
+                        | QPainter::NonCosmeticDefaultPen
+                        | QPainter::TextAntialiasing);
     m_view->setDragMode(QGraphicsView::RubberBandDrag);
+    m_view->setMouseTracking(true);
     layout->addWidget(m_view);
 
     QWidget *widget = new QWidget;

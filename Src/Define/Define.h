@@ -8,6 +8,7 @@
 #ifndef NETLISTVIZ_DEFINE_DEFINE_H
 #define NETLISTVIZ_DEFINE_DEFINE_H
 
+#include <cassert>
 
 /* For trace and debug */
 #define LINE_INFO "\n[" << __FILE__ << " : line " << __LINE__ << " : " << __FUNCTION__ << "() ]"
