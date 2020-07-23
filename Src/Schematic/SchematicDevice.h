@@ -50,6 +50,8 @@ public:
 	
 	void SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
 
+	QVector<QRectF>  GetTerminalRects() const;
+
 	void Print() const;
 
 protected:
@@ -77,6 +79,8 @@ private:
 	Orientation     m_devOrien;   // device orientation
 	int             m_terNumber;  // terminal number
 	QPixmap        *m_imag;       // device image
+
+	QVector<QRectF> m_terRects;
 
 	/* For CktParser */
 	QString         m_name;       // device value

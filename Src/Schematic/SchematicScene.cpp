@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QMap>
 #include <QDebug>
+#include <QGraphicsView>
 
 #include "SchematicData.h"
 #include "SchematicLayout.h"
@@ -42,7 +43,8 @@ void SchematicScene::SetTextColor(const QColor &color)
 {
     m_textColor = color;
     if (IsItemChange(SchematicTextItem::Type)) {
-        SchematicTextItem *item = qgraphicsitem_cast<SchematicTextItem *>(selectedItems().first());
+        SchematicTextItem *item = qgraphicsitem_cast<SchematicTextItem *>
+                                  (selectedItems().first());
         item->setDefaultTextColor(m_textColor);
     }
 }
@@ -53,8 +55,10 @@ void SchematicScene::SetFont(const QFont &font)
     m_font = font;
 
     if (IsItemChange(SchematicTextItem::Type)) {
-        QGraphicsTextItem *item = qgraphicsitem_cast<SchematicTextItem *>(selectedItems().first());
-        //At this point the selection can change so the first selected item might not be a SchematicTextItem
+        QGraphicsTextItem *item = qgraphicsitem_cast<SchematicTextItem *>
+                                  (selectedItems().first());
+        // At this point the selection can change so the first
+        // selected item might not be a SchematicTextItem
         if (item)
             item->setFont(m_font);
     }
@@ -308,7 +312,19 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
 void SchematicScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
     /* do something */
+    QPointF scenePos = mouseEvent->scenePos();
+
+    switch (m_mode) {
+        case BaseMode:
+            SenseDeviceTerminal(scenePos);
+            break;
+    }
+
     QGraphicsScene::mouseMoveEvent(mouseEvent);
 }
 
@@ -320,7 +336,8 @@ void SchematicScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 }
 
 
-void SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type, const QPointF &pos)
+void SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
+                                           const QPointF &pos)
 {
     SchematicDevice *dev = new SchematicDevice(type, m_itemMenu);
     dev->setPos(pos);
@@ -379,4 +396,36 @@ bool SchematicScene::IsItemChange(int type) const
     const QList<QGraphicsItem *> items = selectedItems();
     const auto cb = [type](const QGraphicsItem *item) { return item->type() == type; };
     return std::find_if(items.begin(), items.end(), cb) != items.end();
+}
+
+
+/* Check whether the mouse is right at a device port.
+   If yes, this function changes the cursor to a CROSS "+" and returns'
+   Otherwise, it restores the cursor to an ARROW.
+   Called by mouseMoveEvent() to detect a device port */
+void SchematicScene::SenseDeviceTerminal(const QPointF &scenePos) const
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+    QGraphicsItem *item;
+    SchematicDevice *device;
+
+    item = itemAt(scenePos, QTransform());
+    if (item) {
+        if (item->type() == SchematicDevice::Type) {
+            device = qgraphicsitem_cast<SchematicDevice *>(item);
+            if (NOT device)  return;
+
+            QVector<QRectF> portRects = device->GetTerminalRects();
+            for (int i = 0; i < portRects.size(); ++ i) {
+                if (portRects[i].contains(device->mapFromScene(scenePos))) {
+                    views().first()->setCursor(Qt::CrossCursor);
+                    return;
+                }
+            }
+        }
+    }
+
+    views().first()->setCursor(Qt::ArrowCursor);
 }

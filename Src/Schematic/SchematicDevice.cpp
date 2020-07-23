@@ -115,7 +115,7 @@ QRectF SchematicDevice::DashRect() const
 void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
                   QWidget *)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
 
@@ -135,7 +135,7 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
 
 void SchematicDevice::DrawResistor()
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
 
@@ -162,11 +162,23 @@ void SchematicDevice::DrawResistor()
     setPath(path);
 
     m_terNumber = 2;
+
+    int width = TerminalSize;
+    int upperCornerX = -halfTerSize;
+    int upperCornerY = -BASE_LEN - TerminalSize;
+    m_terRects.append(QRectF(upperCornerX, upperCornerY, width, width));
+
+    int lowerCornerX = - halfTerSize;
+    int lowerCornerY = BASE_LEN;
+    m_terRects.append(QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
 
 void SchematicDevice::DrawCapacitor()
 {
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
     QPainterPath path;
 
     m_name = "C";
@@ -187,11 +199,24 @@ void SchematicDevice::DrawCapacitor()
     path.lineTo(0, +BASE_LEN + halfTerSize);
 
     setPath(path);
+
+    m_terNumber = 2;
+
+    int width = TerminalSize;
+    int upperCornerX = -halfTerSize;
+    int upperCornerY = -BASE_LEN - TerminalSize;
+    m_terRects.append(QRectF(upperCornerX, upperCornerY, width, width));
+    int lowerCornerX = -halfTerSize;
+    int lowerCornerY = BASE_LEN;
+    m_terRects.append(QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
 
 void SchematicDevice::DrawInductor()
 {
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
     QPainterPath path;
 
     m_name = "L";
@@ -209,11 +234,23 @@ void SchematicDevice::DrawInductor()
     path.lineTo(0, +BASE_LEN + halfTerSize);
 
     setPath(path);
+
+    m_terNumber = 2;
+    int width = TerminalSize;
+    int upperCornerX = -halfTerSize;
+    int upperCornerY = -BASE_LEN - TerminalSize;
+    m_terRects.append(QRectF(upperCornerX, upperCornerY, width, width));
+    int lowerCornerX = -halfTerSize;
+    int lowerCornerY = BASE_LEN;
+    m_terRects.append(QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
 
 void SchematicDevice::DrawIsrc()
 {
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
     m_name = "I";
     m_value = 1e-3; // 1mA
 
@@ -243,11 +280,20 @@ void SchematicDevice::DrawIsrc()
     path.moveTo(0, cb);
     path.lineTo(0, BASE_LEN + halfTerSize);
     setPath(path);
+
+    m_terNumber = 2;
+
+    int width = TerminalSize;
+    m_terRects.append(QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
+    m_terRects.append(QRectF(-halfTerSize, BASE_LEN, width, width));
 }
 
 
 void SchematicDevice::DrawVsrc()
 {
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
     m_name = "V";
     m_value = 1;  // 1V
 
@@ -279,6 +325,17 @@ void SchematicDevice::DrawVsrc()
     path.lineTo(0, BASE_LEN + halfTerSize);
     setPath(path);
 
+    m_terNumber = 2;
+
+    int width = TerminalSize;
+    m_terRects.append(QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
+    m_terRects.append(QRectF(-halfTerSize, BASE_LEN, width, width));
+}
+
+
+QVector<QRectF> SchematicDevice::GetTerminalRects() const
+{
+    return m_terRects;
 }
 
 

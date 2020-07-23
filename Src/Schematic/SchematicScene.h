@@ -70,6 +70,7 @@ protected:
 private:
     void InitVariables();
     bool IsItemChange(int type) const;
+    void SenseDeviceTerminal(const QPointF &) const;
 
     QMenu             *m_itemMenu;
     Mode               m_mode;
