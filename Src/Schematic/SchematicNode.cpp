@@ -85,8 +85,8 @@ void SchematicNode::RemoveDevices()
 {
 	const auto devicesCopy = m_devices;
 	for (SchematicDevice *device : devicesCopy) {
-		device->GetStartNode()->RemoveDevice(device);
-		device->GetEndNode()->RemoveDevice(device);
+		device->GetPosNode()->RemoveDevice(device);
+		device->GetNegNode()->RemoveDevice(device);
 		scene()->removeItem(device);
 		delete device;
 	}

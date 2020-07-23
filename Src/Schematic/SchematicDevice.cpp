@@ -3,51 +3,92 @@
 #include <QPen>
 #include <QDebug>
 #include "SchematicNode.h"
+#include "Define/Define.h"
 
 
-SchematicDevice::SchematicDevice(DeviceType type, SchematicNode *startNode, SchematicNode *endNode, 
-				            QGraphicsItem *parent)
-    : m_deviceType(type), QGraphicsLineItem(parent)
+const int TerminalSize = 8;
+const int IMAG_LEN = 25;
+const int BASE_LEN = 20;
+const int BRECT_W = 32;
+
+
+SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
+                                QTransform itemTransform, QGraphicsItem *parent)
 {
-    m_startNode = startNode;
-    m_endNode = endNode;
-    setFlag(QGraphicsItem::ItemIsSelectable, true);
-    m_contextMenu = nullptr;
-    m_color = GetColorFromDeviceType(m_deviceType);
+    m_deviceType = type;
+    m_contextMenu = contextMenu;
+    setTransform(itemTransform);
+    m_color = Qt::black;
     setPen(QPen(m_color, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+
+    switch (m_deviceType) {
+        case Resistor:
+            m_devOrien = Horizontal;
+            DrawResistor();
+            break;
+        case Capacitor:
+            m_devOrien = Horizontal;
+            DrawCapacitor();
+            break;
+        case Inductor:
+            m_devOrien = Horizontal;
+            DrawInductor();
+            break;
+        case Isrc:
+            m_devOrien = Vertical; 
+            DrawIsrc();
+            break;
+        case Vsrc:
+            m_devOrien = Vertical;
+            DrawVsrc();
+            break;
+        default:;
+    }
+
+    m_imag = nullptr;
+
+    setFlag(QGraphicsItem::ItemIsMovable, true);
+    setFlag(QGraphicsItem::ItemIsSelectable, true);
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+
+    setZValue(0);
 }
 
 
 SchematicDevice::~SchematicDevice()
 {
-
+    if (m_imag)  delete m_imag;
 }
 
 
-QPixmap SchematicDevice::GetImage() const
+QPixmap SchematicDevice::GetImage()
 {
-    switch (m_deviceType) {
-        case Resistor:  return QPixmap(":images/res.png");
-        case Capacitor: return QPixmap(":images/cap.png");
-        case Inductor:  return QPixmap(":images/ind.png");
-        case Isrc:      return QPixmap(":images/isrc.png");
-        case Vsrc:      return QPixmap(":images/vsrc.png");
-        default:;
-    }
+    if (m_imag)  return m_imag->copy();
+
+    m_imag = new QPixmap(2 * IMAG_LEN, 2 * IMAG_LEN);
+    m_imag->fill(Qt::white);
+
+    QPainter painter(m_imag);
+    painter.setPen(QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.translate(IMAG_LEN, IMAG_LEN);
+    painter.drawPath(path());
+
+    return m_imag->copy();
 }
 
 
-int SchematicDevice::GetStartNodeId() const
+int SchematicDevice::GetPosNodeId() const
 {
-    assert(m_startNode);
-    return m_startNode->GetId();
+    assert(m_posNode);
+    return m_posNode->GetId();
 }
 
 
-int SchematicDevice::GetEndNodeId() const
+int SchematicDevice::GetNegNodeId() const
 {
-    assert(m_endNode);
-    return m_endNode->GetId();
+    assert(m_negNode);
+    return m_negNode->GetId();
 }
 
 
@@ -59,68 +100,192 @@ void SchematicDevice::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 
 QRectF SchematicDevice::boundingRect() const
 {
-    qreal extra = (pen().width() + 20) / 2.0;
-
-    return QRectF(line().p1(), QSizeF(line().p2().x() - line().p1().x(),
-                                      line().p2().y() - line().p1().y()))
-        .normalized()
-        .adjusted(-extra, -extra, extra, extra);
+    return QRectF(-BRECT_W, -BRECT_W, 2 * BRECT_W, 2 * BRECT_W);
 }
 
 
-// QPainterPath SchematicDevice::shape() const
-// {
-//     return nullptr;
-// }
-
-
-void SchematicDevice::UpdatePosition()
+QRectF SchematicDevice::DashRect() const
 {
-    QLineF line(mapFromItem(m_startNode, 0, 0), mapFromItem(m_endNode, 0, 0));
-    setLine(line);
+    int halfTerSize = TerminalSize / 2;
+
+    return QRectF(-12, -BASE_LEN + halfTerSize, 24, (BASE_LEN - halfTerSize) * 2);
 }
 
 
 void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
                   QWidget *)
 {
-    QPen tPen = pen();
-    tPen.setColor(m_color);
-    painter->setPen(tPen);
-    painter->setBrush(m_color);
-    setLine(QLineF(m_startNode->pos(), m_endNode->pos()));
-    painter->drawLine(line());
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    painter->setPen(QPen(m_color, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter->setRenderHint(QPainter::Antialiasing);
+
+    painter->drawPath(path());
 
     if (isSelected()) {
-        painter->setPen(QPen(m_color, 1, Qt::DashLine));
-        QLineF myLine = line();
-        myLine.translate(0, 4.0);
-        painter->drawLine(myLine);
-        myLine.translate(0,-8.0);
-        painter->drawLine(myLine);
+
+        painter->setPen(QPen(Qt::black, 1, Qt::DashLine));
+        painter->setBrush(QBrush(Qt::NoBrush));
+        painter->drawRect(DashRect());
     }
 }
 
 
-QColor SchematicDevice::GetColorFromDeviceType(DeviceType type)
+void SchematicDevice::DrawResistor()
 {
-    QColor color = Qt::black;
-    switch (type) {
-        case Resistor:  color = Qt::black;  break;
-        case Capacitor: color = Qt::blue;   break;
-        case Inductor:  color = Qt::yellow; break;
-        case Isrc:      color = Qt::green;  break;
-        case Vsrc:      color = Qt::red;    break;
-        default:;
-    }
-    return color;
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    QPainterPath path;
+
+    m_name = "R";
+    m_value = 1e3; // 1K
+
+    int halfTerSize = TerminalSize / 2;
+
+    path.moveTo(0, -BASE_LEN - halfTerSize);
+    path.lineTo(0, -12);
+
+    path.lineTo(-8, -10);
+    path.lineTo(8, -6);
+    path.lineTo(-8, -2);
+    path.lineTo(8, 2);
+    path.lineTo(-8, 6);
+    path.lineTo(8, 10);
+
+    path.lineTo(0, 12);
+    path.lineTo(0, +BASE_LEN + halfTerSize);
+
+    setPath(path);
+
+    m_terNumber = 2;
+}
+
+
+void SchematicDevice::DrawCapacitor()
+{
+    QPainterPath path;
+
+    m_name = "C";
+    m_value = 1e-12;  // 1P
+
+    int halfTerSize = TerminalSize / 2;
+    int dispV = 4;  // vertical displacement of the cap plate
+    int refX = 10;  // x-coord for drawing cap plate
+
+    // top vertical line
+    path.moveTo(0, -BASE_LEN - halfTerSize);
+    path.lineTo(0, -dispV);
+    path.moveTo(-refX, -dispV);
+    path.lineTo(refX, -dispV);
+    path.moveTo(-refX, dispV);
+    path.lineTo(refX, dispV);
+    path.moveTo(0, dispV);
+    path.lineTo(0, +BASE_LEN + halfTerSize);
+
+    setPath(path);
+}
+
+
+void SchematicDevice::DrawInductor()
+{
+    QPainterPath path;
+
+    m_name = "L";
+    m_value = 1e-3;  // 1mH
+
+    int halfTerSize = TerminalSize / 2;
+
+    path.moveTo(0, - BASE_LEN - halfTerSize);
+    path.lineTo(0, -15);
+    path.arcTo(-8, -15, 16, 10, 90, -240);
+    path.arcTo(-8, -10, 16, 12, 150, -300);
+    path.arcTo(-8, -3, 16, 12, 150, -300);
+    path.arcTo(-8, 4, 16, 10, 150, -240);
+
+    path.lineTo(0, +BASE_LEN + halfTerSize);
+
+    setPath(path);
+}
+
+
+void SchematicDevice::DrawIsrc()
+{
+    m_name = "I";
+    m_value = 1e-3; // 1mA
+
+    int cl = -12; // circle left coord
+    int ct = -12; // circle top coord
+    int cd = 24;  // circle diameter
+    int cb = 12;  // circle bottom coord
+    int tipY1 = -7; // arrow tip 1
+    int tipY2 = -5; // arrow tip 2
+    int tailY = 6;  // arrow tail
+
+    QPainterPath path;
+    int halfTerSize = TerminalSize / 2;
+
+    path.moveTo(0, -BASE_LEN - halfTerSize);
+    path.lineTo(0, ct);
+    
+    path.addEllipse(cl, ct, cd, cd);
+
+    path.moveTo(0, tailY);
+    path.lineTo(0, tipY2);
+    path.moveTo(0, tipY1);
+    path.lineTo(-2, -2);
+    path.lineTo(2, -2);
+    path.lineTo(0, tipY1);
+
+    path.moveTo(0, cb);
+    path.lineTo(0, BASE_LEN + halfTerSize);
+    setPath(path);
+}
+
+
+void SchematicDevice::DrawVsrc()
+{
+    m_name = "V";
+    m_value = 1;  // 1V
+
+    int cl = -12; // circle left coord
+    int ct = -12; // circle top coord
+    int cd = 24;  // circle diameter
+    int cb = 12;  // circle bottom coord
+    int signl = -2; // sign left
+    int signr = 2;  // sign right
+    int upsignref = -5; // upper sign ref coord
+    int lowsignref = 5; // lower sign ref coord 
+
+    QPainterPath path;
+    int halfTerSize = TerminalSize / 2;
+
+    path.moveTo(0, -BASE_LEN - halfTerSize);
+    path.lineTo(0, ct);
+    
+    path.addEllipse(cl, ct, cd, cd);
+
+    path.moveTo(signl, upsignref);
+    path.lineTo(signr, upsignref);
+    path.moveTo(0, upsignref - 2);
+    path.lineTo(0, upsignref + 2);
+    path.moveTo(signl, lowsignref);
+    path.lineTo(signr, lowsignref);
+    
+    path.moveTo(0, cb);
+    path.lineTo(0, BASE_LEN + halfTerSize);
+    setPath(path);
+
 }
 
 
  void SchematicDevice::Print() const
  {
     qInfo().noquote().nospace() << m_name << " type(" << m_deviceType << ") posName("
-            << m_startNode->GetName() << ") negName("
-            << m_endNode->GetName() << ") value(" << m_value << ")" << endl;
+            << m_posNode->GetName() << ") negName("
+            << m_negNode->GetName() << ") value(" << m_value << ")" << endl;
  }
 

@@ -5,7 +5,6 @@
 #include "SchematicDevice.h"
 
 class SchematicScene;
-class SchematicNode;
 class SchematicDevice;
 class NetlistDialog;
 class SchematicData;
@@ -38,10 +37,10 @@ public:
     ~MainWindow();
 
 private slots:
-    /* Device, Node, Text */
+    /* Device*/
     void ButtonGroupClicked(int id);
 
-    /* Delete node, device, text ... */
+    /* Delete wire, device, text ... */
     void DeleteItem();
 
     /* BaseMode and InsertText mode */
@@ -54,8 +53,8 @@ private slots:
     /* Text inserted */
     void TextInserted(QGraphicsTextItem *item);
 
-    /* Node inserted */
-    void NodeInserted(SchematicNode *node);
+    /* Wire inserted */
+    // void WireInserted(SchematicWire *wire);
 
     /* Device inserted */
     void DeviceInserted(SchematicDevice *device);
@@ -70,14 +69,14 @@ private slots:
     /* Text color changed */
     void TextColorChanged();
 
-    /* Node color changed */
-    void NodeColorChanged();
+    /* Wire color changed */
+    // void WireColorChanged();
 
     /* Text Button triggered */
     void TextButtonTriggered();
 
     /* Fill Button triggered */
-    void NodeButtonTriggered();
+    // void WireButtonTriggered();
 
     /* Handle Font change */
     void HandleFontChange();
@@ -111,8 +110,11 @@ private slots:
 private:
     /* Initialize variables */
     void InitVariables();
+    
+    /* Create SchematicScene and connect its signals */
+    void CreateSchematicScene();
 
-    /* Create Device, Node */
+    /* Create Device */
     void CreateToolBox();
 
     /* Create MainWindow actions */
@@ -120,6 +122,9 @@ private:
 
     /* Create MainWindow menus */
     void CreateMenus();
+
+    /* Create Center Widget */
+    void CreateCenterWidget();
 
     /* Reset button in ToolBox and cursor */
     // void ResetButtonAndCursor();
@@ -162,7 +167,8 @@ private:
     QAction *m_aboutAction;
 
     QMenu *m_fileMenu;
-    QMenu *m_itemMenu;
+    QMenu *m_editMenu;
+    QMenu *m_viewMenu;
     QMenu *m_aboutMenu;
 
     QToolBar *m_fileToolbar;
@@ -175,23 +181,23 @@ private:
     QComboBox *m_fontSizeCombo;
     QFontComboBox *m_fontCombo;
 
-    /* Node, Device */
+    /* Device */
     QToolBox *m_toolBox;
 
-    /* Node, Device buttons */
+    /* Device buttons */
     QButtonGroup *m_buttonGroup;
 
     /* Pointer buttons, BaseMode and InsertText Mode */
     QButtonGroup *m_pointerGroup;
 
     QToolButton *m_fontColorToolButton;
-    QToolButton *m_nodeColorToolButton;
+    // QToolButton *m_wireColorToolButton;
 
     QAction *m_boldAction;
     QAction *m_underlineAction;
     QAction *m_italicAction;
     QAction *m_textAction;
-    QAction *m_nodeAction;
+    // QAction *m_wireAction;
 
     QAction *m_scrollPointerAction;
 
@@ -203,6 +209,9 @@ private:
 
     /* Open Schematic File */
     QAction *m_openSchematicFileAction;
+
+    /* Device Panel */
+    QDockWidget *m_devicePanelDockWidget;
 
     QString m_curNetlistPath;
     QString m_curNetlistFile;

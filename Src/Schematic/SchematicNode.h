@@ -58,7 +58,6 @@ protected:
 
 private:
 	void    InitVariables();
-	// void    DrawNode();
 	void    contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 
 	QMenu   *m_contextMenu;

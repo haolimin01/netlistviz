@@ -13,7 +13,8 @@
 #include "NetlistDialog.h"
 #include "Parser/MyParser.h"
 
-const int InsertNodeButton = 20;
+// const int InsertNodeButton = 20;
+const int DEV_ICON_SIZE = 40;
 
 
 MainWindow::MainWindow()
@@ -21,36 +22,19 @@ MainWindow::MainWindow()
     InitVariables();
 
     CreateActions();
+
+    /* Define the main window corners for placing the DockWidget areas */
+    setCorner(Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
+    setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
+    setCorner(Qt::TopRightCorner, Qt::TopDockWidgetArea);
+    setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
     CreateToolBox();
+
     CreateMenus();
-
-    m_scene = new SchematicScene(m_itemMenu, this);
-    m_scene->setSceneRect(QRectF(0, 0, 5000, 5000));
-
-    connect(m_scene, &SchematicScene::TextInserted,
-            this, &MainWindow::TextInserted);
-
-    connect(m_scene, &SchematicScene::NodeInserted,
-            this, &MainWindow::NodeInserted);
-        
-    connect(m_scene, &SchematicScene::DeviceInserted,
-            this, &MainWindow::DeviceInserted);
-    
-    connect(m_scene, &SchematicScene::changed,
-            this, &MainWindow::UpdateWindowTitle);
-
     CreateToolbars();
 
-    QHBoxLayout *layout = new QHBoxLayout;
-    layout->addWidget(m_toolBox);
-    m_view = new QGraphicsView(m_scene);
-    m_view->setDragMode(QGraphicsView::RubberBandDrag);
-    layout->addWidget(m_view);
-
-    QWidget *widget = new QWidget;
-    widget->setLayout(layout);
-
-    setCentralWidget(widget);
+    CreateSchematicScene();
+    CreateCenterWidget();
     setWindowTitle(tr("netlistviz"));
     setUnifiedTitleAndToolBarOnMac(true);
 }
@@ -74,6 +58,35 @@ void MainWindow::InitVariables()
 }
 
 
+void MainWindow::CreateSchematicScene()
+{
+    m_scene = new SchematicScene(m_editMenu, this);
+    m_scene->setSceneRect(QRectF(0, 0, 5000, 5000));
+
+    connect(m_scene, &SchematicScene::TextInserted,
+            this, &MainWindow::TextInserted);
+    connect(m_scene, &SchematicScene::DeviceInserted,
+            this, &MainWindow::DeviceInserted);
+    connect(m_scene, &SchematicScene::changed,
+            this, &MainWindow::UpdateWindowTitle);
+}
+
+
+void MainWindow::CreateCenterWidget()
+{
+    QHBoxLayout *layout = new QHBoxLayout;
+    m_view = new QGraphicsView(m_scene);
+    m_view->setDragMode(QGraphicsView::RubberBandDrag);
+    layout->addWidget(m_view);
+
+    QWidget *widget = new QWidget;
+    widget->setLayout(layout);
+
+    setCentralWidget(widget);
+}
+
+
+/* BUG */
 void MainWindow::ButtonGroupClicked(int id)
 {
     const QList<QAbstractButton *> buttons = m_buttonGroup->buttons();
@@ -85,18 +98,21 @@ void MainWindow::ButtonGroupClicked(int id)
     }
 
     /* InsertNodeButton clicked */
-    if (id == InsertNodeButton) {
-        m_scene->SetMode(SchematicScene::InsertNodeMode);
+    // if (id == InsertNodeButton) {
+    //     m_scene->SetMode(SchematicScene::InsertNodeMode);
     
     /* InsertDeviceButton clicked */
-    } else {
-        m_scene->SetMode(SchematicScene::InsertDeviceMode);
-        m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
-    }
+    // } else {
+    //     m_scene->SetMode(SchematicScene::InsertDeviceMode);
+    //     m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
+    // }
+    m_scene->SetMode(SchematicScene::InsertDeviceMode);
+    m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
 
 }
 
 
+/* BUG */
 void MainWindow::DeleteItem()
 {
     QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
@@ -104,8 +120,8 @@ void MainWindow::DeleteItem()
         if (item->type() == SchematicDevice::Type) {
             m_scene->removeItem(item);
             SchematicDevice *dev = qgraphicsitem_cast<SchematicDevice*>(item);
-            dev->GetStartNode()->RemoveDevice(dev);
-            dev->GetEndNode()->RemoveDevice(dev);
+            dev->GetPosNode()->RemoveDevice(dev);
+            dev->GetNegNode()->RemoveDevice(dev);
             delete item;
         }
     }
@@ -120,6 +136,7 @@ void MainWindow::DeleteItem()
 }
 
 
+/* BUG */
 void MainWindow::PointerGroupClicked(int id)
 {
     m_scene->SetMode(SchematicScene::Mode(m_pointerGroup->checkedId()));
@@ -171,14 +188,10 @@ void MainWindow::TextInserted(QGraphicsTextItem *)
 }
 
 
-void MainWindow::NodeInserted(SchematicNode *)
-{
-    m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
-    m_pointerGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
-    m_scene->SetMode(SchematicScene::BaseMode);
-
-    m_buttonGroup->button(InsertNodeButton)->setChecked(false);
-}
+// void MainWindow::WireInserted(SchematicNode *)
+// {
+// 
+// }
 
 
 void MainWindow::DeviceInserted(SchematicDevice *device)
@@ -223,15 +236,10 @@ void MainWindow::TextColorChanged()
 }
 
 
-void MainWindow::NodeColorChanged()
-{
-    // node color changed
-    m_nodeAction = qobject_cast<QAction *>(sender());
-    m_nodeColorToolButton->setIcon(CreateColorToolButtonIcon(
-        ":/images/floodfill.png",
-        qvariant_cast<QColor>(m_nodeAction->data())));
-    NodeButtonTriggered();
-}
+// void MainWindow::WireColorChanged()
+// {
+// 
+// }
 
 
 void MainWindow::TextButtonTriggered()
@@ -240,10 +248,10 @@ void MainWindow::TextButtonTriggered()
 }
 
 
-void MainWindow::NodeButtonTriggered()
-{
-    m_scene->SetNodeColor(qvariant_cast<QColor>(m_nodeAction->data()));
-}
+// void MainWindow::NodeButtonTriggered()
+// {
+//     m_scene->SetNodeColor(qvariant_cast<QColor>(m_nodeAction->data()));
+// }
 
 
 void MainWindow::HandleFontChange()
@@ -297,19 +305,19 @@ void MainWindow::CreateToolBox()
     layout->addWidget(CreateCellWidget(tr("VSource"), SchematicDevice::Vsrc), 2, 0);
 
     /* Add node */
-    QToolButton *nodeButton = new QToolButton;
-    nodeButton->setCheckable(true);
-    m_buttonGroup->addButton(nodeButton, InsertNodeButton);
-    SchematicNode node(m_itemMenu);
-    QIcon icon(node.GetImage());
-    nodeButton->setIcon(icon);
-    nodeButton->setIconSize(QSize(50, 50));
-    QGridLayout *nodeLayout = new QGridLayout;
-    nodeLayout->addWidget(nodeButton, 0, 0, Qt::AlignHCenter);
-    nodeLayout->addWidget(new QLabel(tr("Node")), 1, 0, Qt::AlignCenter);
-    QWidget *nodeWidget = new QWidget;
-    nodeWidget->setLayout(nodeLayout);
-    layout->addWidget(nodeWidget, 2, 1);
+    // QToolButton *nodeButton = new QToolButton;
+    // nodeButton->setCheckable(true);
+    // // m_buttonGroup->addButton(nodeButton, InsertNodeButton);
+    // SchematicNode node(m_editMenu);
+    // QIcon icon(node.GetImage());
+    // nodeButton->setIcon(icon);
+    // nodeButton->setIconSize(QSize(DEV_ICON_SIZE, DEV_ICON_SIZE));
+    // QGridLayout *nodeLayout = new QGridLayout;
+    // nodeLayout->addWidget(nodeButton, 0, 0, Qt::AlignHCenter);
+    // nodeLayout->addWidget(new QLabel(tr("Node")), 1, 0, Qt::AlignCenter);
+    // QWidget *nodeWidget = new QWidget;
+    // nodeWidget->setLayout(nodeLayout);
+    // layout->addWidget(nodeWidget, 2, 1);
 
     layout->setRowStretch(3, 10);
     layout->setColumnStretch(2, 10);
@@ -320,7 +328,14 @@ void MainWindow::CreateToolBox()
     m_toolBox = new QToolBox;
     m_toolBox->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Ignored));
     m_toolBox->setMinimumWidth(itemWidget->sizeHint().width());
-    m_toolBox->addItem(itemWidget, tr("Device and Node"));
+    m_toolBox->addItem(itemWidget, tr(""));
+
+    /* Create device panel */
+    m_devicePanelDockWidget = new QDockWidget(tr("Devices"));
+    m_devicePanelDockWidget->setWidget(m_toolBox);
+    m_devicePanelDockWidget->setGeometry(10, 30, 100, 70);
+    m_devicePanelDockWidget->hide();
+    addDockWidget(Qt::LeftDockWidgetArea, m_devicePanelDockWidget);
 }
 
 
@@ -365,7 +380,6 @@ void MainWindow::CreateActions()
     connect(m_underlineAction, &QAction::triggered, this, &MainWindow::HandleFontChange);
 
     m_aboutAction = new QAction(tr("A&bout"), this);
-    m_aboutAction->setShortcut(tr("F1"));
     connect(m_aboutAction, &QAction::triggered, this, &MainWindow::About);
 
     m_openNetlistAction = new QAction(QIcon(":/images/open_netlist.png"), tr("Open N&etlist"), this);
@@ -400,11 +414,14 @@ void MainWindow::CreateMenus()
     m_fileMenu->addSeparator();
     m_fileMenu->addAction(m_exitAction);
 
-    m_itemMenu = menuBar()->addMenu(tr("&Item"));
-    m_itemMenu->addAction(m_deleteAction);
-    m_itemMenu->addSeparator();
-    m_itemMenu->addAction(m_toFrontAction);
-    m_itemMenu->addAction(m_sendBackAction);
+    m_editMenu = menuBar()->addMenu(tr("&Edit"));
+    m_editMenu->addAction(m_deleteAction);
+    m_editMenu->addSeparator();
+    m_editMenu->addAction(m_toFrontAction);
+    m_editMenu->addAction(m_sendBackAction);
+
+    m_viewMenu = menuBar()->addMenu(tr("&View"));
+    m_viewMenu->addAction(m_devicePanelDockWidget->toggleViewAction());
 
     m_aboutMenu = menuBar()->addMenu(tr("&Help"));
     m_aboutMenu->addAction(m_aboutAction);
@@ -446,14 +463,14 @@ void MainWindow::CreateToolbars()
     connect(m_fontColorToolButton, &QAbstractButton::clicked,
             this, &MainWindow::TextButtonTriggered);
 
-    m_nodeColorToolButton = new QToolButton;
-    m_nodeColorToolButton->setPopupMode(QToolButton::MenuButtonPopup);
-    m_nodeColorToolButton->setMenu(CreateColorMenu(SLOT(NodeColorChanged()), Qt::black));
-    m_nodeColorToolButton->setIcon(CreateColorToolButtonIcon(
-        ":/images/floodfill.png", Qt::black));
-    m_nodeAction = m_nodeColorToolButton->menu()->defaultAction();
-    connect(m_nodeColorToolButton, &QAbstractButton::clicked,
-        this, &MainWindow::NodeButtonTriggered);
+    // m_nodeColorToolButton = new QToolButton;
+    // m_nodeColorToolButton->setPopupMode(QToolButton::MenuButtonPopup);
+    // m_nodeColorToolButton->setMenu(CreateColorMenu(SLOT(NodeColorChanged()), Qt::black));
+    // m_nodeColorToolButton->setIcon(CreateColorToolButtonIcon(
+    //     ":/images/floodfill.png", Qt::black));
+    // m_nodeAction = m_nodeColorToolButton->menu()->defaultAction();
+    // connect(m_nodeColorToolButton, &QAbstractButton::clicked,
+    //     this, &MainWindow::NodeButtonTriggered);
 
     m_textToolBar = addToolBar(tr("Font"));
     m_textToolBar->addWidget(m_fontCombo);
@@ -464,7 +481,7 @@ void MainWindow::CreateToolbars()
 
     m_colorToolBar = addToolBar(tr("Color"));
     m_colorToolBar->addWidget(m_fontColorToolButton);
-    m_colorToolBar->addWidget(m_nodeColorToolButton);
+    // m_colorToolBar->addWidget(m_nodeColorToolButton);
 
     QToolButton *baseModePointerButton = new QToolButton;
     baseModePointerButton->setCheckable(true);
@@ -501,12 +518,12 @@ void MainWindow::CreateToolbars()
 QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::DeviceType type)
 {
 
-    SchematicDevice device(type, nullptr, nullptr, nullptr);
+    SchematicDevice device(type, nullptr);
     QIcon icon(device.GetImage());
 
     QToolButton *button = new QToolButton;
     button->setIcon(icon);
-    button->setIconSize(QSize(50, 50));
+    button->setIconSize(QSize(DEV_ICON_SIZE, DEV_ICON_SIZE));
     button->setCheckable(true);
     // m_buttonGroup->addButton(button, InsertDeviceButton);
     m_buttonGroup->addButton(button, type);
@@ -632,7 +649,7 @@ void MainWindow::OpenSchematic()
 
 void MainWindow::UpdateWindowTitle(const QList<QRectF> &)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
     if (m_curSchematicFile.isEmpty()) {
