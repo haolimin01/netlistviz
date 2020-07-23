@@ -22,36 +22,19 @@ MainWindow::MainWindow()
     InitVariables();
 
     CreateActions();
+
+    /* Define the main window corners for placing the DockWidget areas */
+    setCorner(Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
+    setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
+    setCorner(Qt::TopRightCorner, Qt::TopDockWidgetArea);
+    setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
     CreateToolBox();
+
     CreateMenus();
-
-    m_scene = new SchematicScene(m_itemMenu, this);
-    m_scene->setSceneRect(QRectF(0, 0, 5000, 5000));
-
-    connect(m_scene, &SchematicScene::TextInserted,
-            this, &MainWindow::TextInserted);
-
-    // connect(m_scene, &SchematicScene::NodeInserted,
-    //         this, &MainWindow::NodeInserted);
-        
-    connect(m_scene, &SchematicScene::DeviceInserted,
-            this, &MainWindow::DeviceInserted);
-    
-    connect(m_scene, &SchematicScene::changed,
-            this, &MainWindow::UpdateWindowTitle);
-
     CreateToolbars();
 
-    QHBoxLayout *layout = new QHBoxLayout;
-    layout->addWidget(m_toolBox);
-    m_view = new QGraphicsView(m_scene);
-    m_view->setDragMode(QGraphicsView::RubberBandDrag);
-    layout->addWidget(m_view);
-
-    QWidget *widget = new QWidget;
-    widget->setLayout(layout);
-
-    setCentralWidget(widget);
+    CreateSchematicScene();
+    CreateCenterWidget();
     setWindowTitle(tr("netlistviz"));
     setUnifiedTitleAndToolBarOnMac(true);
 }
@@ -72,6 +55,34 @@ void MainWindow::InitVariables()
 
     m_netlistDialog = new NetlistDialog(this);
     connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::RenderNetlistFile);
+}
+
+
+void MainWindow::CreateSchematicScene()
+{
+    m_scene = new SchematicScene(m_editMenu, this);
+    m_scene->setSceneRect(QRectF(0, 0, 5000, 5000));
+
+    connect(m_scene, &SchematicScene::TextInserted,
+            this, &MainWindow::TextInserted);
+    connect(m_scene, &SchematicScene::DeviceInserted,
+            this, &MainWindow::DeviceInserted);
+    connect(m_scene, &SchematicScene::changed,
+            this, &MainWindow::UpdateWindowTitle);
+}
+
+
+void MainWindow::CreateCenterWidget()
+{
+    QHBoxLayout *layout = new QHBoxLayout;
+    m_view = new QGraphicsView(m_scene);
+    m_view->setDragMode(QGraphicsView::RubberBandDrag);
+    layout->addWidget(m_view);
+
+    QWidget *widget = new QWidget;
+    widget->setLayout(layout);
+
+    setCentralWidget(widget);
 }
 
 
@@ -297,7 +308,7 @@ void MainWindow::CreateToolBox()
     // QToolButton *nodeButton = new QToolButton;
     // nodeButton->setCheckable(true);
     // // m_buttonGroup->addButton(nodeButton, InsertNodeButton);
-    // SchematicNode node(m_itemMenu);
+    // SchematicNode node(m_editMenu);
     // QIcon icon(node.GetImage());
     // nodeButton->setIcon(icon);
     // nodeButton->setIconSize(QSize(DEV_ICON_SIZE, DEV_ICON_SIZE));
@@ -317,7 +328,14 @@ void MainWindow::CreateToolBox()
     m_toolBox = new QToolBox;
     m_toolBox->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Ignored));
     m_toolBox->setMinimumWidth(itemWidget->sizeHint().width());
-    m_toolBox->addItem(itemWidget, tr("Devices"));
+    m_toolBox->addItem(itemWidget, tr(""));
+
+    /* Create device panel */
+    m_devicePanelDockWidget = new QDockWidget(tr("Devices"));
+    m_devicePanelDockWidget->setWidget(m_toolBox);
+    m_devicePanelDockWidget->setGeometry(10, 30, 100, 70);
+    m_devicePanelDockWidget->hide();
+    addDockWidget(Qt::LeftDockWidgetArea, m_devicePanelDockWidget);
 }
 
 
@@ -362,7 +380,6 @@ void MainWindow::CreateActions()
     connect(m_underlineAction, &QAction::triggered, this, &MainWindow::HandleFontChange);
 
     m_aboutAction = new QAction(tr("A&bout"), this);
-    m_aboutAction->setShortcut(tr("F1"));
     connect(m_aboutAction, &QAction::triggered, this, &MainWindow::About);
 
     m_openNetlistAction = new QAction(QIcon(":/images/open_netlist.png"), tr("Open N&etlist"), this);
@@ -397,11 +414,14 @@ void MainWindow::CreateMenus()
     m_fileMenu->addSeparator();
     m_fileMenu->addAction(m_exitAction);
 
-    m_itemMenu = menuBar()->addMenu(tr("&Item"));
-    m_itemMenu->addAction(m_deleteAction);
-    m_itemMenu->addSeparator();
-    m_itemMenu->addAction(m_toFrontAction);
-    m_itemMenu->addAction(m_sendBackAction);
+    m_editMenu = menuBar()->addMenu(tr("&Edit"));
+    m_editMenu->addAction(m_deleteAction);
+    m_editMenu->addSeparator();
+    m_editMenu->addAction(m_toFrontAction);
+    m_editMenu->addAction(m_sendBackAction);
+
+    m_viewMenu = menuBar()->addMenu(tr("&View"));
+    m_viewMenu->addAction(m_devicePanelDockWidget->toggleViewAction());
 
     m_aboutMenu = menuBar()->addMenu(tr("&Help"));
     m_aboutMenu->addAction(m_aboutAction);
@@ -629,7 +649,7 @@ void MainWindow::OpenSchematic()
 
 void MainWindow::UpdateWindowTitle(const QList<QRectF> &)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
     if (m_curSchematicFile.isEmpty()) {

@@ -37,7 +37,7 @@ public:
     ~MainWindow();
 
 private slots:
-    /* Device, Wire, Text */
+    /* Device*/
     void ButtonGroupClicked(int id);
 
     /* Delete wire, device, text ... */
@@ -110,8 +110,11 @@ private slots:
 private:
     /* Initialize variables */
     void InitVariables();
+    
+    /* Create SchematicScene and connect its signals */
+    void CreateSchematicScene();
 
-    /* Create Device, Wire */
+    /* Create Device */
     void CreateToolBox();
 
     /* Create MainWindow actions */
@@ -119,6 +122,9 @@ private:
 
     /* Create MainWindow menus */
     void CreateMenus();
+
+    /* Create Center Widget */
+    void CreateCenterWidget();
 
     /* Reset button in ToolBox and cursor */
     // void ResetButtonAndCursor();
@@ -161,7 +167,8 @@ private:
     QAction *m_aboutAction;
 
     QMenu *m_fileMenu;
-    QMenu *m_itemMenu;
+    QMenu *m_editMenu;
+    QMenu *m_viewMenu;
     QMenu *m_aboutMenu;
 
     QToolBar *m_fileToolbar;
@@ -174,10 +181,10 @@ private:
     QComboBox *m_fontSizeCombo;
     QFontComboBox *m_fontCombo;
 
-    /* Wire, Device */
+    /* Device */
     QToolBox *m_toolBox;
 
-    /* Wire, Device buttons */
+    /* Device buttons */
     QButtonGroup *m_buttonGroup;
 
     /* Pointer buttons, BaseMode and InsertText Mode */
@@ -202,6 +209,9 @@ private:
 
     /* Open Schematic File */
     QAction *m_openSchematicFileAction;
+
+    /* Device Panel */
+    QDockWidget *m_devicePanelDockWidget;
 
     QString m_curNetlistPath;
     QString m_curNetlistFile;
