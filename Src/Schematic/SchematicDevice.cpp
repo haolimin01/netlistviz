@@ -2,8 +2,10 @@
 #include <QPainter>
 #include <QPen>
 #include <QDebug>
+#include <QGraphicsSceneMouseEvent>
 #include "Circuit/CktNode.h"
 #include "Define/Define.h"
+#include "SchematicWire.h"
 
 
 const int TerminalSize = 8;
@@ -47,6 +49,7 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
 
     m_imag = nullptr;
     m_showNodeFlag = false;
+    m_wiresAtTerminal.resize(m_terNumber);
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -345,8 +348,41 @@ void SchematicDevice::AddNode(CktNode *node)
 }
 
 
- void SchematicDevice::Print() const
- {
+QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &value)
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+    if (change == ItemPositionChange && scene()) {
+        UpdateWirePosition();
+    }
+    
+    return QGraphicsItem::itemChange(change, value);
+}
+
+
+void SchematicDevice::UpdateWirePosition()
+{
+    int i = 0;
+    while (i < m_wiresAtTerminal.size()) {
+        foreach(SchematicWire *wire, m_wiresAtTerminal[i]) {
+            if (NOT wire->isSelected())
+                wire->UpdatePosition(this, i, m_terRects[i].center());
+        }
+        i++;   
+    }
+}
+
+
+void SchematicDevice::AddWire(SchematicWire *wire, int terIndex)
+{
+    assert(terIndex < m_terNumber);
+    m_wiresAtTerminal[terIndex].append(wire);
+}
+
+
+void SchematicDevice::Print() const
+{
 #if 0
     qInfo().noquote().nospace() << m_name << " type(" << m_deviceType << ") posName("
             << m_posNode->GetName() << ") negName("

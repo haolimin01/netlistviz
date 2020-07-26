@@ -43,6 +43,7 @@ public:
 
     void SetWirePathPoints(QVector<QPointF> points);
     void CompactPathPoints();
+    void UpdatePosition(SchematicDevice *device, int terIndex, const QPointF &newPos);
 
 protected:
     void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *widget = nullptr) override;

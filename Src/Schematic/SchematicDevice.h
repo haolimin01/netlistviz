@@ -5,9 +5,11 @@
 
 QT_BEGIN_NAMESPACE
 class QGraphicsPixmapItem;
+class QGraphicsSceneMouseEvent;
 QT_END_NAMESPACE;
 
 class CktNode;
+class SchematicWire;
 
 
 class SchematicDevice : public QGraphicsPathItem
@@ -24,30 +26,22 @@ public:
 
 	~SchematicDevice();
 
-	QPixmap GetImage();
-
-	QRectF boundingRect() const override;
-
-	CktNode* GetNode(int index) const;
-	void     AddNode(CktNode *node);
-	int      GetNodeId(int index) const;
-
+	QPixmap    GetImage();
+	QRectF     boundingRect() const override;
+	CktNode*   GetNode(int index) const;
+	void       AddNode(CktNode *node);
+	int        GetNodeId(int index) const;
 	DeviceType GetDeviceType() const { return m_deviceType; }
-
-	int  type() const override { return Type; }
-
-	QColor GetColor() const  { return m_color; }
-
-	void SetName(QString name) { m_name = name; }
-	void SetValue(double value) { m_value = value; }
-    QString GetName() const { return m_name; }
-	double GetValue() const { return m_value; }
-	
-	void SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
-
+	int        type() const override { return Type; }
+	QColor     GetColor() const  { return m_color; }
+	void       SetName(QString name) { m_name = name; }
+	void       SetValue(double value) { m_value = value; }
+    QString    GetName() const { return m_name; }
+	double     GetValue() const { return m_value; }
+	void       SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
 	QVector<QRectF>  GetTerminalRects() const;
-
-	void SetShowNodeFlag(bool show = true)  { m_showNodeFlag = show; }
+	void       SetShowNodeFlag(bool show = true)  { m_showNodeFlag = show; }
+	void       AddWire(SchematicWire *wire, int terIndex);
 
 	void Print() const;
 
@@ -55,10 +49,12 @@ protected:
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 			QWidget *widget = nullptr) override;
 	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+	QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
 
 private:
 	void InitVariables();
 	QRectF DashRect() const;
+	void UpdateWirePosition();
 
 	void DrawResistor();
 	void DrawCapacitor();
@@ -67,6 +63,7 @@ private:
 	void DrawVsrc();
 
 	QVector<CktNode *> m_terminals;
+	QVector<QList<SchematicWire*> > m_wiresAtTerminal;
 
 	DeviceType      m_deviceType;
 	QMenu          *m_contextMenu;
