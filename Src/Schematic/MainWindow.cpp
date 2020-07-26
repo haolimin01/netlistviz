@@ -8,6 +8,7 @@
 #include <QList>
 #include "SchematicScene.h"
 #include "SchematicTextItem.h"
+#include "SchematicWire.h"
 #include "Define/Define.h"
 #include "NetlistDialog.h"
 #include "Parser/MyParser.h"
@@ -90,53 +91,48 @@ void MainWindow::CreateCenterWidget()
 }
 
 
-/* BUG */
 void MainWindow::ButtonGroupClicked(int id)
 {
     const QList<QAbstractButton *> buttons = m_buttonGroup->buttons();
     for (QAbstractButton *button : buttons) {
         if (m_buttonGroup->button(id) != button) {
             button->setChecked(false);
-            // qInfo() << button << " set false" << endl;
         }
     }
-
-    /* InsertNodeButton clicked */
-    // if (id == InsertNodeButton) {
-    //     m_scene->SetMode(SchematicScene::InsertNodeMode);
-    
-    /* InsertDeviceButton clicked */
-    // } else {
-    //     m_scene->SetMode(SchematicScene::InsertDeviceMode);
-    //     m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
-    // }
     m_scene->SetMode(SchematicScene::InsertDeviceMode);
     m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
 
 }
 
 
-/* BUG */
 void MainWindow::DeleteItem()
 {
-    // QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
-    // for (QGraphicsItem *item : qAsConst(selectedItems)) {
-    //     if (item->type() == SchematicDevice::Type) {
-    //         m_scene->removeItem(item);
-    //         SchematicDevice *dev = qgraphicsitem_cast<SchematicDevice*>(item);
-    //         dev->GetPosNode()->RemoveDevice(dev);
-    //         dev->GetNegNode()->RemoveDevice(dev);
-    //         delete item;
-    //     }
-    // }
-    // selectedItems = m_scene->selectedItems();
-    // for (QGraphicsItem *item : qAsConst(selectedItems)) {
-    //     if (item->type() == SchematicNode::Type) {
-    //         qgraphicsitem_cast<SchematicNode*>(item)->RemoveDevices();
-    //     }
-    //     m_scene->removeItem(item);
-    //     delete item;
-    // }
+    QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
+    foreach (QGraphicsItem *item, qAsConst(selectedItems)) {
+        SchematicDevice *device = nullptr;
+        int terIndex = 0;
+        if (item->type() == SchematicWire::Type) {
+            m_scene->removeItem(item);
+            SchematicWire *wire = qgraphicsitem_cast<SchematicWire *>(item);
+            device = wire->GetStartDevice();
+            terIndex = wire->GetStartTerminalIndex();
+            device->RemoveWire(wire, terIndex);
+            device = wire->GetEndDevice();
+            terIndex = wire->GetEndTerminalIndex();
+            device->RemoveWire(wire, terIndex);
+            delete item;
+        }
+    }
+
+    selectedItems = m_scene->selectedItems();
+    foreach (QGraphicsItem *item, qAsConst(selectedItems)) {
+        if (item->type() == SchematicDevice::Type) {
+            SchematicDevice *device = qgraphicsitem_cast<SchematicDevice *>(item);
+            device->RemoveWires(true);
+            m_scene->removeItem(item);
+            delete item;
+        }
+    }
 }
 
 

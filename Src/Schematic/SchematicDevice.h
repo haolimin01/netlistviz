@@ -42,6 +42,8 @@ public:
 	QVector<QRectF>  GetTerminalRects() const;
 	void       SetShowNodeFlag(bool show = true)  { m_showNodeFlag = show; }
 	void       AddWire(SchematicWire *wire, int terIndex);
+	void       RemoveWires(bool deletion = true);
+	void       RemoveWire(SchematicWire *wire, int terIndex);
 
 	void Print() const;
 

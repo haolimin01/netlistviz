@@ -14,6 +14,10 @@ SchematicWire::SchematicWire(SchematicDevice *startDev, SchematicDevice *endDev,
     m_color = Qt::black;
     m_startTerIndex = startTer;
     m_endTerIndex = endTer;
+
+    setFlag(QGraphicsItem::ItemIsMovable, true);
+    setFlag(QGraphicsItem::ItemIsSelectable, true);
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 }
 
 
@@ -61,6 +65,9 @@ void SchematicWire::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         startPoint = m_wirePathPoints.at(i);
         endPoint = m_wirePathPoints.at(i + 1);
         painter->drawLine(startPoint, endPoint);
+    }
+    if (isSelected()) {
+        qInfo() << "wire selected" << endl;
     }
 }
 

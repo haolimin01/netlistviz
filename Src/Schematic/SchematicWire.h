@@ -45,6 +45,11 @@ public:
     void CompactPathPoints();
     void UpdatePosition(SchematicDevice *device, int terIndex, const QPointF &newPos);
 
+    SchematicDevice* GetStartDevice() const  { return m_startDev; }
+    SchematicDevice* GetEndDevice()   const  { return m_endDev; }
+    int GetStartTerminalIndex() const  { return m_startTerIndex; }
+    int GetEndTerminalIndex()   const  { return m_endTerIndex; }
+
 protected:
     void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *widget = nullptr) override;
 

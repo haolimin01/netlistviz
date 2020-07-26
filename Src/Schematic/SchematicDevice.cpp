@@ -3,6 +3,7 @@
 #include <QPen>
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsScene>
 #include "Circuit/CktNode.h"
 #include "Define/Define.h"
 #include "SchematicWire.h"
@@ -378,6 +379,36 @@ void SchematicDevice::AddWire(SchematicWire *wire, int terIndex)
 {
     assert(terIndex < m_terNumber);
     m_wiresAtTerminal[terIndex].append(wire);
+}
+
+
+void SchematicDevice::RemoveWires(bool deletion)
+{
+    int i = 0;
+    int terIndex = 0;
+    SchematicDevice *device = nullptr;
+    while (i < m_wiresAtTerminal.size()) {
+        foreach(SchematicWire *wire, m_wiresAtTerminal.at(i)) {
+           scene()->removeItem(wire);
+           device = wire->GetStartDevice();
+           terIndex = wire->GetStartTerminalIndex();
+           device->RemoveWire(wire, terIndex);
+           device = wire->GetEndDevice();
+           terIndex = wire->GetEndTerminalIndex();
+           device->RemoveWire(wire, terIndex);
+           if (deletion)  delete wire;
+        }
+        i++;
+    }
+}
+
+
+void SchematicDevice::RemoveWire(SchematicWire *wire, int terIndex)
+{
+    assert(terIndex < m_terNumber);
+    int wireIndex = m_wiresAtTerminal.at(terIndex).indexOf(wire);
+    if (wireIndex != -1)
+        m_wiresAtTerminal[terIndex].removeAt(wireIndex);
 }
 
 
