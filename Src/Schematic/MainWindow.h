@@ -106,6 +106,9 @@ private slots:
     /* Scroll action toggled */
     void ScrollActionToggled(bool checked);
 
+    /* Show or Hide node on items */
+    void ShowItemNodeToggled(bool show);
+
 
 private:
     /* Initialize variables */
@@ -198,6 +201,7 @@ private:
     QAction *m_italicAction;
     QAction *m_textAction;
     // QAction *m_wireAction;
+    QAction *m_showNodeAction;
 
     QAction *m_scrollPointerAction;
 

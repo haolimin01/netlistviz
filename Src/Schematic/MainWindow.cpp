@@ -8,7 +8,6 @@
 #include <QList>
 #include "SchematicScene.h"
 #include "SchematicTextItem.h"
-#include "SchematicNode.h"
 #include "Define/Define.h"
 #include "NetlistDialog.h"
 #include "Parser/MyParser.h"
@@ -62,6 +61,7 @@ void MainWindow::CreateSchematicScene()
 {
     m_scene = new SchematicScene(m_editMenu, this);
     m_scene->setSceneRect(QRectF(0, 0, 5000, 5000));
+    m_scene->setFocus(Qt::MouseFocusReason);
 
     connect(m_scene, &SchematicScene::TextInserted,
             this, &MainWindow::TextInserted);
@@ -76,7 +76,11 @@ void MainWindow::CreateCenterWidget()
 {
     QHBoxLayout *layout = new QHBoxLayout;
     m_view = new QGraphicsView(m_scene);
+    m_view->setRenderHints(QPainter::Antialiasing
+                        | QPainter::NonCosmeticDefaultPen
+                        | QPainter::TextAntialiasing);
     m_view->setDragMode(QGraphicsView::RubberBandDrag);
+    m_view->setMouseTracking(true);
     layout->addWidget(m_view);
 
     QWidget *widget = new QWidget;
@@ -115,24 +119,24 @@ void MainWindow::ButtonGroupClicked(int id)
 /* BUG */
 void MainWindow::DeleteItem()
 {
-    QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
-    for (QGraphicsItem *item : qAsConst(selectedItems)) {
-        if (item->type() == SchematicDevice::Type) {
-            m_scene->removeItem(item);
-            SchematicDevice *dev = qgraphicsitem_cast<SchematicDevice*>(item);
-            dev->GetPosNode()->RemoveDevice(dev);
-            dev->GetNegNode()->RemoveDevice(dev);
-            delete item;
-        }
-    }
-    selectedItems = m_scene->selectedItems();
-    for (QGraphicsItem *item : qAsConst(selectedItems)) {
-        if (item->type() == SchematicNode::Type) {
-            qgraphicsitem_cast<SchematicNode*>(item)->RemoveDevices();
-        }
-        m_scene->removeItem(item);
-        delete item;
-    }
+    // QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
+    // for (QGraphicsItem *item : qAsConst(selectedItems)) {
+    //     if (item->type() == SchematicDevice::Type) {
+    //         m_scene->removeItem(item);
+    //         SchematicDevice *dev = qgraphicsitem_cast<SchematicDevice*>(item);
+    //         dev->GetPosNode()->RemoveDevice(dev);
+    //         dev->GetNegNode()->RemoveDevice(dev);
+    //         delete item;
+    //     }
+    // }
+    // selectedItems = m_scene->selectedItems();
+    // for (QGraphicsItem *item : qAsConst(selectedItems)) {
+    //     if (item->type() == SchematicNode::Type) {
+    //         qgraphicsitem_cast<SchematicNode*>(item)->RemoveDevices();
+    //     }
+    //     m_scene->removeItem(item);
+    //     delete item;
+    // }
 }
 
 
@@ -401,6 +405,11 @@ void MainWindow::CreateActions()
     m_scrollPointerAction->setCheckable(true);
     m_scrollPointerAction->setChecked(false);
     connect(m_scrollPointerAction, &QAction::toggled, this, &MainWindow::ScrollActionToggled);
+
+    m_showNodeAction = new QAction(QIcon(":/images/show_node.png"), tr("Show Node"), this);
+    m_showNodeAction->setCheckable(true);
+    m_showNodeAction->setChecked(false);
+    connect(m_showNodeAction, &QAction::toggled, this, &MainWindow::ShowItemNodeToggled);
 }
 
 
@@ -422,6 +431,7 @@ void MainWindow::CreateMenus()
 
     m_viewMenu = menuBar()->addMenu(tr("&View"));
     m_viewMenu->addAction(m_devicePanelDockWidget->toggleViewAction());
+    m_viewMenu->addAction(m_showNodeAction);
 
     m_aboutMenu = menuBar()->addMenu(tr("&Help"));
     m_aboutMenu->addAction(m_aboutAction);
@@ -440,6 +450,7 @@ void MainWindow::CreateToolbars()
     m_editToolBar->addAction(m_deleteAction);
     m_editToolBar->addAction(m_toFrontAction);
     m_editToolBar->addAction(m_sendBackAction);
+    m_editToolBar->addAction(m_showNodeAction);
 
     m_fontCombo = new QFontComboBox();
     connect(m_fontCombo, &QFontComboBox::currentFontChanged,
@@ -586,6 +597,12 @@ QIcon MainWindow::CreateColorIcon(QColor color)
     painter.fillRect(QRect(0, 0, 20, 20), color);
 
     return QIcon(pixmap);
+}
+
+
+void MainWindow::ShowItemNodeToggled(bool show)
+{
+    m_scene->SetShowNodeFlag(show);
 }
 
 

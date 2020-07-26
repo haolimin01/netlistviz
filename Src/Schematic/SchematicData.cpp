@@ -1,7 +1,7 @@
 #include "SchematicData.h"
 #include <regex>
 #include <QDebug>
-#include "SchematicNode.h"
+#include "Circuit/CktNode.h"
 #include "SchematicDevice.h"
 #include "SchematicTextItem.h"
 
@@ -37,13 +37,13 @@ void SchematicData::ParseC(QString name, QString posName, QString negName, doubl
         EXIT;
     }
 
-    SchematicNode *posNode = GetAddNode(posName);
-    SchematicNode *negNode = GetAddNode(negName);
+    CktNode *posNode = GetAddNode(posName);
+    CktNode *negNode = GetAddNode(negName);
     SchematicDevice *c = new SchematicDevice(SchematicDevice::Capacitor, nullptr);
     c->SetName(name);
     c->SetValue(value);
-    c->SetPosNode(posNode);
-    c->SetNegNode(negNode);
+    c->AddNode(posNode);
+    c->AddNode(negNode);
 
     posNode->AddDevice(c);
     negNode->AddDevice(c);
@@ -60,13 +60,13 @@ void SchematicData::ParseI(QString name, QString posName, QString negName, doubl
         EXIT;
     }
 
-    SchematicNode *posNode = GetAddNode(posName);
-    SchematicNode *negNode = GetAddNode(negName);
+    CktNode *posNode = GetAddNode(posName);
+    CktNode *negNode = GetAddNode(negName);
     SchematicDevice *i = new SchematicDevice(SchematicDevice::Isrc, nullptr);
     i->SetName(name);
     i->SetValue(value);
-    i->SetPosNode(posNode);
-    i->SetNegNode(negNode);
+    i->AddNode(posNode);
+    i->AddNode(negNode);
 
     posNode->AddDevice(i);
     negNode->AddDevice(i);
@@ -83,13 +83,13 @@ void SchematicData::ParseL(QString name, QString posName, QString negName, doubl
         EXIT;
     }
 
-    SchematicNode *posNode = GetAddNode(posName);
-    SchematicNode *negNode = GetAddNode(negName);
+    CktNode *posNode = GetAddNode(posName);
+    CktNode *negNode = GetAddNode(negName);
     SchematicDevice *l = new SchematicDevice(SchematicDevice::Inductor, nullptr);
     l->SetName(name);
     l->SetValue(value);
-    l->SetPosNode(posNode);
-    l->SetNegNode(negNode);
+    l->AddNode(posNode);
+    l->AddNode(negNode);
 
     posNode->AddDevice(l);
     negNode->AddDevice(l);
@@ -106,13 +106,13 @@ void SchematicData::ParseR(QString name, QString posName, QString negName, doubl
         EXIT;
     }
 
-    SchematicNode *posNode = GetAddNode(posName);
-    SchematicNode *negNode = GetAddNode(negName);
+    CktNode *posNode = GetAddNode(posName);
+    CktNode *negNode = GetAddNode(negName);
     SchematicDevice *r = new SchematicDevice(SchematicDevice::Resistor, nullptr);
     r->SetName(name);
     r->SetValue(value);
-    r->SetPosNode(posNode);
-    r->SetNegNode(negNode);
+    r->AddNode(posNode);
+    r->AddNode(negNode);
 
     posNode->AddDevice(r);
     negNode->AddDevice(r);
@@ -129,13 +129,13 @@ void SchematicData::ParseV(QString name, QString posName, QString negName, doubl
         EXIT;
     }
 
-    SchematicNode *posNode = GetAddNode(posName);
-    SchematicNode *negNode = GetAddNode(negName);
+    CktNode *posNode = GetAddNode(posName);
+    CktNode *negNode = GetAddNode(negName);
     SchematicDevice *v = new SchematicDevice(SchematicDevice::Vsrc, nullptr);
     v->SetName(name);
     v->SetValue(value);
-    v->SetPosNode(posNode);
-    v->SetNegNode(negNode);
+    v->AddNode(posNode);
+    v->AddNode(negNode);
 
     posNode->AddDevice(v);
     negNode->AddDevice(v);
@@ -145,7 +145,7 @@ void SchematicData::ParseV(QString name, QString posName, QString negName, doubl
 }
 
 
-SchematicNode* SchematicData::GetAddNode(const QString &name)
+CktNode* SchematicData::GetAddNode(const QString &name)
 {
     NodeTable::const_iterator finder;
     finder = m_nodeTable.find(name);
@@ -153,8 +153,7 @@ SchematicNode* SchematicData::GetAddNode(const QString &name)
         return finder.value();
     }
 
-    SchematicNode *node = new SchematicNode();
-    node->SetName(name);
+    CktNode *node = new CktNode(name);
     
     if (IsGnd(name)) {
         node->SetId(0);
@@ -182,7 +181,7 @@ bool SchematicData::IsGnd(const QString &name) const
 
 void SchematicData::PrintNodeAndDevice() const
 {
-    SchematicNode *node = nullptr;
+    CktNode *node = nullptr;
     SchematicDevice *dev = nullptr;
     qInfo() << "\n--------------- Node ---------------\n";
     for (int i = 0; i < m_nodeList.size(); ++ i) {

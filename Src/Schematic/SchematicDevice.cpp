@@ -2,7 +2,7 @@
 #include <QPainter>
 #include <QPen>
 #include <QDebug>
-#include "SchematicNode.h"
+#include "Circuit/CktNode.h"
 #include "Define/Define.h"
 
 
@@ -46,6 +46,7 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     }
 
     m_imag = nullptr;
+    m_showNodeFlag = false;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -78,17 +79,10 @@ QPixmap SchematicDevice::GetImage()
 }
 
 
-int SchematicDevice::GetPosNodeId() const
+int SchematicDevice::GetNodeId(int index) const
 {
-    assert(m_posNode);
-    return m_posNode->GetId();
-}
-
-
-int SchematicDevice::GetNegNodeId() const
-{
-    assert(m_negNode);
-    return m_negNode->GetId();
+    assert(index < m_terNumber);
+    return m_terminals.at(index)->GetId();
 }
 
 
@@ -123,6 +117,12 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     painter->setRenderHint(QPainter::Antialiasing);
 
     painter->drawPath(path());
+
+    if (m_showNodeFlag) {
+        painter->setBrush(QBrush(m_color));
+        painter->setPen(Qt::NoPen);
+        painter->drawRects(m_terRects);
+    }
 
     if (isSelected()) {
 
@@ -339,10 +339,18 @@ QVector<QRectF> SchematicDevice::GetTerminalRects() const
 }
 
 
+void SchematicDevice::AddNode(CktNode *node)
+{
+    m_terminals.append(node);
+}
+
+
  void SchematicDevice::Print() const
  {
+#if 0
     qInfo().noquote().nospace() << m_name << " type(" << m_deviceType << ") posName("
             << m_posNode->GetName() << ") negName("
             << m_negNode->GetName() << ") value(" << m_value << ")" << endl;
+#endif
  }
 
