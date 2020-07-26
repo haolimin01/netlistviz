@@ -7,7 +7,7 @@ QT_BEGIN_NAMESPACE
 class QGraphicsPixmapItem;
 QT_END_NAMESPACE;
 
-class SchematicNode;
+class CktNode;
 
 
 class SchematicDevice : public QGraphicsPathItem
@@ -28,14 +28,9 @@ public:
 
 	QRectF boundingRect() const override;
 
-	SchematicNode* GetPosNode() const  { return m_posNode; }
-	SchematicNode* GetNegNode() const  { return m_negNode; }
-
-	void SetPosNode(SchematicNode *posNode)  { m_posNode = posNode; }
-	void SetNegNode(SchematicNode *negNode)  { m_negNode = negNode; }	
-
-	int GetPosNodeId() const;
-	int GetNegNodeId() const;
+	CktNode* GetNode(int index) const;
+	void     AddNode(CktNode *node);
+	int      GetNodeId(int index) const;
 
 	DeviceType GetDeviceType() const { return m_deviceType; }
 
@@ -71,8 +66,7 @@ private:
 	void DrawIsrc();
 	void DrawVsrc();
 
-	SchematicNode  *m_posNode;
-	SchematicNode  *m_negNode;
+	QVector<CktNode *> m_terminals;
 
 	DeviceType      m_deviceType;
 	QMenu          *m_contextMenu;

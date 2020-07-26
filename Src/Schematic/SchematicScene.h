@@ -1,7 +1,6 @@
 #ifndef NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H
 #define NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H
 
-#include "SchematicNode.h"
 #include "SchematicTextItem.h"
 #include "SchematicDevice.h"
 
@@ -30,7 +29,7 @@ public:
     {
         BaseMode,
         InsertWireMode,
-        InsertDeviceMode, // line
+        InsertDeviceMode,
         InsertTextMode
     };
 
@@ -38,7 +37,6 @@ public:
     ~SchematicScene();
 
     void SetTextColor(const QColor &color);
-    // void SetNodeColor(const QColor &color);
     void SetFont(const QFont &font);
     void SetDeviceType(SchematicDevice::DeviceType type);
 
@@ -66,13 +64,19 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
 
-    void InsertSchematicDevice(SchematicDevice::DeviceType, const QPointF &);
-    void InsertSchematicTextItem(const QPointF &);
-
 private:
     void InitVariables();
     bool IsItemChange(int type) const;
     void SenseDeviceTerminal(const QPointF &) const;
+    void ProcessMousePress(const QPointF &scenePos);
+    void DrawWireTowardDeviceTerminal(const QPointF &scenePos);
+    void FinishDrawingWireAt(const QPointF &scenePos);
+
+    /* Insert Item */
+    void InsertSchematicDevice(SchematicDevice::DeviceType, const QPointF &);
+    void InsertSchematicTextItem(const QPointF &);
+    void InsertSchematicWire(SchematicDevice *, SchematicDevice *, int, int,
+                            const QVector<QPointF>&);
 
     QMenu             *m_itemMenu;
     Mode               m_mode;
@@ -80,13 +84,21 @@ private:
 
     SchematicTextItem *m_text;
     SchematicDevice   *m_device;
-
     SchematicDevice::DeviceType m_deviceType;
+    QGraphicsLineItem *m_line;
+
+    /* For wire */
+    SchematicDevice   *m_startDevice;
+    int                m_startTer;
+    QPointF            m_startPoint;
+    SchematicDevice   *m_endDevice;
+    int                m_endTer;
+    QPointF            m_endPoint;
+    QVector<QPointF>   m_curWirePathPoints;
+
 
     QColor             m_textColor;
     QColor             m_deviceColor;
-
-    SchematicLayout   *m_schLayout;
 
     /* Device number, assign to added device */
     /* Start from 0 */

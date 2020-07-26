@@ -3,7 +3,7 @@
 
 /*
  *
- * SchematicData stores SchematicDevice and SchematicNode.
+ * SchematicData stores SchematicDevice and CktNode.
  * SchematicScene uses this class to render device and node.
  * CktParser uses this class to store circuit infomation.
  * 
@@ -14,7 +14,7 @@
 #include <QString>
 #include "Define/Define.h"
 
-class SchematicNode;
+class CktNode;
 class SchematicDevice;
 class SchematicTextItem;
 class SchematicLayout;
@@ -24,9 +24,9 @@ class SchematicScene;
 class SchematicData
 {
 public:
-    typedef QMap<QString, SchematicNode *>    NodeTable;
+    typedef QMap<QString, CktNode *>          NodeTable;
     typedef QMap<QString, SchematicDevice *>  DeviceTable;
-    typedef QVector<SchematicNode *>          NodeList;
+    typedef QVector<CktNode *>                NodeList;
     typedef QVector<SchematicDevice *>        DeviceList;
 
 public:
@@ -47,8 +47,8 @@ private:
 
     /* If node name exists, return it's pointer */
     /* else create node and return it's pointer */
-    SchematicNode* GetAddNode(const QString &name);
-    bool           IsGnd(const QString &name) const;
+    CktNode* GetAddNode(const QString &name);
+    bool     IsGnd(const QString &name) const;
 
     /* Only use in CktParser */
     /* Do not contain the complete data */
@@ -62,7 +62,6 @@ private:
     /* node number */
     int         m_nodeNumber;
 
-    friend class SchematicLayout;
     friend class SchematicScene;
 };
 
