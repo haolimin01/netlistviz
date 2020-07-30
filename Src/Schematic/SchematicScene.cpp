@@ -91,7 +91,7 @@ void SchematicScene::EditorLostFocus(SchematicTextItem *item)
 
 void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
 
@@ -124,7 +124,7 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
 void SchematicScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
 
@@ -180,36 +180,7 @@ void SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
     dev->SetShowNodeFlag(m_showNodeFlag);
     addItem(dev);
 
-    QString name;
-    double value = 0;
-
-    switch (type) {
-        case SchematicDevice::Resistor:
-            name = "R" + QString::number(m_deviceNumber); 
-            value = 1000;
-            break;
-        case SchematicDevice::Capacitor:
-            name = "C" + QString::number(m_deviceNumber);
-            value = 1e-12;
-            break;
-        case SchematicDevice::Inductor:
-            name = "L" + QString::number(m_deviceNumber);
-            value = 1e-3; 
-            break;
-        case SchematicDevice::Isrc:
-            name = "I" + QString::number(m_deviceNumber);
-            value = 1;
-            break;
-        case SchematicDevice::Vsrc:
-            name = "V" + QString::number(m_deviceNumber);
-            value = 1;
-            break;
-        default:;
-    }
-
     m_deviceNumber++;
-    dev->SetName(name);
-    dev->SetValue(value);
     emit DeviceInserted(dev);
 }
 
@@ -278,7 +249,7 @@ void SchematicScene::SenseDeviceTerminal(const QPointF &scenePos) const
 */
 void SchematicScene::ProcessMousePress(const QPointF &scenePos)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
 
@@ -373,6 +344,9 @@ void SchematicScene::InsertSchematicWire(SchematicDevice *startDev, SchematicDev
     newWire->SetWirePathPoints(wirePoints);
     addItem(newWire);
     newWire->setPos(0, 0);
+
+    startDev->AddWire(newWire, startTer);
+    endDev->AddWire(newWire, endTer);
 }
                     
 

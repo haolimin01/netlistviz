@@ -43,6 +43,12 @@ public:
 
     void SetWirePathPoints(QVector<QPointF> points);
     void CompactPathPoints();
+    void UpdatePosition(SchematicDevice *device, int terIndex, const QPointF &newPos);
+
+    SchematicDevice* StartDevice() const  { return m_startDev; }
+    SchematicDevice* EndDevice()   const  { return m_endDev; }
+    int StartTerminalIndex() const  { return m_startTerIndex; }
+    int EndTerminalIndex()   const  { return m_endTerIndex; }
 
 protected:
     void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *widget = nullptr) override;

@@ -20,10 +20,10 @@ public:
 
     int type() const override { return Type; }
 
-    QString GetText() const { return toPlainText();}
-    QString GetColorName() const { return defaultTextColor().name(); }
-    QString GetFontFamily() const { return font().family(); }
-    int     GetSize() const { return font().pointSize(); }
+    QString Text() const { return toPlainText();}
+    QString ColorName() const { return defaultTextColor().name(); }
+    QString FontFamily() const { return font().family(); }
+    int     Size() const { return font().pointSize(); }
     bool    IsBold() const { return font().bold(); }
     bool    IsItalic() const { return font().italic(); }
     bool    IsUnderline() const { return font().underline(); }

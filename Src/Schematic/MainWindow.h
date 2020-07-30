@@ -38,13 +38,13 @@ public:
 
 private slots:
     /* Device*/
-    void ButtonGroupClicked(int id);
+    void DeviceBtnGroupClicked(int id);
 
     /* Delete wire, device, text ... */
     void DeleteItem();
 
     /* BaseMode and InsertText mode */
-    void PointerGroupClicked(int);
+    void PointerBtnGroupClicked(int id);
 
     /* Change ZValue */
     void BringToFront();
@@ -52,9 +52,6 @@ private slots:
 
     /* Text inserted */
     void TextInserted(QGraphicsTextItem *item);
-
-    /* Wire inserted */
-    // void WireInserted(SchematicWire *wire);
 
     /* Device inserted */
     void DeviceInserted(SchematicDevice *device);
@@ -118,7 +115,7 @@ private:
     void CreateSchematicScene();
 
     /* Create Device */
-    void CreateToolBox();
+    void CreateDeviceToolBox();
 
     /* Create MainWindow actions */
     void CreateActions();
@@ -157,73 +154,67 @@ private:
     /* m menas member in class */
 
     /* The scene */
-    SchematicScene *m_scene;
+    SchematicScene     *m_scene;
 
     /* The view */
-    QGraphicsView *m_view;
+    QGraphicsView      *m_view;
 
-    QAction *m_exitAction;
-    QAction *m_deleteAction;
+    QAction            *m_exitAction;
+    QAction            *m_deleteAction;
 
-    QAction *m_toFrontAction;
-    QAction *m_sendBackAction;
-    QAction *m_aboutAction;
+    QAction            *m_toFrontAction;
+    QAction            *m_sendBackAction;
+    QAction            *m_aboutAction;
 
-    QMenu *m_fileMenu;
-    QMenu *m_editMenu;
-    QMenu *m_viewMenu;
-    QMenu *m_aboutMenu;
+    QMenu              *m_fileMenu;
+    QMenu              *m_editMenu;
+    QMenu              *m_viewMenu;
+    QMenu              *m_aboutMenu;
 
-    QToolBar *m_fileToolbar;
-    QToolBar *m_textToolBar;
-    QToolBar *m_editToolBar;
-    QToolBar *m_colorToolBar;
-    QToolBar *m_pointerToolbar;
+    QToolBar           *m_fileToolBar;
+    QToolBar           *m_textToolBar;
+    QToolBar           *m_editToolBar;
+    QToolBar           *m_colorToolBar;
+    QToolBar           *m_pointerToolbar;
 
-    QComboBox *m_sceneScaleCombo;
-    QComboBox *m_fontSizeCombo;
-    QFontComboBox *m_fontCombo;
+    QComboBox          *m_sceneScaleCombo;
+    QComboBox          *m_fontSizeCombo;
+    QFontComboBox      *m_fontCombo;
 
     /* Device */
-    QToolBox *m_toolBox;
+    QToolBox           *m_deviceToolBox;
 
     /* Device buttons */
-    QButtonGroup *m_buttonGroup;
+    QButtonGroup       *m_deviceBtnGroup;
 
     /* Pointer buttons, BaseMode and InsertText Mode */
-    QButtonGroup *m_pointerGroup;
+    QButtonGroup       *m_pointerBtnGroup;
 
-    QToolButton *m_fontColorToolButton;
+    QToolButton        *m_fontColorToolButton;
     // QToolButton *m_wireColorToolButton;
 
-    QAction *m_boldAction;
-    QAction *m_underlineAction;
-    QAction *m_italicAction;
-    QAction *m_textAction;
-    // QAction *m_wireAction;
-    QAction *m_showNodeAction;
-
-    QAction *m_scrollPointerAction;
-
-    QAction *m_openNetlistAction;
-
+    QAction            *m_boldAction;
+    QAction            *m_underlineAction;
+    QAction            *m_italicAction;
+    QAction            *m_textAction;
+    QAction            *m_showNodeAction;
+    QAction            *m_scrollPointerAction;
+    QAction            *m_openNetlistAction;
     /* Save and SaveAs Schematic File */
-    QAction *m_saveSchematicFileAction;
-    QAction *m_saveAsSchematicFileAction;
-
+    QAction            *m_saveSchematicFileAction;
+    QAction            *m_saveAsSchematicFileAction;
     /* Open Schematic File */
-    QAction *m_openSchematicFileAction;
+    QAction            *m_openSchematicFileAction;
 
     /* Device Panel */
-    QDockWidget *m_devicePanelDockWidget;
+    QDockWidget        *m_devicePanelDockWidget;
 
-    QString m_curNetlistPath;
-    QString m_curNetlistFile;
+    QString             m_curNetlistPath;
+    QString             m_curNetlistFile;
+    QString             m_curSchematicPath;
+    QString             m_curSchematicFile;
 
-    QString m_curSchematicPath;
-    QString m_curSchematicFile;
-
-    NetlistDialog *m_netlistDialog;
+    NetlistDialog      *m_netlistDialog;
 
 };
 //! [0]
