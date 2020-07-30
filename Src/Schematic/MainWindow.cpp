@@ -13,7 +13,6 @@
 #include "NetlistDialog.h"
 #include "Parser/MyParser.h"
 
-// const int InsertNodeButton = 20;
 const int DEV_ICON_SIZE = 40;
 
 
@@ -28,7 +27,7 @@ MainWindow::MainWindow()
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
     setCorner(Qt::TopRightCorner, Qt::TopDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
-    CreateToolBox();
+    CreateDeviceToolBox();
 
     CreateMenus();
     CreateToolbars();
@@ -91,11 +90,11 @@ void MainWindow::CreateCenterWidget()
 }
 
 
-void MainWindow::ButtonGroupClicked(int id)
+void MainWindow::DeviceBtnGroupClicked(int id)
 {
-    const QList<QAbstractButton *> buttons = m_buttonGroup->buttons();
+    const QList<QAbstractButton *> buttons = m_deviceBtnGroup->buttons();
     for (QAbstractButton *button : buttons) {
-        if (m_buttonGroup->button(id) != button) {
+        if (m_deviceBtnGroup->button(id) != button) {
             button->setChecked(false);
         }
     }
@@ -114,11 +113,11 @@ void MainWindow::DeleteItem()
         if (item->type() == SchematicWire::Type) {
             m_scene->removeItem(item);
             SchematicWire *wire = qgraphicsitem_cast<SchematicWire *>(item);
-            device = wire->GetStartDevice();
-            terIndex = wire->GetStartTerminalIndex();
+            device = wire->StartDevice();
+            terIndex = wire->StartTerminalIndex();
             device->RemoveWire(wire, terIndex);
-            device = wire->GetEndDevice();
-            terIndex = wire->GetEndTerminalIndex();
+            device = wire->EndDevice();
+            terIndex = wire->EndTerminalIndex();
             device->RemoveWire(wire, terIndex);
             delete item;
         }
@@ -137,19 +136,19 @@ void MainWindow::DeleteItem()
 
 
 /* BUG */
-void MainWindow::PointerGroupClicked(int id)
+void MainWindow::PointerBtnGroupClicked(int id)
 {
-    m_scene->SetMode(SchematicScene::Mode(m_pointerGroup->checkedId()));
+    m_scene->SetMode(SchematicScene::Mode(m_pointerBtnGroup->checkedId()));
 
     if (id == int(SchematicScene::BaseMode)) {
 
-        m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
-        m_pointerGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
+        m_pointerBtnGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
+        m_pointerBtnGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
 
     } else if (id == int(SchematicScene::InsertTextMode)) {
 
-        m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(false);
-        m_pointerGroup->button(int(SchematicScene::InsertTextMode))->setChecked(true);
+        m_pointerBtnGroup->button(int(SchematicScene::BaseMode))->setChecked(false);
+        m_pointerBtnGroup->button(int(SchematicScene::InsertTextMode))->setChecked(true);
     }
 }
 
@@ -182,25 +181,19 @@ void MainWindow::SendToBack()
 
 void MainWindow::TextInserted(QGraphicsTextItem *)
 {
-    m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
-    m_pointerGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
+    m_pointerBtnGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
+    m_pointerBtnGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
     m_scene->SetMode(SchematicScene::BaseMode);
 }
 
 
-// void MainWindow::WireInserted(SchematicNode *)
-// {
-// 
-// }
-
-
 void MainWindow::DeviceInserted(SchematicDevice *device)
 {
-    m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
-    m_pointerGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
+    m_pointerBtnGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
+    m_pointerBtnGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
     m_scene->SetMode(SchematicScene::BaseMode);
 
-    m_buttonGroup->button((int)(device->GetDeviceType()))->setChecked(false);
+    m_deviceBtnGroup->button((int)(device->GetDeviceType()))->setChecked(false);
 }
 
 
@@ -248,12 +241,6 @@ void MainWindow::TextButtonTriggered()
 }
 
 
-// void MainWindow::NodeButtonTriggered()
-// {
-//     m_scene->SetNodeColor(qvariant_cast<QColor>(m_nodeAction->data()));
-// }
-
-
 void MainWindow::HandleFontChange()
 {
     QFont font = m_fontCombo->currentFont();
@@ -288,12 +275,12 @@ void MainWindow::About()
 }
 
 
-void MainWindow::CreateToolBox()
+void MainWindow::CreateDeviceToolBox()
 {
-    m_buttonGroup = new QButtonGroup(this);
-    m_buttonGroup->setExclusive(false);
-    connect(m_buttonGroup, QOverload<int>::of(&QButtonGroup::buttonClicked),
-            this, &MainWindow::ButtonGroupClicked);
+    m_deviceBtnGroup = new QButtonGroup(this);
+    m_deviceBtnGroup->setExclusive(false);
+    connect(m_deviceBtnGroup, QOverload<int>::of(&QButtonGroup::buttonClicked),
+            this, &MainWindow::DeviceBtnGroupClicked);
 
     QGridLayout *layout = new QGridLayout;
 
@@ -304,35 +291,20 @@ void MainWindow::CreateToolBox()
     layout->addWidget(CreateCellWidget(tr("ISource"), SchematicDevice::Isrc), 1, 1);
     layout->addWidget(CreateCellWidget(tr("VSource"), SchematicDevice::Vsrc), 2, 0);
 
-    /* Add node */
-    // QToolButton *nodeButton = new QToolButton;
-    // nodeButton->setCheckable(true);
-    // // m_buttonGroup->addButton(nodeButton, InsertNodeButton);
-    // SchematicNode node(m_editMenu);
-    // QIcon icon(node.GetImage());
-    // nodeButton->setIcon(icon);
-    // nodeButton->setIconSize(QSize(DEV_ICON_SIZE, DEV_ICON_SIZE));
-    // QGridLayout *nodeLayout = new QGridLayout;
-    // nodeLayout->addWidget(nodeButton, 0, 0, Qt::AlignHCenter);
-    // nodeLayout->addWidget(new QLabel(tr("Node")), 1, 0, Qt::AlignCenter);
-    // QWidget *nodeWidget = new QWidget;
-    // nodeWidget->setLayout(nodeLayout);
-    // layout->addWidget(nodeWidget, 2, 1);
-
     layout->setRowStretch(3, 10);
     layout->setColumnStretch(2, 10);
 
     QWidget *itemWidget = new QWidget;
     itemWidget->setLayout(layout);
 
-    m_toolBox = new QToolBox;
-    m_toolBox->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Ignored));
-    m_toolBox->setMinimumWidth(itemWidget->sizeHint().width());
-    m_toolBox->addItem(itemWidget, tr(""));
+    m_deviceToolBox = new QToolBox;
+    m_deviceToolBox->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Ignored));
+    m_deviceToolBox->setMinimumWidth(itemWidget->sizeHint().width());
+    m_deviceToolBox->addItem(itemWidget, tr(""));
 
     /* Create device panel */
     m_devicePanelDockWidget = new QDockWidget(tr("Devices"));
-    m_devicePanelDockWidget->setWidget(m_toolBox);
+    m_devicePanelDockWidget->setWidget(m_deviceToolBox);
     m_devicePanelDockWidget->setGeometry(10, 30, 100, 70);
     m_devicePanelDockWidget->hide();
     addDockWidget(Qt::LeftDockWidgetArea, m_devicePanelDockWidget);
@@ -436,11 +408,11 @@ void MainWindow::CreateMenus()
 
 void MainWindow::CreateToolbars()
 {
-    m_fileToolbar = addToolBar(tr("File"));
-    m_fileToolbar->addAction(m_openNetlistAction);
-    m_fileToolbar->addAction(m_openSchematicFileAction);
-    m_fileToolbar->addAction(m_saveSchematicFileAction);
-    m_fileToolbar->addAction(m_saveAsSchematicFileAction);
+    m_fileToolBar = addToolBar(tr("File"));
+    m_fileToolBar->addAction(m_openNetlistAction);
+    m_fileToolBar->addAction(m_openSchematicFileAction);
+    m_fileToolBar->addAction(m_saveSchematicFileAction);
+    m_fileToolBar->addAction(m_saveAsSchematicFileAction);
 
     m_editToolBar = addToolBar(tr("Edit"));
     m_editToolBar->addAction(m_deleteAction);
@@ -470,15 +442,6 @@ void MainWindow::CreateToolbars()
     connect(m_fontColorToolButton, &QAbstractButton::clicked,
             this, &MainWindow::TextButtonTriggered);
 
-    // m_nodeColorToolButton = new QToolButton;
-    // m_nodeColorToolButton->setPopupMode(QToolButton::MenuButtonPopup);
-    // m_nodeColorToolButton->setMenu(CreateColorMenu(SLOT(NodeColorChanged()), Qt::black));
-    // m_nodeColorToolButton->setIcon(CreateColorToolButtonIcon(
-    //     ":/images/floodfill.png", Qt::black));
-    // m_nodeAction = m_nodeColorToolButton->menu()->defaultAction();
-    // connect(m_nodeColorToolButton, &QAbstractButton::clicked,
-    //     this, &MainWindow::NodeButtonTriggered);
-
     m_textToolBar = addToolBar(tr("Font"));
     m_textToolBar->addWidget(m_fontCombo);
     m_textToolBar->addWidget(m_fontSizeCombo);
@@ -488,7 +451,6 @@ void MainWindow::CreateToolbars()
 
     m_colorToolBar = addToolBar(tr("Color"));
     m_colorToolBar->addWidget(m_fontColorToolButton);
-    // m_colorToolBar->addWidget(m_nodeColorToolButton);
 
     QToolButton *baseModePointerButton = new QToolButton;
     baseModePointerButton->setCheckable(true);
@@ -499,12 +461,12 @@ void MainWindow::CreateToolbars()
     insertTextPointerButton->setCheckable(true);
     insertTextPointerButton->setIcon(QIcon(":/images/textpointer.png"));
 
-    m_pointerGroup = new QButtonGroup(this);
-    m_pointerGroup->setExclusive(true);
-    m_pointerGroup->addButton(baseModePointerButton, int(SchematicScene::BaseMode));
-    m_pointerGroup->addButton(insertTextPointerButton, int(SchematicScene::InsertTextMode));
-    connect(m_pointerGroup, SIGNAL(buttonClicked(int)),
-            this, SLOT(PointerGroupClicked(int)));
+    m_pointerBtnGroup = new QButtonGroup(this);
+    m_pointerBtnGroup->setExclusive(true);
+    m_pointerBtnGroup->addButton(baseModePointerButton, int(SchematicScene::BaseMode));
+    m_pointerBtnGroup->addButton(insertTextPointerButton, int(SchematicScene::InsertTextMode));
+    connect(m_pointerBtnGroup, SIGNAL(buttonClicked(int)),
+            this, SLOT(PointerBtnGroupClicked(int)));
 
     m_sceneScaleCombo = new QComboBox;
     QStringList scales;
@@ -532,8 +494,7 @@ QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::Devi
     button->setIcon(icon);
     button->setIconSize(QSize(DEV_ICON_SIZE, DEV_ICON_SIZE));
     button->setCheckable(true);
-    // m_buttonGroup->addButton(button, InsertDeviceButton);
-    m_buttonGroup->addButton(button, type);
+    m_deviceBtnGroup->addButton(button, type);
 
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(button, 0, 0, Qt::AlignHCenter);
@@ -791,11 +752,11 @@ void MainWindow::ScrollActionToggled(bool checked)
 {
     if (checked) {
         m_view->setDragMode(QGraphicsView::ScrollHandDrag);
-        m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(false);
+        m_pointerBtnGroup->button(int(SchematicScene::BaseMode))->setChecked(false);
     } else {
         m_view->setDragMode(QGraphicsView::RubberBandDrag);
-        m_pointerGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
+        m_pointerBtnGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
     }
 
-    m_pointerGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
+    m_pointerBtnGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
 }
