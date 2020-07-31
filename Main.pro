@@ -34,7 +34,8 @@ INCLUDEPATH += ./Src\
                ./Src/Schematic\
                ./Src/Define\
                ./Src/Parser\
-               ./Src/Circuit
+               ./Src/Circuit\
+               ./Src/ASG
 
 
 HEADERS += ./Src/Schematic/MainWindow.h\
@@ -46,7 +47,10 @@ HEADERS += ./Src/Schematic/MainWindow.h\
            ./Src/Schematic/SchematicWire.h\
            ./Src/Parser/CktParser.hpp\
            ./Src/Parser/MyParser.h\
-           ./Src/Circuit/CktNode.h
+           ./Src/Circuit/CktNode.h\
+           ./Src/ASG/ASG.h\
+           ./Src/ASG/MatrixElement.h\
+           ./Src/ASG/Matrix.h
 
 
 SOURCES += ./Src/Main/Main.cpp\
@@ -60,7 +64,10 @@ SOURCES += ./Src/Main/Main.cpp\
            ./Src/Parser/CktScanner.cpp\
            ./Src/Parser/CktParser.cpp\
            ./Src/Parser/MyParser.cpp\
-           ./Src/Circuit/CktNode.cpp
+           ./Src/Circuit/CktNode.cpp\
+           ./Src/ASG/ASG.cpp\
+           ./Src/ASG/MatrixElement.cpp\
+           ./Src/ASG/Matrix.cpp
 
 
 RESOURCES += ./Src/Schematic/Schematic.qrc

@@ -227,7 +227,7 @@ void SchematicScene::SenseDeviceTerminal(const QPointF &scenePos) const
             device = qgraphicsitem_cast<SchematicDevice *>(item);
             if (NOT device)  return;
 
-            QVector<QRectF> portRects = device->GetTerminalRects();
+            QVector<QRectF> portRects = device->TerminalRects();
             for (int i = 0; i < portRects.size(); ++ i) {
                 if (portRects[i].contains(device->mapFromScene(scenePos))) {
                     views().first()->setCursor(Qt::CrossCursor);
@@ -264,7 +264,7 @@ void SchematicScene::ProcessMousePress(const QPointF &scenePos)
         device = qgraphicsitem_cast<SchematicDevice *>(item);
         if (NOT device)  return;
 
-        QVector<QRectF> terRects = device->GetTerminalRects();
+        QVector<QRectF> terRects = device->TerminalRects();
         for (int i = 0; i < terRects.size(); ++ i) {
             if (terRects.at(i).contains(device->mapFromScene(scenePos))) {
                m_startDevice = device;
@@ -306,7 +306,7 @@ void SchematicScene::FinishDrawingWireAt(const QPointF &scenePos)
     if (NOT item)  return;
     if (item->type() == SchematicDevice::Type) {
         device = qgraphicsitem_cast<SchematicDevice *>(item);
-        QVector<QRectF> terRects = device->GetTerminalRects();
+        QVector<QRectF> terRects = device->TerminalRects();
         for (int i = 0; terRects.size(); ++ i) {
             if (terRects.at(i).contains(device->mapFromScene(scenePos))) {
                 m_endDevice = device;

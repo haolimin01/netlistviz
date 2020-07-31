@@ -13,7 +13,7 @@
 #include "NetlistDialog.h"
 #include "Parser/MyParser.h"
 
-const int DEV_ICON_SIZE = 40;
+const int DEV_ICON_SIZE = 30;
 
 
 MainWindow::MainWindow()
@@ -488,7 +488,7 @@ QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::Devi
 {
 
     SchematicDevice device(type, nullptr);
-    QIcon icon(device.GetImage());
+    QIcon icon(device.Image());
 
     QToolButton *button = new QToolButton;
     button->setIcon(icon);
