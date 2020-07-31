@@ -23,9 +23,9 @@ public:
 
     void AddDevice(SchematicDevice *device);
     void SetId(int id) { m_id = id; }
-    int GetId() const { return m_id; }
+    int  Id() const { return m_id; }
     void SetGnd(bool isGnd) { m_isGnd = isGnd; }
-    QString GetName() const { return m_name; }
+    QString Name() const { return m_name; }
     void ClearAllDevices();
     void Print() const;
 

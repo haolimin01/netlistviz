@@ -26,20 +26,20 @@ public:
 
 	~SchematicDevice();
 
-	QPixmap    GetImage();
+	QPixmap    Image();
 	QRectF     boundingRect() const override;
-	CktNode*   GetNode(int index) const;
+	CktNode*   Node(int index) const;
 	void       AddNode(CktNode *node);
-	int        GetNodeId(int index) const;
+	int        NodeId(int index) const;
 	DeviceType GetDeviceType() const { return m_deviceType; }
 	int        type() const override { return Type; }
-	QColor     GetColor() const  { return m_color; }
+	QColor     Color() const  { return m_color; }
 	void       SetName(QString name) { m_name = name; }
 	void       SetValue(double value) { m_value = value; }
-    QString    GetName() const { return m_name; }
-	double     GetValue() const { return m_value; }
+    QString    Name() const { return m_name; }
+	double     Value() const { return m_value; }
 	void       SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
-	QVector<QRectF>  GetTerminalRects() const;
+	QVector<QRectF>  TerminalRects() const;
 	void       SetShowNodeFlag(bool show = true)  { m_showNodeFlag = show; }
 	void       AddWire(SchematicWire *wire, int terIndex);
 	void       RemoveWires(bool deletion = true);

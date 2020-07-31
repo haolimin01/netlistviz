@@ -66,7 +66,7 @@ SchematicDevice::~SchematicDevice()
 }
 
 
-QPixmap SchematicDevice::GetImage()
+QPixmap SchematicDevice::Image()
 {
     if (m_imag)  return m_imag->copy();
 
@@ -83,10 +83,10 @@ QPixmap SchematicDevice::GetImage()
 }
 
 
-int SchematicDevice::GetNodeId(int index) const
+int SchematicDevice::NodeId(int index) const
 {
     assert(index < m_terNumber);
-    return m_terminals.at(index)->GetId();
+    return m_terminals.at(index)->Id();
 }
 
 
@@ -337,7 +337,7 @@ void SchematicDevice::DrawVsrc()
 }
 
 
-QVector<QRectF> SchematicDevice::GetTerminalRects() const
+QVector<QRectF> SchematicDevice::TerminalRects() const
 {
     return m_terRects;
 }
@@ -390,11 +390,11 @@ void SchematicDevice::RemoveWires(bool deletion)
     while (i < m_wiresAtTerminal.size()) {
         foreach(SchematicWire *wire, m_wiresAtTerminal.at(i)) {
            scene()->removeItem(wire);
-           device = wire->GetStartDevice();
-           terIndex = wire->GetStartTerminalIndex();
+           device = wire->StartDevice();
+           terIndex = wire->StartTerminalIndex();
            device->RemoveWire(wire, terIndex);
-           device = wire->GetEndDevice();
-           terIndex = wire->GetEndTerminalIndex();
+           device = wire->EndDevice();
+           terIndex = wire->EndTerminalIndex();
            device->RemoveWire(wire, terIndex);
            if (deletion)  delete wire;
         }
@@ -416,8 +416,8 @@ void SchematicDevice::Print() const
 {
 #if 0
     qInfo().noquote().nospace() << m_name << " type(" << m_deviceType << ") posName("
-            << m_posNode->GetName() << ") negName("
-            << m_negNode->GetName() << ") value(" << m_value << ")" << endl;
+            << m_posNode->Name() << ") negName("
+            << m_negNode->Name() << ") value(" << m_value << ")" << endl;
 #endif
  }
 
