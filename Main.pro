@@ -52,6 +52,7 @@ HEADERS += ./Src/Schematic/MainWindow.h\
            ./Src/ASG/ASG.h\
            ./Src/ASG/MatrixElement.h\
            ./Src/ASG/Matrix.h\
+           ./Src/ASG/TablePlotter.h\
            ./Src/Utilities/MyString.h
 
 
@@ -70,7 +71,7 @@ SOURCES += ./Src/Main/Main.cpp\
            ./Src/ASG/ASG.cpp\
            ./Src/ASG/MatrixElement.cpp\
            ./Src/ASG/Matrix.cpp\
-           ./Src/ASG/MatrixPlotter.cpp\
+           ./Src/ASG/TablePlotter.cpp\
            ./Src/Utilities/MyString.cpp
 
 
