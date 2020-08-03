@@ -19,6 +19,7 @@ class SchematicDevice;
 class SchematicTextItem;
 class SchematicLayout;
 class SchematicScene;
+class ASG;
 
 
 class SchematicData
@@ -40,6 +41,9 @@ public:
     void ParseR(QString, QString, QString, double);
     void ParseV(QString, QString, QString, double);
 
+    void AssignDeviceNumber();
+
+    void Clear();
     void PrintNodeAndDevice() const;
 
 private:
@@ -62,7 +66,11 @@ private:
     /* node number */
     int         m_nodeNumber;
 
+    /* for ASG level 0 */
+    DeviceList  m_firstLevelDeviceList;
+
     friend class SchematicScene;
+    friend class ASG;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATIC_DATA_H

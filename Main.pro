@@ -35,7 +35,8 @@ INCLUDEPATH += ./Src\
                ./Src/Define\
                ./Src/Parser\
                ./Src/Circuit\
-               ./Src/ASG
+               ./Src/ASG\
+               ./Src/Utilities
 
 
 HEADERS += ./Src/Schematic/MainWindow.h\
@@ -50,7 +51,8 @@ HEADERS += ./Src/Schematic/MainWindow.h\
            ./Src/Circuit/CktNode.h\
            ./Src/ASG/ASG.h\
            ./Src/ASG/MatrixElement.h\
-           ./Src/ASG/Matrix.h
+           ./Src/ASG/Matrix.h\
+           ./Src/Utilities/MyString.h
 
 
 SOURCES += ./Src/Main/Main.cpp\
@@ -67,7 +69,10 @@ SOURCES += ./Src/Main/Main.cpp\
            ./Src/Circuit/CktNode.cpp\
            ./Src/ASG/ASG.cpp\
            ./Src/ASG/MatrixElement.cpp\
-           ./Src/ASG/Matrix.cpp
+           ./Src/ASG/Matrix.cpp\
+           ./Src/ASG/MatrixPlotter.cpp\
+           ./Src/Utilities/MyString.cpp
 
 
 RESOURCES += ./Src/Schematic/Schematic.qrc
+RC_ICONS = ./Src/Main/netlistviz.ico

@@ -20,11 +20,9 @@ SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
     m_showNodeFlag = false;
 }
 
-
 SchematicScene::~SchematicScene()
 {
 }
-
 
 /* Do NOT handle m_data */
 void SchematicScene::InitVariables()
@@ -43,7 +41,6 @@ void SchematicScene::InitVariables()
     m_line = nullptr;
 }
 
-
 void SchematicScene::SetTextColor(const QColor &color)
 {
     m_textColor = color;
@@ -53,7 +50,6 @@ void SchematicScene::SetTextColor(const QColor &color)
         item->setDefaultTextColor(m_textColor);
     }
 }
-
 
 void SchematicScene::SetFont(const QFont &font)
 {
@@ -69,12 +65,10 @@ void SchematicScene::SetFont(const QFont &font)
     }
 }
 
-
 void SchematicScene::SetDeviceType(SchematicDevice::DeviceType type)
 {
     m_deviceType = type;
 }
-
 
 void SchematicScene::EditorLostFocus(SchematicTextItem *item)
 {
@@ -87,7 +81,6 @@ void SchematicScene::EditorLostFocus(SchematicTextItem *item)
         item->deleteLater();
     }
 }
-
 
 void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
@@ -121,7 +114,6 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
     QGraphicsScene::mousePressEvent(mouseEvent);
 }
 
-
 void SchematicScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
 #ifdef TRACEx
@@ -149,13 +141,11 @@ void SchematicScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
     QGraphicsScene::mouseMoveEvent(mouseEvent);
 }
 
-
 void SchematicScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
     /* do something */
     QGraphicsScene::mouseReleaseEvent(mouseEvent);
 }
-
 
 void SchematicScene::SetShowNodeFlag(bool show)
 {
@@ -170,7 +160,6 @@ void SchematicScene::SetShowNodeFlag(bool show)
         }
     }
 }
-
 
 void SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
                                            const QPointF &pos)
@@ -198,14 +187,12 @@ void SchematicScene::InsertSchematicTextItem(const QPointF &pos)
     emit TextInserted(m_text);
 }
 
-
 bool SchematicScene::IsItemChange(int type) const
 {
     const QList<QGraphicsItem *> items = selectedItems();
     const auto cb = [type](const QGraphicsItem *item) { return item->type() == type; };
     return std::find_if(items.begin(), items.end(), cb) != items.end();
 }
-
 
 /*
     Check whether the mouse is right at a device port.
@@ -239,7 +226,6 @@ void SchematicScene::SenseDeviceTerminal(const QPointF &scenePos) const
 
     views().first()->setCursor(Qt::ArrowCursor);
 }
-
 
 /*
     When the mouse is pressed in base mode, this function differentiates whether
@@ -286,7 +272,6 @@ void SchematicScene::ProcessMousePress(const QPointF &scenePos)
     }
 }
 
-
 void SchematicScene::DrawWireTowardDeviceTerminal(const QPointF &scenePos)
 {
     if (NOT m_line)
@@ -295,7 +280,6 @@ void SchematicScene::DrawWireTowardDeviceTerminal(const QPointF &scenePos)
    QLineF newLine(m_startPoint, scenePos);
    m_line->setLine(newLine); 
 }
-
 
 void SchematicScene::FinishDrawingWireAt(const QPointF &scenePos)
 {
@@ -334,7 +318,6 @@ void SchematicScene::FinishDrawingWireAt(const QPointF &scenePos)
     }
 }
 
-
 void SchematicScene::InsertSchematicWire(SchematicDevice *startDev, SchematicDevice *endDev,
                                 int startTer, int endTer, const QVector<QPointF> &wirePoints)
 {
@@ -349,8 +332,6 @@ void SchematicScene::InsertSchematicWire(SchematicDevice *startDev, SchematicDev
     endDev->AddWire(newWire, endTer);
 }
                     
-
-
 /* Read and Write SchematicData */
 // BUG
 void SchematicScene::RenderSchematicData(SchematicData *data)
@@ -358,22 +339,14 @@ void SchematicScene::RenderSchematicData(SchematicData *data)
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-#if 0
     Q_ASSERT(data);
-    InitVariables();
 
-    /* Update node and device number */
-    // m_nodeNumber = data->m_nodeList.size();
-    m_deviceNumber = data->m_deviceList.size();
 
-    /* Remove and Delete all items */
-    clear();
-
-    m_schLayout->GeneratePos(data, SchematicLayout::Square);
+    // m_schLayout->GeneratePos(data, SchematicLayout::Square);
 
     /* t => temp */
     // SchematicNode *tNode = nullptr;
-    SchematicDevice *tDev = nullptr;
+    // SchematicDevice *tDev = nullptr;
 
     // for (int i = 0; i < data->m_nodeList.size(); ++ i) {
     //     tNode = data->m_nodeList.at(i);
@@ -381,14 +354,12 @@ void SchematicScene::RenderSchematicData(SchematicData *data)
     //     addItem(tNode);
     // }
 
-    for (int i = 0; i < data->m_deviceList.size(); ++ i) {
-        tDev = data->m_deviceList.at(i);
-        tDev->SetContextMenu(m_itemMenu);
-        addItem(tDev);
-    }
-#endif
+    // for (int i = 0; i < data->m_deviceList.size(); ++ i) {
+    //     tDev = data->m_deviceList.at(i);
+    //     tDev->SetContextMenu(m_itemMenu);
+    //     addItem(tDev);
+    // }
 }
-
 
 // BUG
 void SchematicScene::WriteSchematicToStream(QTextStream &stream) const
@@ -451,7 +422,6 @@ void SchematicScene::WriteSchematicToStream(QTextStream &stream) const
     QApplication::setOverrideCursor(Qt::ArrowCursor);
 #endif
 }
-
 
 // BUG
 void SchematicScene::LoadSchematicFromStream(QTextStream &stream)

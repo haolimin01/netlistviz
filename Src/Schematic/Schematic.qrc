@@ -16,6 +16,9 @@
     <file>images/saveas_schematic.png</file>
     <file>images/scroll.png</file>
     <file>images/show_node.png</file>
+    <file>images/build_matrix.png</file>
+    <file>images/levelling.png</file>
+    <file>images/bubbling.png</file>
 </qresource>
 </RCC>
 

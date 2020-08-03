@@ -12,6 +12,7 @@
 #include "Define/Define.h"
 #include "NetlistDialog.h"
 #include "Parser/MyParser.h"
+#include "ASG/ASG.h"
 
 const int DEV_ICON_SIZE = 30;
 
@@ -30,20 +31,22 @@ MainWindow::MainWindow()
     CreateDeviceToolBox();
 
     CreateMenus();
-    CreateToolbars();
+    CreateToolBars();
 
     CreateSchematicScene();
     CreateCenterWidget();
     setWindowTitle(tr("netlistviz"));
     setUnifiedTitleAndToolBarOnMac(true);
-}
 
+    connect(this, &MainWindow::NetlistChanged, this, &MainWindow::NetlistChangedSlot);
+}
 
 MainWindow::~MainWindow()
 {
-
+    m_scene->clear();
+    if (m_data)  m_data->Clear();
+    if (m_asg)  delete m_asg;
 }
-
 
 void MainWindow::InitVariables()
 {
@@ -51,11 +54,12 @@ void MainWindow::InitVariables()
     m_curNetlistFile = "";
     m_curSchematicPath = ".";
     m_curSchematicFile = "";
+    m_data = nullptr;
+    m_asg = new ASG();
 
     m_netlistDialog = new NetlistDialog(this);
-    connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::RenderNetlistFile);
+    connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::ParseNetlist);
 }
-
 
 void MainWindow::CreateSchematicScene()
 {
@@ -70,7 +74,6 @@ void MainWindow::CreateSchematicScene()
     connect(m_scene, &SchematicScene::changed,
             this, &MainWindow::UpdateWindowTitle);
 }
-
 
 void MainWindow::CreateCenterWidget()
 {
@@ -89,7 +92,6 @@ void MainWindow::CreateCenterWidget()
     setCentralWidget(widget);
 }
 
-
 void MainWindow::DeviceBtnGroupClicked(int id)
 {
     const QList<QAbstractButton *> buttons = m_deviceBtnGroup->buttons();
@@ -103,6 +105,19 @@ void MainWindow::DeviceBtnGroupClicked(int id)
 
 }
 
+void MainWindow::closeEvent(QCloseEvent *closeEvent)
+{
+    if (m_asg) {
+        delete m_asg;
+        m_asg = nullptr;
+    }
+    if (m_data) {
+        delete m_data;
+        m_data = nullptr;
+    }
+    
+    QMainWindow::closeEvent(closeEvent);
+}
 
 void MainWindow::DeleteItem()
 {
@@ -134,7 +149,6 @@ void MainWindow::DeleteItem()
     }
 }
 
-
 /* BUG */
 void MainWindow::PointerBtnGroupClicked(int id)
 {
@@ -152,7 +166,6 @@ void MainWindow::PointerBtnGroupClicked(int id)
     }
 }
 
-
 /* BUG */
 void MainWindow::BringToFront()
 {
@@ -164,7 +177,6 @@ void MainWindow::BringToFront()
     qreal zValue = 0;
     selectedItem->setZValue(zValue);
 }
-
 
 /* BUG */
 void MainWindow::SendToBack()
@@ -178,14 +190,12 @@ void MainWindow::SendToBack()
     selectedItem->setZValue(zValue);
 }
 
-
 void MainWindow::TextInserted(QGraphicsTextItem *)
 {
     m_pointerBtnGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
     m_pointerBtnGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
     m_scene->SetMode(SchematicScene::BaseMode);
 }
-
 
 void MainWindow::DeviceInserted(SchematicDevice *device)
 {
@@ -196,18 +206,15 @@ void MainWindow::DeviceInserted(SchematicDevice *device)
     m_deviceBtnGroup->button((int)(device->GetDeviceType()))->setChecked(false);
 }
 
-
 void MainWindow::CurrentFontChanged(const QFont &)
 {
     HandleFontChange();
 }
 
-
 void MainWindow::FontSizeChanged(const QString &)
 {
     HandleFontChange();
 }
-
 
 void MainWindow::SceneScaleChanged(const QString &scale)
 {
@@ -218,7 +225,6 @@ void MainWindow::SceneScaleChanged(const QString &scale)
     m_view->scale(newScale, newScale);
 }
 
-
 void MainWindow::TextColorChanged()
 {
     m_textAction = qobject_cast<QAction *>(sender());
@@ -228,18 +234,15 @@ void MainWindow::TextColorChanged()
     TextButtonTriggered();
 }
 
-
 // void MainWindow::WireColorChanged()
 // {
 // 
 // }
 
-
 void MainWindow::TextButtonTriggered()
 {
     m_scene->SetTextColor(qvariant_cast<QColor>(m_textAction->data()));
 }
-
 
 void MainWindow::HandleFontChange()
 {
@@ -251,7 +254,6 @@ void MainWindow::HandleFontChange()
 
     m_scene->SetFont(font);
 }
-
 
 void MainWindow::ItemSelected(QGraphicsItem *item)
 {
@@ -266,14 +268,12 @@ void MainWindow::ItemSelected(QGraphicsItem *item)
     m_underlineAction->setChecked(font.underline());
 }
 
-
 void MainWindow::About()
 {
     QMessageBox::about(this, tr("About netlistviz"),
                        tr("The <b>netlistviz</b> shows "
                           "SPICE netlist"));
 }
-
 
 void MainWindow::CreateDeviceToolBox()
 {
@@ -309,7 +309,6 @@ void MainWindow::CreateDeviceToolBox()
     m_devicePanelDockWidget->hide();
     addDockWidget(Qt::LeftDockWidgetArea, m_devicePanelDockWidget);
 }
-
 
 void MainWindow::CreateActions()
 {
@@ -360,7 +359,7 @@ void MainWindow::CreateActions()
 
     m_saveSchematicFileAction = new QAction(QIcon(":/images/save_schematic.png"), tr("S&ave Schematic"), this);
     m_saveSchematicFileAction->setShortcut(QKeySequence::Save);
-    connect(m_saveSchematicFileAction, &QAction::triggered, this, &MainWindow::SaveSchematicFile);
+    // connect(m_saveSchematicFileAction, &QAction::triggered, this, &MainWindow::SaveSchematicFile);
 
     m_saveAsSchematicFileAction = new QAction(QIcon(":/images/saveas_schematic.png"), tr("SaveA&s Schematic"), this);
     connect(m_saveAsSchematicFileAction, &QAction::triggered, this, &MainWindow::SaveAsSchematicFile);
@@ -378,8 +377,19 @@ void MainWindow::CreateActions()
     m_showNodeAction->setCheckable(true);
     m_showNodeAction->setChecked(false);
     connect(m_showNodeAction, &QAction::toggled, this, &MainWindow::ShowItemNodeToggled);
-}
 
+    m_buildMatrixAction = new QAction(QIcon(":/images/build_matrix.png"), tr("Build Matrix"), this);
+    m_buildMatrixAction->setEnabled(false);
+    connect(m_buildMatrixAction, &QAction::triggered, this, &MainWindow::BuildIncidenceMatrix);
+    
+    m_levellingAction = new QAction(QIcon(":/images/levelling.png"), tr("Levelling"), this);
+    m_levellingAction->setEnabled(false);
+    connect(m_levellingAction, &QAction::triggered, this, &MainWindow::Levelling);
+
+    m_bubblingAction = new QAction(QIcon(":/images/bubbling.png"), tr("Bubbling"), this);
+    m_bubblingAction->setEnabled(false);
+    connect(m_bubblingAction, &QAction::triggered, this, &MainWindow::Bubbling);
+}
 
 void MainWindow::CreateMenus()
 {
@@ -401,12 +411,16 @@ void MainWindow::CreateMenus()
     m_viewMenu->addAction(m_devicePanelDockWidget->toggleViewAction());
     m_viewMenu->addAction(m_showNodeAction);
 
+    m_asgMenu = menuBar()->addMenu(tr("&ASG"));
+    m_asgMenu->addAction(m_buildMatrixAction);
+    m_asgMenu->addAction(m_levellingAction);
+    m_asgMenu->addAction(m_bubblingAction);
+
     m_aboutMenu = menuBar()->addMenu(tr("&Help"));
     m_aboutMenu->addAction(m_aboutAction);
 }
 
-
-void MainWindow::CreateToolbars()
+void MainWindow::CreateToolBars()
 {
     m_fileToolBar = addToolBar(tr("File"));
     m_fileToolBar->addAction(m_openNetlistAction);
@@ -476,13 +490,17 @@ void MainWindow::CreateToolbars()
     connect(m_sceneScaleCombo, &QComboBox::currentTextChanged,
             this, &MainWindow::SceneScaleChanged);
 
-    m_pointerToolbar = addToolBar(tr("Pointer type"));
-    m_pointerToolbar->addWidget(baseModePointerButton);
-    m_pointerToolbar->addAction(m_scrollPointerAction);
-    m_pointerToolbar->addWidget(insertTextPointerButton);
-    m_pointerToolbar->addWidget(m_sceneScaleCombo);
-}
+    m_pointerToolBar = addToolBar(tr("Pointer type"));
+    m_pointerToolBar->addWidget(baseModePointerButton);
+    m_pointerToolBar->addAction(m_scrollPointerAction);
+    m_pointerToolBar->addWidget(insertTextPointerButton);
+    m_pointerToolBar->addWidget(m_sceneScaleCombo);
 
+    m_asgToolBar = addToolBar(tr("ASG"));
+    m_asgToolBar->addAction(m_buildMatrixAction);
+    m_asgToolBar->addAction(m_levellingAction);
+    m_asgToolBar->addAction(m_bubblingAction);
+}
 
 QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::DeviceType type)
 {
@@ -506,7 +524,6 @@ QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::Devi
     return widget;
 }
 
-
 QMenu *MainWindow::CreateColorMenu(const char *slot, QColor defaultColor)
 {
     QList<QColor> colors;
@@ -529,7 +546,6 @@ QMenu *MainWindow::CreateColorMenu(const char *slot, QColor defaultColor)
     return colorMenu;
 }
 
-
 QIcon MainWindow::CreateColorToolButtonIcon(const QString &imageFile, QColor color)
 {
     QPixmap pixmap(50, 80);
@@ -545,7 +561,6 @@ QIcon MainWindow::CreateColorToolButtonIcon(const QString &imageFile, QColor col
     return QIcon(pixmap);
 }
 
-
 QIcon MainWindow::CreateColorIcon(QColor color)
 {
     QPixmap pixmap(20, 20);
@@ -556,12 +571,10 @@ QIcon MainWindow::CreateColorIcon(QColor color)
     return QIcon(pixmap);
 }
 
-
 void MainWindow::ShowItemNodeToggled(bool show)
 {
     m_scene->SetShowNodeFlag(show);
 }
-
 
 void MainWindow::OpenNetlist()
 {
@@ -582,9 +595,17 @@ void MainWindow::OpenNetlist()
     m_curNetlistPath = QFileInfo(fileName).path();
     m_curNetlistFile = fileName;
 
+    emit NetlistChanged();
+
     ShowNetlistFile(m_curNetlistFile);
 }
 
+void MainWindow::NetlistChangedSlot()
+{
+    m_buildMatrixAction->setEnabled(true);
+    m_levellingAction->setEnabled(true);
+    m_bubblingAction->setEnabled(true);
+}
 
 void MainWindow::OpenSchematic()
 {
@@ -592,6 +613,7 @@ void MainWindow::OpenSchematic()
     qInfo() << LINE_INFO << endl;
 #endif 
 
+#if 0
     QString fileName;
     QString fileFilters;
     fileFilters = tr("Schematic files (*.sch)\n" "All files(*)");
@@ -618,8 +640,8 @@ void MainWindow::OpenSchematic()
 
     QString dispName = QFileInfo(m_curSchematicFile).fileName();
     setWindowTitle(dispName);
+#endif
 }
-
 
 void MainWindow::UpdateWindowTitle(const QList<QRectF> &)
 {
@@ -636,12 +658,12 @@ void MainWindow::UpdateWindowTitle(const QList<QRectF> &)
     setWindowTitle(dispName);
 }
 
-
 void MainWindow::SaveSchematicFile() 
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
+#if 0
     if (m_curSchematicFile.isEmpty())
         return SaveAsSchematicFile();
 
@@ -662,14 +684,15 @@ void MainWindow::SaveSchematicFile()
 #ifdef DEBUG
     qInfo() << "Save to " << m_curSchematicFile << endl;
 #endif
+#endif
 }
-
 
 void MainWindow::SaveAsSchematicFile()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
+#if 0
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save Schematic As"),
                                     m_curSchematicPath, tr("Schematic files (*.sch)"));
     
@@ -695,8 +718,8 @@ void MainWindow::SaveAsSchematicFile()
 
     QString dispName = QFileInfo(m_curSchematicFile).fileName();
     setWindowTitle(dispName);
+#endif
 }
-
 
 void MainWindow::ShowNetlistFile(const QString &netlist)
 {
@@ -704,49 +727,56 @@ void MainWindow::ShowNetlistFile(const QString &netlist)
     m_netlistDialog->show();
 }
 
+// void MainWindow::RenderNetlist()
+// {
+// #ifdef TRACE
+//     qInfo() << LINE_INFO << endl;
+// #endif
+//     SchematicData *data = ParseNetlist();
+//     if (data) {
+//         m_view->centerOn(CenterX, CenterY);
+//         m_scene->RenderSchematicData(data);
+//         m_scene->SetMode(SchematicScene::BaseMode);
+//         // m_scene->update();
+//     }
+// }
 
-void MainWindow::RenderNetlistFile()
+void MainWindow::ParseNetlist()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-    SchematicData *data = ParseNetlist();
-    if (data) {
-        m_view->centerOn(CenterX, CenterY);
-        m_scene->RenderSchematicData(data);
-        m_scene->SetMode(SchematicScene::BaseMode);
-        m_scene->update();
-    }
-}
 
+    if (m_data) delete m_data;
+    /* delete all devices */
+    m_scene->clear();
 
-SchematicData* MainWindow::ParseNetlist()
-{
-#ifdef TRACE
-    qInfo() << LINE_INFO << endl;
-#endif
     MyParser parser;
-    SchematicData *data = new SchematicData();
-    int error = parser.ParseNetlist(m_curNetlistFile.toStdString(), data);
+    m_data = new SchematicData();
+    int error = parser.ParseNetlist(m_curNetlistFile.toStdString(), m_data);
     if (error) {
-        delete data;
+        delete m_data;
         ShowCriticalMsg(tr("Parse Netlist failed."));
-        return nullptr;
+        return;
     }
+
+    m_asg->SetSchematicData(m_data);
 
 #ifdef DEBUG
-    // data->PrintNodeAndDevice();
+    m_data->PrintNodeAndDevice();
 #endif
-
-    return data;
+    ShowInfoMsg(tr("Parse Netlist successfully."));
 }
-
 
 void MainWindow::ShowCriticalMsg(const QString &msg)
 {
     QMessageBox::critical(this, tr("Critical Message"), msg);
 }
 
+void MainWindow::ShowInfoMsg(const QString &msg)
+{
+    QMessageBox::information(this, tr("Information"), msg);
+}
 
 void MainWindow::ScrollActionToggled(bool checked)
 {
@@ -759,4 +789,32 @@ void MainWindow::ScrollActionToggled(bool checked)
     }
 
     m_pointerBtnGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
+}
+
+void MainWindow::BuildIncidenceMatrix()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+    m_asg->BuildIncidenceMatrix();
+}
+
+void MainWindow::Levelling()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+    if (NOT m_asg->BuildMatrixFinished()) {
+        ShowCriticalMsg(tr("Please Build Incidence Matrix firstly!"));
+        return;
+    }
+    m_asg->Levelling();
+}
+
+void MainWindow::Bubbling()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
 }

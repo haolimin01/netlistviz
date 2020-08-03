@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsScene>
+#include <iostream>
+#include <sstream>
 #include "Circuit/CktNode.h"
 #include "Define/Define.h"
 #include "SchematicWire.h"
@@ -51,6 +53,8 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     m_imag = nullptr;
     m_showNodeFlag = false;
     m_wiresAtTerminal.resize(m_terNumber);
+    m_id = -1;
+    m_idGiven = false;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -59,12 +63,10 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     setZValue(0);
 }
 
-
 SchematicDevice::~SchematicDevice()
 {
     if (m_imag)  delete m_imag;
 }
-
 
 QPixmap SchematicDevice::Image()
 {
@@ -82,25 +84,28 @@ QPixmap SchematicDevice::Image()
     return m_imag->copy();
 }
 
-
-int SchematicDevice::NodeId(int index) const
+int SchematicDevice::NodeId(NodeType type) const
 {
-    assert(index < m_terNumber);
-    return m_terminals.at(index)->Id();
+    CktNode *node = m_terminals.value(type, nullptr);
+    if (node)  return node->Id();
+    else  return -1;
 }
 
+SchematicDevice::NodeType SchematicDevice::GetNodeType(CktNode *node) const
+{
+    NodeType type = m_terminals.key(node, Positive);
+    return type;
+}
 
 void SchematicDevice::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     // do nothing now.
 }
 
-
 QRectF SchematicDevice::boundingRect() const
 {
     return QRectF(-BRECT_W, -BRECT_W, 2 * BRECT_W, 2 * BRECT_W);
 }
-
 
 QRectF SchematicDevice::DashRect() const
 {
@@ -108,7 +113,6 @@ QRectF SchematicDevice::DashRect() const
 
     return QRectF(-12, -BASE_LEN + halfTerSize, 24, (BASE_LEN - halfTerSize) * 2);
 }
-
 
 void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
                   QWidget *)
@@ -135,7 +139,6 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
         painter->drawRect(DashRect());
     }
 }
-
 
 void SchematicDevice::DrawResistor()
 {
@@ -177,7 +180,6 @@ void SchematicDevice::DrawResistor()
     m_terRects.append(QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
-
 void SchematicDevice::DrawCapacitor()
 {
 #ifdef TRACEx
@@ -215,7 +217,6 @@ void SchematicDevice::DrawCapacitor()
     m_terRects.append(QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
-
 void SchematicDevice::DrawInductor()
 {
 #ifdef TRACEx
@@ -248,7 +249,6 @@ void SchematicDevice::DrawInductor()
     int lowerCornerY = BASE_LEN;
     m_terRects.append(QRectF(lowerCornerX, lowerCornerY, width, width));
 }
-
 
 void SchematicDevice::DrawIsrc()
 {
@@ -291,7 +291,6 @@ void SchematicDevice::DrawIsrc()
     m_terRects.append(QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
     m_terRects.append(QRectF(-halfTerSize, BASE_LEN, width, width));
 }
-
 
 void SchematicDevice::DrawVsrc()
 {
@@ -336,18 +335,22 @@ void SchematicDevice::DrawVsrc()
     m_terRects.append(QRectF(-halfTerSize, BASE_LEN, width, width));
 }
 
-
 QVector<QRectF> SchematicDevice::TerminalRects() const
 {
     return m_terRects;
 }
 
-
-void SchematicDevice::AddNode(CktNode *node)
+void SchematicDevice::AddNode(NodeType type, CktNode *node)
 {
-    m_terminals.append(node);
+    m_terminals.insert(type, node);
 }
 
+CktNode* SchematicDevice::Node(NodeType type) const
+{
+    CktNode *node = nullptr;
+    node = m_terminals.value(type, nullptr);
+    return node;
+}
 
 QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &value)
 {
@@ -361,7 +364,6 @@ QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &
     return QGraphicsItem::itemChange(change, value);
 }
 
-
 void SchematicDevice::UpdateWirePosition()
 {
     int i = 0;
@@ -374,13 +376,11 @@ void SchematicDevice::UpdateWirePosition()
     }
 }
 
-
 void SchematicDevice::AddWire(SchematicWire *wire, int terIndex)
 {
     assert(terIndex < m_terNumber);
     m_wiresAtTerminal[terIndex].append(wire);
 }
-
 
 void SchematicDevice::RemoveWires(bool deletion)
 {
@@ -402,7 +402,6 @@ void SchematicDevice::RemoveWires(bool deletion)
     }
 }
 
-
 void SchematicDevice::RemoveWire(SchematicWire *wire, int terIndex)
 {
     assert(terIndex < m_terNumber);
@@ -411,7 +410,6 @@ void SchematicDevice::RemoveWire(SchematicWire *wire, int terIndex)
         m_wiresAtTerminal[terIndex].removeAt(wireIndex);
 }
 
-
 void SchematicDevice::Print() const
 {
 #if 0
@@ -419,5 +417,32 @@ void SchematicDevice::Print() const
             << m_posNode->Name() << ") negName("
             << m_negNode->Name() << ") value(" << m_value << ")" << endl;
 #endif
+    std::stringstream ss;
+
+    ss << "Name(" << m_name.toStdString() << "), ";
+    ss << "type(" << m_deviceType << "), ";
+    ss << "id(" << m_id << "), ";
+
+    CktNode *node = nullptr;
+    
+    switch (m_deviceType) {
+        case Resistor:
+        case Capacitor:
+        case Inductor:
+        case Isrc:
+        case Vsrc:
+            node = Node(SchematicDevice::Positive);
+            if (node) {
+                ss << "posName(" << node->Name().toStdString() << "), ";
+            }
+            node = Node(SchematicDevice::Negative);
+            if (node) {
+                ss << "negName(" << node->Name().toStdString() << ")";
+            }
+            break;
+        default:;
+    }
+
+    std::cout << ss.str() << std::endl;
  }
 

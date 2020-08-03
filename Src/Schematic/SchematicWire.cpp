@@ -20,12 +20,10 @@ SchematicWire::SchematicWire(SchematicDevice *startDev, SchematicDevice *endDev,
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 }
 
-
 SchematicWire::~SchematicWire()
 {
 
 }
-
 
 QRectF SchematicWire::boundingRect() const
 {
@@ -45,7 +43,6 @@ QRectF SchematicWire::boundingRect() const
 
     return QRectF(minX, minY, maxX - minX, maxY - minY);
 }
-
 
 void SchematicWire::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                         QWidget *)
@@ -71,13 +68,11 @@ void SchematicWire::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     }
 }
 
-
 void SchematicWire::SetWirePathPoints(QVector<QPointF> points)
 {
     m_wirePathPoints.clear();
     m_wirePathPoints = points;
 }
-
 
 void SchematicWire::UpdatePosition(SchematicDevice *device, int terIndex, const QPointF &newPos)
 {
