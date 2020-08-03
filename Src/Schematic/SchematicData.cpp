@@ -9,7 +9,6 @@
 SchematicData::SchematicData()
 {
     m_nodeNumber = 1;
-    m_deviceNumber = 0;
 }
 
 SchematicData::~SchematicData()
@@ -41,8 +40,6 @@ void SchematicData::ParseC(QString name, QString posName, QString negName, doubl
     SchematicDevice *c = new SchematicDevice(SchematicDevice::Capacitor, nullptr);
     c->SetName(name);
     c->SetValue(value);
-    c->SetId(m_deviceNumber);
-    m_deviceNumber++;
 
     c->AddNode(SchematicDevice::Positive, posNode);
     c->AddNode(SchematicDevice::Negative, negNode);
@@ -66,8 +63,6 @@ void SchematicData::ParseI(QString name, QString posName, QString negName, doubl
     SchematicDevice *i = new SchematicDevice(SchematicDevice::Isrc, nullptr);
     i->SetName(name);
     i->SetValue(value);
-    i->SetId(m_deviceNumber);
-    m_deviceNumber++;
 
     i->AddNode(SchematicDevice::Positive, posNode);
     i->AddNode(SchematicDevice::Negative, negNode);
@@ -77,6 +72,10 @@ void SchematicData::ParseI(QString name, QString posName, QString negName, doubl
 
     m_deviceTable.insert(name, i);
     m_deviceList.push_back(i);
+
+    /* now first level deviceList just contains one */
+    if (m_firstLevelDeviceList.size() < 1)
+        m_firstLevelDeviceList.push_back(i);
 }
 
 void SchematicData::ParseL(QString name, QString posName, QString negName, double value)
@@ -91,8 +90,6 @@ void SchematicData::ParseL(QString name, QString posName, QString negName, doubl
     SchematicDevice *l = new SchematicDevice(SchematicDevice::Inductor, nullptr);
     l->SetName(name);
     l->SetValue(value);
-    l->SetId(m_deviceNumber);
-    m_deviceNumber++;
 
     l->AddNode(SchematicDevice::Positive, posNode);
     l->AddNode(SchematicDevice::Negative, negNode);
@@ -116,8 +113,6 @@ void SchematicData::ParseR(QString name, QString posName, QString negName, doubl
     SchematicDevice *r = new SchematicDevice(SchematicDevice::Resistor, nullptr);
     r->SetName(name);
     r->SetValue(value);
-    r->SetId(m_deviceNumber);
-    m_deviceNumber++;
 
     r->AddNode(SchematicDevice::Positive, posNode);
     r->AddNode(SchematicDevice::Negative, negNode);
@@ -141,8 +136,6 @@ void SchematicData::ParseV(QString name, QString posName, QString negName, doubl
     SchematicDevice *v = new SchematicDevice(SchematicDevice::Vsrc, nullptr);
     v->SetName(name);
     v->SetValue(value);
-    v->SetId(m_deviceNumber);
-    m_deviceNumber++;
 
     v->AddNode(SchematicDevice::Positive, posNode);
     v->AddNode(SchematicDevice::Negative, negNode);
@@ -152,6 +145,10 @@ void SchematicData::ParseV(QString name, QString posName, QString negName, doubl
 
     m_deviceTable.insert(name, v);
     m_deviceList.push_back(v);
+
+    /* now first level deviceList just contains one */
+    if (m_firstLevelDeviceList.size() < 1)
+        m_firstLevelDeviceList.push_back(v);
 }
 
 CktNode* SchematicData::GetAddNode(const QString &name)
@@ -184,6 +181,35 @@ bool SchematicData::IsGnd(const QString &name) const
     std::regex gndRex("^(0|gnd)$", std::regex::icase);
     bool ret = std::regex_match(name.toStdString(), gndRex);
     return ret;
+}
+
+void SchematicData::AssignDeviceNumber()
+{
+    int id = 0;
+    SchematicDevice *device = nullptr;
+    foreach (device, m_firstLevelDeviceList) {
+        device->SetId(id);
+        id++;
+    }
+
+    foreach (device, m_deviceList) {
+        if (device->IdGiven())  continue;
+        device->SetId(id);
+        id++;
+    }
+}
+
+void SchematicData::Clear()
+{
+    /* Devices will be deletedd by SchematicScene */
+    CktNode *node = nullptr;
+    foreach (node, m_nodeList)
+        delete node;
+    
+    m_nodeList.clear();
+    m_nodeTable.clear();
+    m_deviceList.clear();
+    m_deviceTable.clear();
 }
 
 void SchematicData::PrintNodeAndDevice() const

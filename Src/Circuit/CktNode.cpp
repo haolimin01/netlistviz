@@ -11,7 +11,8 @@ CktNode::CktNode(QString nodeName)
 
 CktNode::~CktNode()
 {
-
+    /* devices will be deleted by SchematicScene */
+    m_devices.clear();
 }
 
 void CktNode::AddDevice(SchematicDevice *device)

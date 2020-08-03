@@ -41,6 +41,9 @@ public:
     void ParseR(QString, QString, QString, double);
     void ParseV(QString, QString, QString, double);
 
+    void AssignDeviceNumber();
+
+    void Clear();
     void PrintNodeAndDevice() const;
 
 private:
@@ -62,8 +65,9 @@ private:
 
     /* node number */
     int         m_nodeNumber;
-    /* device number */
-    int         m_deviceNumber;
+
+    /* for ASG level 0 */
+    DeviceList  m_firstLevelDeviceList;
 
     friend class SchematicScene;
     friend class ASG;

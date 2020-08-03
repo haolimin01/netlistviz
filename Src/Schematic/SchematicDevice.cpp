@@ -54,6 +54,7 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     m_showNodeFlag = false;
     m_wiresAtTerminal.resize(m_terNumber);
     m_id = -1;
+    m_idGiven = false;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);

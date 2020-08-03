@@ -8,6 +8,8 @@ MatrixElement::MatrixElement(int row, int col,
     m_colIndex = col;
     m_fromDevice = fromDevice;
     m_toDevice = toDevice;
+
+    m_visited = false;
 }
 
 MatrixElement::~MatrixElement()

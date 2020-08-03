@@ -27,6 +27,9 @@ public:
     int   RowIndex() const { return m_rowIndex; }
     int   ColIndex() const { return m_colIndex; }
 
+    bool  Visited() const { return m_visited; }
+    void  SetVisited(bool visited = true) { m_visited = visited; }
+
     SchematicDevice* FromDevice() const { return m_fromDevice; }
     SchematicDevice* ToDevice()   const { return m_toDevice; }
     MatrixElement*   NextInRow() const { return m_nextInRow; }
@@ -50,6 +53,8 @@ private:
     SchematicDevice *m_toDevice;
     MatrixElement   *m_nextInRow;
     MatrixElement   *m_nextInCol;
+
+    bool             m_visited;
 };
 
 #endif // NETLISTVIZ_ASG_MATRIXELEMENT_H

@@ -1,8 +1,9 @@
 #include "Matrix.h"
+#include <QDebug>
 #include "MatrixElement.h"
 #include "Schematic/SchematicDevice.h"
-#include <QDebug>
 #include "Utilities/MyString.h"
+#include "TablePlotter.h"
 
 
 Matrix::Matrix(int size)
@@ -12,6 +13,8 @@ Matrix::Matrix(int size)
 
     m_rowHead = new HeadElement[size];
     m_colHead = new HeadElement[size];
+
+    m_plotter = nullptr;
 }
 
 Matrix::~Matrix()
@@ -28,6 +31,8 @@ Matrix::~Matrix()
 
     delete []m_rowHead;
     delete []m_colHead;
+
+    if (m_plotter)  delete m_plotter;
 }
 
 void Matrix::InsertElement(int row, int col,
@@ -89,17 +94,29 @@ void Matrix::SetColHeadDevice(int col, SchematicDevice *device)
     m_colHead[col].device = device;
 }
 
+HeadElement Matrix::RowHead(int row) const
+{
+    Q_ASSERT(row >=0 && row < m_size);
+    return m_rowHead[row];
+}
+
+HeadElement Matrix::ColHead(int col) const
+{
+    Q_ASSERT(col >= 0 && col < m_size);
+    return m_colHead[col];
+}
+
 void Matrix::Print() const
 {
     printf("---------------- Incidence Matrix ---------------\n");
     /* Print Row Head String */
-    printf("%-6s", " ");
+    printf("%-8s", " ");
 
     SchematicDevice *device = nullptr;
     for (int i = 0; i < m_size; ++ i) {
         device = m_colHead[i].device;
         assert(device->Id() == i);
-        printf("%-6s", CString(device->Name()));
+        printf("%-8s", CString(device->Name()));
     }
     printf("\n");
 
@@ -109,14 +126,14 @@ void Matrix::Print() const
     for (int i = 0; i < m_size; ++ i) {
         device = m_rowHead[i].device;
         assert(device->Id() == i);
-        printf("%-6s", CString(device->Name()));
+        printf("%-8s", CString(device->Name()));
 
         printCounter = -1;
         element = m_rowHead[i].head;
         while (element) {
             id = element->ToDevice()->Id();
             PrintNEmptyElement(id - printCounter - 1);
-            printf("%-6s", "1");
+            printf("%-8s", "1");
             element = element->NextInRow();
             printCounter = id;
         }
@@ -124,13 +141,73 @@ void Matrix::Print() const
         printf("\n");
     }
 
-    printf("---------------- Incidence Matrix ---------------\n\n");
+    printf("-------------------------------------------------\n\n");
 }
 
 void Matrix::PrintNEmptyElement(int n) const
 {
     if (n <= 0)  return;
     for (int i = 0; i < n; ++ i) {
-        printf("%-6s", "0");
+        printf("%-8s", "0");
+    }
+}
+
+void Matrix::Plot()
+{
+    if (m_plotter) {
+        m_plotter->close();
+        m_plotter->Clear();
+    } else {
+        m_plotter = new TablePlotter;
+    }
+
+    m_plotter->SetTableRowColCount(m_size, m_size);
+
+    QStringList headerText;
+    SchematicDevice *device = nullptr;
+
+    /* row header text */
+    for (int i = 0; i < m_size; ++ i) {
+        device = m_rowHead[i].device;
+        Q_ASSERT(device);
+        headerText << device->Name();
+    }
+    m_plotter->SetRowHeaderText(headerText);
+
+    headerText.clear();
+    /* col header text */
+    for (int i = 0; i < m_size; ++ i) {
+        device = m_colHead[i].device;
+        Q_ASSERT(device);
+        headerText << device->Name();
+    }
+    m_plotter->SetColHeaderText(headerText);
+
+    /* table content */
+    MatrixElement *element = nullptr;
+    int row = 0, col = 0;
+    for (int i = 0; i < m_size; ++ i) {
+        element = m_rowHead[i].head;
+        while (element) {
+            row = element->RowIndex();
+            col = element->ColIndex();
+            m_plotter->AddItem(row, col);
+            element = element->NextInRow();
+        }
+    }
+    m_plotter->Display();
+}
+
+void Matrix::SetAllVisited(bool visited)
+{
+    MatrixElement *element = nullptr;
+
+    for (int i = 0; i < m_size; ++ i) {
+        element = m_rowHead[i].head;
+
+        while (element) {
+            element->SetVisited(visited);
+            element = element->NextInRow();
+        }
     }
 }

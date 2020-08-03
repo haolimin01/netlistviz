@@ -45,6 +45,8 @@ int MyParser::ParseNetlist(const std::string &netlist, SchematicData *data)
     m_cktParser = new yy::CktParser(data);
     m_cktParser->parse();
 
+    data->AssignDeviceNumber();
+
     fclose(yyin);
     yyin = NULL;
     return OKAY;

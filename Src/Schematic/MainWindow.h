@@ -8,6 +8,7 @@ class SchematicScene;
 class SchematicDevice;
 class NetlistDialog;
 class SchematicData;
+class ASG;
 
 QT_BEGIN_NAMESPACE
 class QString;
@@ -91,7 +92,7 @@ private slots:
     void OpenSchematic();
 
     /* Plot Netlist to SchematicScene */
-    void RenderNetlist();
+    // void RenderNetlist();
 
     /* Save and SaveAs SchenaticFile */
     void SaveSchematicFile();
@@ -106,8 +107,24 @@ private slots:
     /* Show or Hide node on items */
     void ShowItemNodeToggled(bool show);
 
+    void NetlistChangedSlot();
+
+    /* Parse Netlist to m_data */
+    void ParseNetlist();
+
+    /* For ASG */
+    void BuildIncidenceMatrix();
+    void Levelling();
+    void Bubbling();
+
+signals:
+    void NetlistChanged();
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 private:
+
     /* Initialize variables */
     void InitVariables();
     
@@ -130,7 +147,7 @@ private:
     // void ResetButtonAndCursor();
 
     /* Create MainWindow toolbars */
-    void CreateToolbars();
+    void CreateToolBars();
 
     /* Using by CreateToolBox, Create SchematicDevice */
     QWidget *CreateCellWidget(const QString &text,
@@ -143,11 +160,10 @@ private:
 
     void ShowNetlistFile(const QString &netlist);
 
-    /* Parse Netlist to m_data */
-    SchematicData* ParseNetlist();
 
     /* Critical Dialog */
     void ShowCriticalMsg(const QString &msg);
+    void ShowInfoMsg(const QString &msg);
 
 
 
@@ -170,12 +186,14 @@ private:
     QMenu              *m_editMenu;
     QMenu              *m_viewMenu;
     QMenu              *m_aboutMenu;
+    QMenu              *m_asgMenu;
 
     QToolBar           *m_fileToolBar;
     QToolBar           *m_textToolBar;
     QToolBar           *m_editToolBar;
     QToolBar           *m_colorToolBar;
-    QToolBar           *m_pointerToolbar;
+    QToolBar           *m_pointerToolBar;
+    QToolBar           *m_asgToolBar;
 
     QComboBox          *m_sceneScaleCombo;
     QComboBox          *m_fontSizeCombo;
@@ -206,6 +224,11 @@ private:
     /* Open Schematic File */
     QAction            *m_openSchematicFileAction;
 
+    /* For ASG Actions */
+    QAction            *m_buildMatrixAction;
+    QAction            *m_levellingAction;
+    QAction            *m_bubblingAction;
+
     /* Device Panel */
     QDockWidget        *m_devicePanelDockWidget;
 
@@ -215,6 +238,8 @@ private:
     QString             m_curSchematicFile;
 
     NetlistDialog      *m_netlistDialog;
+    SchematicData      *m_data;
+    ASG                *m_asg;
 
 };
 //! [0]

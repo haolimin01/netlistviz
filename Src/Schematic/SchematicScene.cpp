@@ -9,7 +9,6 @@
 
 #include "SchematicData.h"
 #include "SchematicWire.h"
-#include "ASG/ASG.h"
 
 
 SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
@@ -341,19 +340,6 @@ void SchematicScene::RenderSchematicData(SchematicData *data)
     qInfo() << LINE_INFO << endl;
 #endif
     Q_ASSERT(data);
-    InitVariables();
-
-    /* Update node and device number */
-    // m_nodeNumber = data->m_nodeList.size();
-    m_deviceNumber = data->m_deviceList.size();
-
-    /* Remove and Delete all items */
-    clear();
-
-    /* ASG works from here */
-    ASG *asg = new ASG(data);
-    asg->GeneratePos();
-    delete asg;
 
 
     // m_schLayout->GeneratePos(data, SchematicLayout::Square);

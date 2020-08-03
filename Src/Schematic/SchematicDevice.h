@@ -33,8 +33,9 @@ public:
 	CktNode*   Node(NodeType type) const;
 	void       AddNode(NodeType type, CktNode *node);
 	int        NodeId(NodeType type) const;
-	void       SetId(int id) { m_id = id; }
+	void       SetId(int id) { m_id = id; m_idGiven = true; }
 	int        Id()  const { return m_id; }
+	bool       IdGiven() const { return m_idGiven; }
 	NodeType   GetNodeType(CktNode *node) const;
 
 	DeviceType GetDeviceType() const { return m_deviceType; }
@@ -82,6 +83,7 @@ private:
 	QPixmap        *m_imag;       // device image
 	bool            m_showNodeFlag;
 	int             m_id;         // device id, for creating incidence matrix.
+	bool            m_idGiven;
 
 	QVector<QRectF> m_terRects;
 
