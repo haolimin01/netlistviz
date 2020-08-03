@@ -13,6 +13,7 @@
 #include <QVector>
  
 class SchematicDevice;
+class ASG;
 
 
 class CktNode
@@ -25,9 +26,10 @@ public:
     void SetId(int id) { m_id = id; }
     int  Id() const { return m_id; }
     void SetGnd(bool isGnd) { m_isGnd = isGnd; }
-    QString Name() const { return m_name; }
     void ClearAllDevices();
     void Print() const;
+    bool IsGnd() const { return m_isGnd; }
+    QString Name() const { return m_name; }
 
 private:
     DISALLOW_COPY_AND_ASSIGN(CktNode);
@@ -37,6 +39,8 @@ private:
     bool        m_isGnd;
 
     QVector<SchematicDevice *>  m_devices;
+
+    friend class ASG;
 };
 
 #endif // NETLISTVIZ_CIRCUIT_CKTNODE_H

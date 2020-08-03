@@ -29,7 +29,6 @@ NetlistDialog::NetlistDialog(QWidget *parent)
     resize(800, 600);
 }
 
-
 void NetlistDialog::SetNetlistFile(const QString &netlist)
 {
     m_netlist = netlist;
@@ -44,7 +43,6 @@ void NetlistDialog::SetNetlistFile(const QString &netlist)
     m_textEdit->setText(QString(m_content));
 }
 
-
 int NetlistDialog::ReadNetlist()
 {
     QFile file(m_netlist);
@@ -57,7 +55,6 @@ int NetlistDialog::ReadNetlist()
     file.close();
     return OKAY;
 }
-
 
 void NetlistDialog::OkButtonClicked()
 {

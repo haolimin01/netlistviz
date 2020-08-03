@@ -19,6 +19,7 @@ class SchematicDevice;
 class SchematicTextItem;
 class SchematicLayout;
 class SchematicScene;
+class ASG;
 
 
 class SchematicData
@@ -61,8 +62,11 @@ private:
 
     /* node number */
     int         m_nodeNumber;
+    /* device number */
+    int         m_deviceNumber;
 
     friend class SchematicScene;
+    friend class ASG;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATIC_DATA_H

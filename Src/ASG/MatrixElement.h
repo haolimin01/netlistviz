@@ -17,7 +17,8 @@ class Matrix;
 class MatrixElement
 {
 public:
-    MatrixElement(int row, int col, SchematicDevice *device);
+    MatrixElement(int row, int col, SchematicDevice *fromDevice,
+        SchematicDevice *toDevice);
     ~MatrixElement();
 
 public:
@@ -26,7 +27,8 @@ public:
     int   RowIndex() const { return m_rowIndex; }
     int   ColIndex() const { return m_colIndex; }
 
-    SchematicDevice* Device() const { return m_device; }
+    SchematicDevice* FromDevice() const { return m_fromDevice; }
+    SchematicDevice* ToDevice()   const { return m_toDevice; }
     MatrixElement*   NextInRow() const { return m_nextInRow; }
     /* for Matrix Insert Element */
     MatrixElement**  NextInRowPtr()    { return &m_nextInRow; }
@@ -44,7 +46,8 @@ private:
 
     int              m_rowIndex;
     int              m_colIndex;
-    SchematicDevice *m_device;
+    SchematicDevice *m_fromDevice;
+    SchematicDevice *m_toDevice;
     MatrixElement   *m_nextInRow;
     MatrixElement   *m_nextInCol;
 };

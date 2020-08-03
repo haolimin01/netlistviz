@@ -1,10 +1,10 @@
-********
-R1 1 0 1
-R2 2 n3 2
-R3 n3 0 1
-C1 n3 0 1p
-VIN 1 2 1
+* case_1.sp simple RC 
 
-*.dc VIN 0 10 1
-*.plot V(2, 1) V(2, 0)
-.end
+V1 1 0 1
+R1 1 2 10
+R2 2 3 5
+R3 3 0 1
+C3 3 0 1p
+
+.OP
+.ends

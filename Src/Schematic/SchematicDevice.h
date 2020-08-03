@@ -19,6 +19,7 @@ public:
 	enum DeviceType { Resistor=0, Capacitor, Inductor,
 					 Vsrc/*3*/, Isrc };
 	enum Orientation { Horizontal, Vertical };
+	enum NodeType    { Positive, Negative };
 
 public:
 	SchematicDevice(DeviceType type, QMenu *contextMenu,
@@ -28,9 +29,14 @@ public:
 
 	QPixmap    Image();
 	QRectF     boundingRect() const override;
-	CktNode*   Node(int index) const;
-	void       AddNode(CktNode *node);
-	int        NodeId(int index) const;
+
+	CktNode*   Node(NodeType type) const;
+	void       AddNode(NodeType type, CktNode *node);
+	int        NodeId(NodeType type) const;
+	void       SetId(int id) { m_id = id; }
+	int        Id()  const { return m_id; }
+	NodeType   GetNodeType(CktNode *node) const;
+
 	DeviceType GetDeviceType() const { return m_deviceType; }
 	int        type() const override { return Type; }
 	QColor     Color() const  { return m_color; }
@@ -64,7 +70,7 @@ private:
 	void DrawIsrc();
 	void DrawVsrc();
 
-	QVector<CktNode *> m_terminals;
+	QMap<NodeType, CktNode *> m_terminals;
 	QVector<QList<SchematicWire*> > m_wiresAtTerminal;
 
 	DeviceType      m_deviceType;
@@ -75,6 +81,7 @@ private:
 	int             m_terNumber;  // terminal number
 	QPixmap        *m_imag;       // device image
 	bool            m_showNodeFlag;
+	int             m_id;         // device id, for creating incidence matrix.
 
 	QVector<QRectF> m_terRects;
 

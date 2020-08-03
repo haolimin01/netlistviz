@@ -38,12 +38,10 @@ MainWindow::MainWindow()
     setUnifiedTitleAndToolBarOnMac(true);
 }
 
-
 MainWindow::~MainWindow()
 {
 
 }
-
 
 void MainWindow::InitVariables()
 {
@@ -53,9 +51,8 @@ void MainWindow::InitVariables()
     m_curSchematicFile = "";
 
     m_netlistDialog = new NetlistDialog(this);
-    connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::RenderNetlistFile);
+    connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::RenderNetlist);
 }
-
 
 void MainWindow::CreateSchematicScene()
 {
@@ -70,7 +67,6 @@ void MainWindow::CreateSchematicScene()
     connect(m_scene, &SchematicScene::changed,
             this, &MainWindow::UpdateWindowTitle);
 }
-
 
 void MainWindow::CreateCenterWidget()
 {
@@ -89,7 +85,6 @@ void MainWindow::CreateCenterWidget()
     setCentralWidget(widget);
 }
 
-
 void MainWindow::DeviceBtnGroupClicked(int id)
 {
     const QList<QAbstractButton *> buttons = m_deviceBtnGroup->buttons();
@@ -102,7 +97,6 @@ void MainWindow::DeviceBtnGroupClicked(int id)
     m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
 
 }
-
 
 void MainWindow::DeleteItem()
 {
@@ -134,7 +128,6 @@ void MainWindow::DeleteItem()
     }
 }
 
-
 /* BUG */
 void MainWindow::PointerBtnGroupClicked(int id)
 {
@@ -152,7 +145,6 @@ void MainWindow::PointerBtnGroupClicked(int id)
     }
 }
 
-
 /* BUG */
 void MainWindow::BringToFront()
 {
@@ -164,7 +156,6 @@ void MainWindow::BringToFront()
     qreal zValue = 0;
     selectedItem->setZValue(zValue);
 }
-
 
 /* BUG */
 void MainWindow::SendToBack()
@@ -178,14 +169,12 @@ void MainWindow::SendToBack()
     selectedItem->setZValue(zValue);
 }
 
-
 void MainWindow::TextInserted(QGraphicsTextItem *)
 {
     m_pointerBtnGroup->button(int(SchematicScene::BaseMode))->setChecked(true);
     m_pointerBtnGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
     m_scene->SetMode(SchematicScene::BaseMode);
 }
-
 
 void MainWindow::DeviceInserted(SchematicDevice *device)
 {
@@ -196,18 +185,15 @@ void MainWindow::DeviceInserted(SchematicDevice *device)
     m_deviceBtnGroup->button((int)(device->GetDeviceType()))->setChecked(false);
 }
 
-
 void MainWindow::CurrentFontChanged(const QFont &)
 {
     HandleFontChange();
 }
 
-
 void MainWindow::FontSizeChanged(const QString &)
 {
     HandleFontChange();
 }
-
 
 void MainWindow::SceneScaleChanged(const QString &scale)
 {
@@ -218,7 +204,6 @@ void MainWindow::SceneScaleChanged(const QString &scale)
     m_view->scale(newScale, newScale);
 }
 
-
 void MainWindow::TextColorChanged()
 {
     m_textAction = qobject_cast<QAction *>(sender());
@@ -228,18 +213,15 @@ void MainWindow::TextColorChanged()
     TextButtonTriggered();
 }
 
-
 // void MainWindow::WireColorChanged()
 // {
 // 
 // }
 
-
 void MainWindow::TextButtonTriggered()
 {
     m_scene->SetTextColor(qvariant_cast<QColor>(m_textAction->data()));
 }
-
 
 void MainWindow::HandleFontChange()
 {
@@ -251,7 +233,6 @@ void MainWindow::HandleFontChange()
 
     m_scene->SetFont(font);
 }
-
 
 void MainWindow::ItemSelected(QGraphicsItem *item)
 {
@@ -266,14 +247,12 @@ void MainWindow::ItemSelected(QGraphicsItem *item)
     m_underlineAction->setChecked(font.underline());
 }
 
-
 void MainWindow::About()
 {
     QMessageBox::about(this, tr("About netlistviz"),
                        tr("The <b>netlistviz</b> shows "
                           "SPICE netlist"));
 }
-
 
 void MainWindow::CreateDeviceToolBox()
 {
@@ -309,7 +288,6 @@ void MainWindow::CreateDeviceToolBox()
     m_devicePanelDockWidget->hide();
     addDockWidget(Qt::LeftDockWidgetArea, m_devicePanelDockWidget);
 }
-
 
 void MainWindow::CreateActions()
 {
@@ -380,7 +358,6 @@ void MainWindow::CreateActions()
     connect(m_showNodeAction, &QAction::toggled, this, &MainWindow::ShowItemNodeToggled);
 }
 
-
 void MainWindow::CreateMenus()
 {
     m_fileMenu = menuBar()->addMenu(tr("&File"));
@@ -404,7 +381,6 @@ void MainWindow::CreateMenus()
     m_aboutMenu = menuBar()->addMenu(tr("&Help"));
     m_aboutMenu->addAction(m_aboutAction);
 }
-
 
 void MainWindow::CreateToolbars()
 {
@@ -483,7 +459,6 @@ void MainWindow::CreateToolbars()
     m_pointerToolbar->addWidget(m_sceneScaleCombo);
 }
 
-
 QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::DeviceType type)
 {
 
@@ -505,7 +480,6 @@ QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::Devi
 
     return widget;
 }
-
 
 QMenu *MainWindow::CreateColorMenu(const char *slot, QColor defaultColor)
 {
@@ -529,7 +503,6 @@ QMenu *MainWindow::CreateColorMenu(const char *slot, QColor defaultColor)
     return colorMenu;
 }
 
-
 QIcon MainWindow::CreateColorToolButtonIcon(const QString &imageFile, QColor color)
 {
     QPixmap pixmap(50, 80);
@@ -545,7 +518,6 @@ QIcon MainWindow::CreateColorToolButtonIcon(const QString &imageFile, QColor col
     return QIcon(pixmap);
 }
 
-
 QIcon MainWindow::CreateColorIcon(QColor color)
 {
     QPixmap pixmap(20, 20);
@@ -556,12 +528,10 @@ QIcon MainWindow::CreateColorIcon(QColor color)
     return QIcon(pixmap);
 }
 
-
 void MainWindow::ShowItemNodeToggled(bool show)
 {
     m_scene->SetShowNodeFlag(show);
 }
-
 
 void MainWindow::OpenNetlist()
 {
@@ -584,7 +554,6 @@ void MainWindow::OpenNetlist()
 
     ShowNetlistFile(m_curNetlistFile);
 }
-
 
 void MainWindow::OpenSchematic()
 {
@@ -620,7 +589,6 @@ void MainWindow::OpenSchematic()
     setWindowTitle(dispName);
 }
 
-
 void MainWindow::UpdateWindowTitle(const QList<QRectF> &)
 {
 #ifdef TRACEx
@@ -635,7 +603,6 @@ void MainWindow::UpdateWindowTitle(const QList<QRectF> &)
     dispName += QFileInfo(m_curSchematicFile).fileName();
     setWindowTitle(dispName);
 }
-
 
 void MainWindow::SaveSchematicFile() 
 {
@@ -663,7 +630,6 @@ void MainWindow::SaveSchematicFile()
     qInfo() << "Save to " << m_curSchematicFile << endl;
 #endif
 }
-
 
 void MainWindow::SaveAsSchematicFile()
 {
@@ -697,15 +663,13 @@ void MainWindow::SaveAsSchematicFile()
     setWindowTitle(dispName);
 }
 
-
 void MainWindow::ShowNetlistFile(const QString &netlist)
 {
     m_netlistDialog->SetNetlistFile(netlist);
     m_netlistDialog->show();
 }
 
-
-void MainWindow::RenderNetlistFile()
+void MainWindow::RenderNetlist()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
@@ -715,10 +679,9 @@ void MainWindow::RenderNetlistFile()
         m_view->centerOn(CenterX, CenterY);
         m_scene->RenderSchematicData(data);
         m_scene->SetMode(SchematicScene::BaseMode);
-        m_scene->update();
+        // m_scene->update();
     }
 }
-
 
 SchematicData* MainWindow::ParseNetlist()
 {
@@ -735,18 +698,16 @@ SchematicData* MainWindow::ParseNetlist()
     }
 
 #ifdef DEBUG
-    // data->PrintNodeAndDevice();
+    data->PrintNodeAndDevice();
 #endif
 
     return data;
 }
 
-
 void MainWindow::ShowCriticalMsg(const QString &msg)
 {
     QMessageBox::critical(this, tr("Critical Message"), msg);
 }
-
 
 void MainWindow::ScrollActionToggled(bool checked)
 {

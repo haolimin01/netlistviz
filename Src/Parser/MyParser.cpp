@@ -11,7 +11,6 @@ MyParser::MyParser()
     yyin = NULL;
 }
 
-
 MyParser::~MyParser()
 {
     if (m_cktParser) {
@@ -24,7 +23,6 @@ MyParser::~MyParser()
         yyin = NULL;
     }
 }
-
 
 int MyParser::ParseNetlist(const std::string &netlist, SchematicData *data)
 {
@@ -48,5 +46,6 @@ int MyParser::ParseNetlist(const std::string &netlist, SchematicData *data)
     m_cktParser->parse();
 
     fclose(yyin);
+    yyin = NULL;
     return OKAY;
 }

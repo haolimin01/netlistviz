@@ -9,7 +9,6 @@ SchematicTextItem::SchematicTextItem(QGraphicsItem *parent)
     setFlag(QGraphicsItem::ItemIsSelectable);
 }
 
-
 QVariant SchematicTextItem::itemChange(GraphicsItemChange change,
                                      const QVariant &value)
 {
@@ -18,14 +17,12 @@ QVariant SchematicTextItem::itemChange(GraphicsItemChange change,
     return value;
 }
 
-
 void SchematicTextItem::focusOutEvent(QFocusEvent *event)
 {
     setTextInteractionFlags(Qt::NoTextInteraction);
     emit LostFocus(this);
     QGraphicsTextItem::focusOutEvent(event);
 }
-
 
 void SchematicTextItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {

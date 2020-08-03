@@ -91,7 +91,7 @@ private slots:
     void OpenSchematic();
 
     /* Plot Netlist to SchematicScene */
-    void RenderNetlistFile();
+    void RenderNetlist();
 
     /* Save and SaveAs SchenaticFile */
     void SaveSchematicFile();
