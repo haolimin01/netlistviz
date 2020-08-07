@@ -40,11 +40,9 @@ public:
     void SetFont(const QFont &font);
     void SetDeviceType(SchematicDevice::DeviceType type);
 
-    void RenderSchematicData(SchematicData *data);
-
+    void RenderSchematic(const QVector<QVector<SchematicDevice*>> &m_levels);
     /* Write Schematic items to stream */
     void WriteSchematicToStream(QTextStream &stream) const;
-
     /* Load Schematic from stream to scene */
     void LoadSchematicFromStream(QTextStream &stream);
 
@@ -53,6 +51,7 @@ public:
 public slots:
     void SetMode(Mode mode)  { m_mode = mode; }
     void EditorLostFocus(SchematicTextItem *item);
+    void SetEnableBackground(bool enabled) { m_backgroundFlag = enabled; }
 
 signals:
     void DeviceInserted(SchematicDevice *item);
@@ -63,6 +62,7 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
+    void drawBackground(QPainter *painter, const QRectF &rect) override;
 
 private:
     void InitVariables();
@@ -77,6 +77,10 @@ private:
     void InsertSchematicTextItem(const QPointF &);
     void InsertSchematicWire(SchematicDevice *, SchematicDevice *, int, int,
                             const QVector<QPointF>&);
+
+    /* For ASG */
+    void SetDeviceAt(int x, int y, SchematicDevice *device);
+
 
     QMenu             *m_itemMenu;
     Mode               m_mode;
@@ -105,6 +109,8 @@ private:
     int                m_deviceNumber;
 
     bool               m_showNodeFlag;
+
+    bool               m_backgroundFlag;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H

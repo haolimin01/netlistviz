@@ -11,10 +11,10 @@
 #include "SchematicWire.h"
 
 
-const int TerminalSize = 8;
+const int TerminalSize = 10;
 const int IMAG_LEN = 25;
 const int BASE_LEN = 20;
-const int BRECT_W = 32;
+const int BRECT_W = 30;
 
 
 SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
@@ -28,15 +28,15 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
 
     switch (m_deviceType) {
         case Resistor:
-            m_devOrien = Horizontal;
+            m_devOrien = Vertical;
             DrawResistor();
             break;
         case Capacitor:
-            m_devOrien = Horizontal;
+            m_devOrien = Vertical;
             DrawCapacitor();
             break;
         case Inductor:
-            m_devOrien = Horizontal;
+            m_devOrien = Vertical;
             DrawInductor();
             break;
         case Isrc:
@@ -55,6 +55,8 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     m_wiresAtTerminal.resize(m_terNumber);
     m_id = -1;
     m_idGiven = false;
+    m_sceneX = -1;
+    m_sceneY = -1;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -105,6 +107,18 @@ void SchematicDevice::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 QRectF SchematicDevice::boundingRect() const
 {
     return QRectF(-BRECT_W, -BRECT_W, 2 * BRECT_W, 2 * BRECT_W);
+}
+
+QPainterPath SchematicDevice::shape() const
+{
+    QPainterPath path;
+    for (int i = 0; i < m_terRects.size(); ++ i) {
+        path.addRect(m_terRects.at(i));
+    }
+
+    path.addRect(DashRect());
+
+    return path;
 }
 
 QRectF SchematicDevice::DashRect() const
@@ -340,6 +354,13 @@ QVector<QRectF> SchematicDevice::TerminalRects() const
     return m_terRects;
 }
 
+void SchematicDevice::SetSceneXY(int x, int y)
+{
+    Q_ASSERT(x >= 0 && y >= 0);
+    m_sceneX = x;
+    m_sceneY = y;
+}
+
 void SchematicDevice::AddNode(NodeType type, CktNode *node)
 {
     m_terminals.insert(type, node);
@@ -360,7 +381,7 @@ QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &
     if (change == ItemPositionChange && scene()) {
         UpdateWirePosition();
     }
-    
+
     return QGraphicsItem::itemChange(change, value);
 }
 
@@ -446,3 +467,28 @@ void SchematicDevice::Print() const
     std::cout << ss.str() << std::endl;
  }
 
+ void SchematicDevice::SetOrientation(SchematicDevice::Orientation orien)
+ {
+    if (orien == m_devOrien)  return;
+    if (orien == Horizontal) {
+        setRotation(-90);
+    } else {
+        setRotation(90);
+    }
+    m_devOrien = orien;
+ }
+
+ void SchematicDevice::mousePressEvent(QGraphicsSceneMouseEvent *event)
+ {
+    QGraphicsPathItem::mousePressEvent(event);
+ }
+
+bool SchematicDevice::TerminalsContain(const QPointF &scenePos) const
+{
+    QPointF itemPos = mapFromScene(scenePos);
+    for (int i = 0; i < m_terRects.size(); ++ i) {
+        if (m_terRects[i].contains(itemPos))
+            return true;
+    }
+    return false;
+}

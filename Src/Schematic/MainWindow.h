@@ -91,9 +91,6 @@ private slots:
     /* Open Schematic */
     void OpenSchematic();
 
-    /* Plot Netlist to SchematicScene */
-    // void RenderNetlist();
-
     /* Save and SaveAs SchenaticFile */
     void SaveSchematicFile();
     void SaveAsSchematicFile();
@@ -107,6 +104,8 @@ private slots:
     /* Show or Hide node on items */
     void ShowItemNodeToggled(bool show);
 
+    void ShowGridToggled(bool show);
+
     void NetlistChangedSlot();
 
     /* Parse Netlist to m_data */
@@ -116,6 +115,7 @@ private slots:
     void BuildIncidenceMatrix();
     void Levelling();
     void Bubbling();
+    void GenerateSchematic();
 
 signals:
     void NetlistChanged();
@@ -216,6 +216,7 @@ private:
     QAction            *m_italicAction;
     QAction            *m_textAction;
     QAction            *m_showNodeAction;
+    QAction            *m_showGridAction;
     QAction            *m_scrollPointerAction;
     QAction            *m_openNetlistAction;
     /* Save and SaveAs Schematic File */
@@ -228,6 +229,7 @@ private:
     QAction            *m_buildMatrixAction;
     QAction            *m_levellingAction;
     QAction            *m_bubblingAction;
+    QAction            *m_generateDeviceAction;
 
     /* Device Panel */
     QDockWidget        *m_devicePanelDockWidget;
@@ -241,6 +243,8 @@ private:
     SchematicData      *m_data;
     ASG                *m_asg;
 
+    /* for cursor image */
+    SchematicDevice    *m_deviceBeingAdded;
 };
 //! [0]
 
