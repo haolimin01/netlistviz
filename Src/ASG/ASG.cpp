@@ -32,6 +32,9 @@ ASG::ASG()
     m_bubblingFlag = false;
     m_levellingFlag = false;
     m_buildMatrixFlag = false;
+
+    m_levelPlotter = nullptr;
+    m_bubblePlotter = nullptr;
 }
 
 ASG::~ASG()

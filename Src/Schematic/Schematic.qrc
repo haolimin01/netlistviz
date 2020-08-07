@@ -9,7 +9,6 @@
     <file>images/bringtofront.png</file>
     <file>images/delete.png</file>
     <file>images/sendtoback.png</file>
-    <file>images/schematicnode.png</file>
     <file>images/open_netlist.png</file>
     <file>images/open_schematic.png</file>
     <file>images/save_schematic.png</file>
@@ -19,6 +18,8 @@
     <file>images/build_matrix.png</file>
     <file>images/levelling.png</file>
     <file>images/bubbling.png</file>
+    <file>images/grid.png</file>
+    <file>images/generate_device.png</file>
 </qresource>
 </RCC>
 

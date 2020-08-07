@@ -10,6 +10,9 @@
 #include "SchematicData.h"
 #include "SchematicWire.h"
 
+const static int Grid_W = 80;
+const static int Grid_H = 80;
+
 
 SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
     : QGraphicsScene(parent)
@@ -17,7 +20,6 @@ SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
     m_itemMenu = itemMenu;
 
     InitVariables();
-    m_showNodeFlag = false;
 }
 
 SchematicScene::~SchematicScene()
@@ -39,6 +41,8 @@ void SchematicScene::InitVariables()
     m_deviceColor = Qt::black;
     m_deviceNumber = 0;
     m_line = nullptr;
+    m_showNodeFlag = false;
+    m_backgroundFlag = true;
 }
 
 void SchematicScene::SetTextColor(const QColor &color)
@@ -68,6 +72,34 @@ void SchematicScene::SetFont(const QFont &font)
 void SchematicScene::SetDeviceType(SchematicDevice::DeviceType type)
 {
     m_deviceType = type;
+}
+
+void SchematicScene::drawBackground(QPainter *painter, const QRectF &rect)
+{
+    Q_UNUSED(rect);
+    if (NOT m_backgroundFlag)  return;
+
+    qreal sceneWidth = width();
+    qreal sceneHeight = height();
+    QPointF startPos = QPointF(0, 0);
+    painter->setPen(QPen(Qt::gray, 1, Qt::DashLine));
+
+    qreal curX = startPos.x();
+    qreal curY = startPos.y();
+    qreal endX = sceneWidth;
+    qreal endY = sceneHeight;
+
+    /* horizontal line */
+    while (curY < endY) {
+        painter->drawLine(startPos.x(), curY, endX, curY);
+        curY += Grid_H;
+    }
+
+    /* vertical line */
+    while (curX < endX) {
+        painter->drawLine(curX, startPos.y(), curX, endY);
+        curX += Grid_W;
+    }
 }
 
 void SchematicScene::EditorLostFocus(SchematicTextItem *item)
@@ -172,7 +204,6 @@ void SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
     m_deviceNumber++;
     emit DeviceInserted(dev);
 }
-
 void SchematicScene::InsertSchematicTextItem(const QPointF &pos)
 {
     m_text = new SchematicTextItem();
@@ -213,13 +244,9 @@ void SchematicScene::SenseDeviceTerminal(const QPointF &scenePos) const
         if (item->type() == SchematicDevice::Type) {
             device = qgraphicsitem_cast<SchematicDevice *>(item);
             if (NOT device)  return;
-
-            QVector<QRectF> portRects = device->TerminalRects();
-            for (int i = 0; i < portRects.size(); ++ i) {
-                if (portRects[i].contains(device->mapFromScene(scenePos))) {
-                    views().first()->setCursor(Qt::CrossCursor);
-                    return;
-                }
+            if (device->TerminalsContain(scenePos)) {
+                views().first()->setCursor(Qt::CrossCursor);
+                return;
             }
         }
     }
@@ -332,35 +359,70 @@ void SchematicScene::InsertSchematicWire(SchematicDevice *startDev, SchematicDev
     endDev->AddWire(newWire, endTer);
 }
                     
-/* Read and Write SchematicData */
-// BUG
-void SchematicScene::RenderSchematicData(SchematicData *data)
+/* Render Level Device List to SchematicScene, for ASG */
+void SchematicScene::RenderSchematic(const QVector<QVector<SchematicDevice*>> &m_levels)
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-    Q_ASSERT(data);
+    if (m_levels.size() == 0)  return;
 
+    /* level 0 device list */
+    // const QVector<SchematicDevice*> &l0Devices = m_levels.at(0);
+    // int l0DeviceCount = l0Devices.size();
 
-    // m_schLayout->GeneratePos(data, SchematicLayout::Square);
+    // int segment = l0DeviceCount + 1;
+    // int sceneHeight = height();
+    // int maxRowCount = sceneHeight / Grid_H;
+    // int perRow = maxRowCount / segment;
 
-    /* t => temp */
-    // SchematicNode *tNode = nullptr;
-    // SchematicDevice *tDev = nullptr;
+    // int row = 0, col = 0;
 
-    // for (int i = 0; i < data->m_nodeList.size(); ++ i) {
-    //     tNode = data->m_nodeList.at(i);
-    //     tNode->SetContextMenu(m_itemMenu);
-    //     addItem(tNode);
+    // for (int i = 0; i < l0DeviceCount; ++ i) {
+    //     col = 0;
+    //     row = (i + 1) * perRow - 1;
+    //     SetDeviceAt(row, col, l0Devices.at(i));
+    //     qInfo() << row << " " << col << endl;
     // }
 
-    // for (int i = 0; i < data->m_deviceList.size(); ++ i) {
-    //     tDev = data->m_deviceList.at(i);
-    //     tDev->SetContextMenu(m_itemMenu);
-    //     addItem(tDev);
-    // }
+    /* other levels */
+
+    /* place device firstly */
+    int segment = 0;
+    int sceneHeight = height();
+    int maxRowCount = sceneHeight / Grid_H;
+    int perY = 0;
+    int x = 0, y = 0;
+    QVector<SchematicDevice*> curDevices;
+    SchematicDevice *device = nullptr;
+
+    for (int i = 0; i < m_levels.size(); ++ i) {
+        curDevices = m_levels.at(i);
+        segment = curDevices.size() + 1;
+        perY = maxRowCount / segment;
+        for (int j = 0; j < curDevices.size(); ++ j) {
+            device = curDevices.at(j);
+            x = i;
+            y = (j + 1) * perY - 1;
+            SetDeviceAt(x, y, device);
+            if (x != 0)
+                device->SetOrientation(SchematicDevice::Horizontal);
+        }
+    }
 }
 
+/* row and col start from 0 */
+void SchematicScene::SetDeviceAt(int x, int y, SchematicDevice *device)
+{
+    qreal centerX = x * Grid_W + Grid_W * 0.5;
+    qreal centerY = y * Grid_H + Grid_H * 0.5;
+
+    addItem(device);
+    device->setPos(centerX, centerY);
+    device->SetSceneXY(x, y);
+}
+
+/* Read and Write SchematicData */
 // BUG
 void SchematicScene::WriteSchematicToStream(QTextStream &stream) const
 {

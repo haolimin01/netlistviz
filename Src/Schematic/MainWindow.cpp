@@ -56,6 +56,7 @@ void MainWindow::InitVariables()
     m_curSchematicFile = "";
     m_data = nullptr;
     m_asg = new ASG();
+    m_deviceBeingAdded = nullptr;
 
     m_netlistDialog = new NetlistDialog(this);
     connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::ParseNetlist);
@@ -64,7 +65,7 @@ void MainWindow::InitVariables()
 void MainWindow::CreateSchematicScene()
 {
     m_scene = new SchematicScene(m_editMenu, this);
-    m_scene->setSceneRect(QRectF(0, 0, 5000, 5000));
+    m_scene->setSceneRect(QRectF(0, 0, 80000, 1600));
     m_scene->setFocus(Qt::MouseFocusReason);
 
     connect(m_scene, &SchematicScene::TextInserted,
@@ -103,6 +104,14 @@ void MainWindow::DeviceBtnGroupClicked(int id)
     m_scene->SetMode(SchematicScene::InsertDeviceMode);
     m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
 
+    if (m_deviceBeingAdded) {
+        delete m_deviceBeingAdded;
+        m_deviceBeingAdded = nullptr;
+    }
+
+    m_deviceBeingAdded = new SchematicDevice(SchematicDevice::DeviceType(id), m_editMenu);
+    QPixmap image(m_deviceBeingAdded->Image());
+    m_view->setCursor(QCursor(image.scaled(30, 30)));
 }
 
 void MainWindow::closeEvent(QCloseEvent *closeEvent)
@@ -111,11 +120,6 @@ void MainWindow::closeEvent(QCloseEvent *closeEvent)
         delete m_asg;
         m_asg = nullptr;
     }
-    if (m_data) {
-        delete m_data;
-        m_data = nullptr;
-    }
-    
     QMainWindow::closeEvent(closeEvent);
 }
 
@@ -216,13 +220,16 @@ void MainWindow::FontSizeChanged(const QString &)
     HandleFontChange();
 }
 
+/* BUG */
 void MainWindow::SceneScaleChanged(const QString &scale)
 {
+#if 0
     double newScale = scale.left(scale.indexOf(tr("%"))).toDouble() / 100.0;
     QMatrix oldMatrix = m_view->matrix();
     m_view->resetMatrix();
     m_view->translate(oldMatrix.dx(), oldMatrix.dy());
     m_view->scale(newScale, newScale);
+#endif
 }
 
 void MainWindow::TextColorChanged()
@@ -359,7 +366,7 @@ void MainWindow::CreateActions()
 
     m_saveSchematicFileAction = new QAction(QIcon(":/images/save_schematic.png"), tr("S&ave Schematic"), this);
     m_saveSchematicFileAction->setShortcut(QKeySequence::Save);
-    // connect(m_saveSchematicFileAction, &QAction::triggered, this, &MainWindow::SaveSchematicFile);
+    connect(m_saveSchematicFileAction, &QAction::triggered, this, &MainWindow::SaveSchematicFile);
 
     m_saveAsSchematicFileAction = new QAction(QIcon(":/images/saveas_schematic.png"), tr("SaveA&s Schematic"), this);
     connect(m_saveAsSchematicFileAction, &QAction::triggered, this, &MainWindow::SaveAsSchematicFile);
@@ -378,6 +385,11 @@ void MainWindow::CreateActions()
     m_showNodeAction->setChecked(false);
     connect(m_showNodeAction, &QAction::toggled, this, &MainWindow::ShowItemNodeToggled);
 
+    m_showGridAction = new QAction(QIcon(":/images/grid.png"), tr("Show Grid"), this);
+    m_showGridAction->setCheckable(true);
+    m_showGridAction->setChecked(true);
+    connect(m_showGridAction, &QAction::toggled, this, &MainWindow::ShowGridToggled);
+
     m_buildMatrixAction = new QAction(QIcon(":/images/build_matrix.png"), tr("Build Matrix"), this);
     m_buildMatrixAction->setEnabled(false);
     connect(m_buildMatrixAction, &QAction::triggered, this, &MainWindow::BuildIncidenceMatrix);
@@ -389,6 +401,10 @@ void MainWindow::CreateActions()
     m_bubblingAction = new QAction(QIcon(":/images/bubbling.png"), tr("Bubbling"), this);
     m_bubblingAction->setEnabled(false);
     connect(m_bubblingAction, &QAction::triggered, this, &MainWindow::Bubbling);
+
+    m_generateDeviceAction = new QAction(QIcon(":/images/generate_device.png"), tr("Generate Device"), this);
+    m_generateDeviceAction->setEnabled(false);
+    connect(m_generateDeviceAction, &QAction::triggered, this, &MainWindow::GenerateSchematic);
 }
 
 void MainWindow::CreateMenus()
@@ -410,11 +426,13 @@ void MainWindow::CreateMenus()
     m_viewMenu = menuBar()->addMenu(tr("&View"));
     m_viewMenu->addAction(m_devicePanelDockWidget->toggleViewAction());
     m_viewMenu->addAction(m_showNodeAction);
+    m_viewMenu->addAction(m_showGridAction);
 
     m_asgMenu = menuBar()->addMenu(tr("&ASG"));
     m_asgMenu->addAction(m_buildMatrixAction);
     m_asgMenu->addAction(m_levellingAction);
     m_asgMenu->addAction(m_bubblingAction);
+    m_asgMenu->addAction(m_generateDeviceAction);
 
     m_aboutMenu = menuBar()->addMenu(tr("&Help"));
     m_aboutMenu->addAction(m_aboutAction);
@@ -433,6 +451,7 @@ void MainWindow::CreateToolBars()
     m_editToolBar->addAction(m_toFrontAction);
     m_editToolBar->addAction(m_sendBackAction);
     m_editToolBar->addAction(m_showNodeAction);
+    m_editToolBar->addAction(m_showGridAction);
 
     m_fontCombo = new QFontComboBox();
     connect(m_fontCombo, &QFontComboBox::currentFontChanged,
@@ -500,6 +519,7 @@ void MainWindow::CreateToolBars()
     m_asgToolBar->addAction(m_buildMatrixAction);
     m_asgToolBar->addAction(m_levellingAction);
     m_asgToolBar->addAction(m_bubblingAction);
+    m_asgToolBar->addAction(m_generateDeviceAction);
 }
 
 QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::DeviceType type)
@@ -576,6 +596,12 @@ void MainWindow::ShowItemNodeToggled(bool show)
     m_scene->SetShowNodeFlag(show);
 }
 
+void MainWindow::ShowGridToggled(bool show)
+{
+    m_scene->SetEnableBackground(show);
+    m_scene->update();
+}
+
 void MainWindow::OpenNetlist()
 {
 #ifdef TRACE
@@ -605,6 +631,7 @@ void MainWindow::NetlistChangedSlot()
     m_buildMatrixAction->setEnabled(true);
     m_levellingAction->setEnabled(true);
     m_bubblingAction->setEnabled(true);
+    m_generateDeviceAction->setEnabled(true);
 }
 
 void MainWindow::OpenSchematic()
@@ -727,20 +754,6 @@ void MainWindow::ShowNetlistFile(const QString &netlist)
     m_netlistDialog->show();
 }
 
-// void MainWindow::RenderNetlist()
-// {
-// #ifdef TRACE
-//     qInfo() << LINE_INFO << endl;
-// #endif
-//     SchematicData *data = ParseNetlist();
-//     if (data) {
-//         m_view->centerOn(CenterX, CenterY);
-//         m_scene->RenderSchematicData(data);
-//         m_scene->SetMode(SchematicScene::BaseMode);
-//         // m_scene->update();
-//     }
-// }
-
 void MainWindow::ParseNetlist()
 {
 #ifdef TRACE
@@ -817,4 +830,25 @@ void MainWindow::Bubbling()
     qInfo() << LINE_INFO << endl;
 #endif
 
+    if (NOT m_asg->LevellingFinished()) {
+        ShowCriticalMsg(tr("Please Levelling firstly!"));
+        return;
+    }
+    m_asg->Bubbling();
+}
+
+/* before or after bubbling */
+void MainWindow::GenerateSchematic()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    if (NOT m_asg->LevellingFinished()) {
+        ShowCriticalMsg(tr("Please Levelling firstly!"));
+        return;
+    }
+
+    m_scene->RenderSchematic(m_asg->RetDeviceList());
+    m_view->centerOn(0, 800);
 }

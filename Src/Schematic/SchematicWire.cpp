@@ -63,9 +63,6 @@ void SchematicWire::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         endPoint = m_wirePathPoints.at(i + 1);
         painter->drawLine(startPoint, endPoint);
     }
-    if (isSelected()) {
-        qInfo() << "wire selected" << endl;
-    }
 }
 
 void SchematicWire::SetWirePathPoints(QVector<QPointF> points)

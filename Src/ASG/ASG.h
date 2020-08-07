@@ -35,6 +35,9 @@ public:
     bool LevellingFinished() const { return m_levellingFlag; }
     bool BubblingFinished() const { return m_bubblingFlag; }
 
+    /* 2-d array */
+    QVector<DeviceList> RetDeviceList() const { return m_levelDeviceList; }
+
 private:
     DISALLOW_COPY_AND_ASSIGN(ASG);
 

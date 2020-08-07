@@ -37,6 +37,10 @@ public:
 	int        Id()  const { return m_id; }
 	bool       IdGiven() const { return m_idGiven; }
 	NodeType   GetNodeType(CktNode *node) const;
+	void       SetOrientation(Orientation orien);
+	void       SetSceneXY(int x, int y);
+	int        SceneX() const  { return m_sceneX; }
+	int        SceneY() const  { return m_sceneY; }
 
 	DeviceType GetDeviceType() const { return m_deviceType; }
 	int        type() const override { return Type; }
@@ -51,6 +55,7 @@ public:
 	void       AddWire(SchematicWire *wire, int terIndex);
 	void       RemoveWires(bool deletion = true);
 	void       RemoveWire(SchematicWire *wire, int terIndex);
+	bool       TerminalsContain(const QPointF &scenePos) const;
 
 	void Print() const;
 
@@ -59,6 +64,8 @@ protected:
 			QWidget *widget = nullptr) override;
 	void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
+	QPainterPath shape() const override;
+	void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
 	void InitVariables();
@@ -90,6 +97,10 @@ private:
 	/* For CktParser */
 	QString         m_name;       // device value
 	double          m_value;      // device name
+
+	/* Grid position, for ASG */
+	int             m_sceneX;
+	int             m_sceneY;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H
