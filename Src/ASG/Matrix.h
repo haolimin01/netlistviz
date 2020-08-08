@@ -9,9 +9,9 @@
  */
 
 #include "Define/Define.h"
+#include "Schematic/SchematicDevice.h"
 
 class MatrixElement;
-class SchematicDevice;
 class TablePlotter;
 
 struct HeadElement
@@ -44,7 +44,7 @@ public:
     void   SetColHeadDevice(int col, SchematicDevice *device);
 
     void   InsertElement(int row, int col, SchematicDevice *fromDevice,
-                SchematicDevice *toDevice);
+                SchematicDevice *toDevice, NodeType fromTer, NodeType toTer);
     
     HeadElement RowHead(int row) const;
     HeadElement ColHead(int col) const;

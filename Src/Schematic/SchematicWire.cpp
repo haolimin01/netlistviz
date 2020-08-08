@@ -7,13 +7,13 @@
 
 
 SchematicWire::SchematicWire(SchematicDevice *startDev, SchematicDevice *endDev,
-    int startTer, int endTer, QGraphicsItem *parent, QGraphicsScene *scene)
+    NodeType startTer, NodeType endTer, QGraphicsItem *parent, QGraphicsScene *scene)
 {
     m_startDev = startDev;
     m_endDev = endDev;
     m_color = Qt::black;
-    m_startTerIndex = startTer;
-    m_endTerIndex = endTer;
+    m_startTerminal = startTer;
+    m_endTerminal = endTer;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -71,7 +71,7 @@ void SchematicWire::SetWirePathPoints(QVector<QPointF> points)
     m_wirePathPoints = points;
 }
 
-void SchematicWire::UpdatePosition(SchematicDevice *device, int terIndex, const QPointF &newPos)
+void SchematicWire::UpdatePosition(SchematicDevice *device, NodeType terminal, const QPointF &newPos)
 {
     QPointF scenePos = mapFromItem(device, newPos);
     prepareGeometryChange();
@@ -80,13 +80,13 @@ void SchematicWire::UpdatePosition(SchematicDevice *device, int terIndex, const 
     /* Now we just simply connect terminals of start device and end device */
     assert(size == 2);
 
-    if (device == m_startDev AND terIndex == m_startTerIndex) {
+    if (device == m_startDev AND terminal == m_startTerminal) {
         m_wirePathPoints[0].rx() = scenePos.x();
         m_wirePathPoints[0].ry() = scenePos.y();
         return;
     }
 
-    if (device == m_endDev AND terIndex == m_endTerIndex) {
+    if (device == m_endDev AND terminal == m_endTerminal) {
         m_wirePathPoints[1].rx() = scenePos.x();
         m_wirePathPoints[1].ry() = scenePos.y();
         return;

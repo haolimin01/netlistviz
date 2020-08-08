@@ -35,8 +35,8 @@ Matrix::~Matrix()
     if (m_plotter)  delete m_plotter;
 }
 
-void Matrix::InsertElement(int row, int col,
-                SchematicDevice *fromDevice, SchematicDevice *toDevice)
+void Matrix::InsertElement(int row, int col, SchematicDevice *fromDevice,
+    SchematicDevice *toDevice, NodeType fromTer, NodeType toTer)
 {
     if ((row >= m_size) || (col >= m_size) || (row < 0) || (col < 0)) {
 #ifdef TRACE
@@ -57,7 +57,7 @@ void Matrix::InsertElement(int row, int col,
     }
 
     /* Create and insert it */
-    MatrixElement *newElement = new MatrixElement(row, col, fromDevice, toDevice);
+    MatrixElement *newElement = new MatrixElement(row, col, fromDevice, toDevice, fromTer, toTer);
 
     /* Insert element in row */
     MatrixElement **rowPtrPtr = &(m_rowHead[row].head);

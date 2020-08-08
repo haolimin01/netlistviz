@@ -3,6 +3,7 @@
 
 #include "SchematicTextItem.h"
 #include "SchematicDevice.h"
+#include "SchematicWire.h"
 
 #include <QGraphicsScene>
 
@@ -17,7 +18,6 @@ class QColor;
 class QTextStream;
 QT_END_NAMESPACE
 class SchematicData;
-class SchematicLayout;
 
 
 class SchematicScene : public QGraphicsScene
@@ -40,7 +40,8 @@ public:
     void SetFont(const QFont &font);
     void SetDeviceType(SchematicDevice::DeviceType type);
 
-    void RenderSchematic(const QVector<QVector<SchematicDevice*>> &m_levels);
+    void RenderSchematic(const QVector<QVector<SchematicDevice*>> &levels,
+                         const QVector<WireDescriptor*> &wireDesps);
     /* Write Schematic items to stream */
     void WriteSchematicToStream(QTextStream &stream) const;
     /* Load Schematic from stream to scene */
@@ -73,10 +74,13 @@ private:
     void FinishDrawingWireAt(const QPointF &scenePos);
 
     /* Insert Item */
-    void InsertSchematicDevice(SchematicDevice::DeviceType, const QPointF &);
-    void InsertSchematicTextItem(const QPointF &);
-    void InsertSchematicWire(SchematicDevice *, SchematicDevice *, int, int,
+    SchematicDevice*   InsertSchematicDevice(SchematicDevice::DeviceType, const QPointF &);
+    SchematicTextItem* InsertSchematicTextItem(const QPointF &);
+    SchematicWire*     InsertSchematicWire(SchematicDevice *, SchematicDevice *, NodeType, NodeType,
                             const QVector<QPointF>&);
+    SchematicWire*     InsertSchematicWire(const WireDescriptor *desp);
+
+    void RenderGND(SchematicDevice *device, int x, int y);
 
     /* For ASG */
     void SetDeviceAt(int x, int y, SchematicDevice *device);
@@ -93,10 +97,11 @@ private:
 
     /* For wire */
     SchematicDevice   *m_startDevice;
-    int                m_startTer;
+    NodeType           m_startTerminal;
     QPointF            m_startPoint;
+
     SchematicDevice   *m_endDevice;
-    int                m_endTer;
+    NodeType           m_endTerminal;
     QPointF            m_endPoint;
     QVector<QPointF>   m_curWirePathPoints;
 
