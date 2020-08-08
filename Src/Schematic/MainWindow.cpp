@@ -128,16 +128,16 @@ void MainWindow::DeleteItem()
     QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
     foreach (QGraphicsItem *item, qAsConst(selectedItems)) {
         SchematicDevice *device = nullptr;
-        int terIndex = 0;
+        NodeType terminal;
         if (item->type() == SchematicWire::Type) {
             m_scene->removeItem(item);
             SchematicWire *wire = qgraphicsitem_cast<SchematicWire *>(item);
             device = wire->StartDevice();
-            terIndex = wire->StartTerminalIndex();
-            device->RemoveWire(wire, terIndex);
+            terminal = wire->StartTerminal();
+            device->RemoveWire(wire, terminal);
             device = wire->EndDevice();
-            terIndex = wire->EndTerminalIndex();
-            device->RemoveWire(wire, terIndex);
+            terminal = wire->EndTerminal();
+            device->RemoveWire(wire, terminal);
             delete item;
         }
     }

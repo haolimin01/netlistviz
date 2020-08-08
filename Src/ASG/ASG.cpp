@@ -141,12 +141,12 @@ void ASG::Bubbling()
 /* RLC current flows from N+ to N- */
 void ASG::InsertRLC(SchematicDevice *device)
 {
-    CktNode *negNode = device->Node(SchematicDevice::Negative);
+    CktNode *negNode = device->Node(Negative);
     assert(negNode);
     if (negNode->IsGnd())  return;
 
     foreach (SchematicDevice *tDev, negNode->m_devices) {
-        if (tDev->GetNodeType(negNode) == SchematicDevice::Positive) {
+        if (tDev->GetNodeType(negNode) == Positive) {
             int row = device->Id();
             int col = tDev->Id();
             if (row == col)  continue;
@@ -159,12 +159,12 @@ void ASG::InsertRLC(SchematicDevice *device)
 /* Isrc current flows from N+ to N- */
 void ASG::InsertVI(SchematicDevice *device)
 {
-    CktNode *posNode = device->Node(SchematicDevice::Positive);
+    CktNode *posNode = device->Node(Positive);
     assert(posNode);
     if (posNode->IsGnd())  return;
 
     foreach (SchematicDevice *tDev, posNode->m_devices) {
-        if (tDev->GetNodeType(posNode) == SchematicDevice::Positive) {
+        if (tDev->GetNodeType(posNode) == Positive) {
             int row = device->Id();
             int col = tDev->Id();
             if (row == col)  continue;

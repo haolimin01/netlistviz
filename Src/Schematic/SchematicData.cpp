@@ -41,8 +41,8 @@ void SchematicData::ParseC(QString name, QString posName, QString negName, doubl
     c->SetName(name);
     c->SetValue(value);
 
-    c->AddNode(SchematicDevice::Positive, posNode);
-    c->AddNode(SchematicDevice::Negative, negNode);
+    c->AddNode(Positive, posNode);
+    c->AddNode(Negative, negNode);
 
     posNode->AddDevice(c);
     negNode->AddDevice(c);
@@ -64,8 +64,8 @@ void SchematicData::ParseI(QString name, QString posName, QString negName, doubl
     i->SetName(name);
     i->SetValue(value);
 
-    i->AddNode(SchematicDevice::Positive, posNode);
-    i->AddNode(SchematicDevice::Negative, negNode);
+    i->AddNode(Positive, posNode);
+    i->AddNode(Negative, negNode);
 
     posNode->AddDevice(i);
     negNode->AddDevice(i);
@@ -91,8 +91,8 @@ void SchematicData::ParseL(QString name, QString posName, QString negName, doubl
     l->SetName(name);
     l->SetValue(value);
 
-    l->AddNode(SchematicDevice::Positive, posNode);
-    l->AddNode(SchematicDevice::Negative, negNode);
+    l->AddNode(Positive, posNode);
+    l->AddNode(Negative, negNode);
 
     posNode->AddDevice(l);
     negNode->AddDevice(l);
@@ -114,8 +114,8 @@ void SchematicData::ParseR(QString name, QString posName, QString negName, doubl
     r->SetName(name);
     r->SetValue(value);
 
-    r->AddNode(SchematicDevice::Positive, posNode);
-    r->AddNode(SchematicDevice::Negative, negNode);
+    r->AddNode(Positive, posNode);
+    r->AddNode(Negative, negNode);
 
     posNode->AddDevice(r);
     negNode->AddDevice(r);
@@ -137,8 +137,8 @@ void SchematicData::ParseV(QString name, QString posName, QString negName, doubl
     v->SetName(name);
     v->SetValue(value);
 
-    v->AddNode(SchematicDevice::Positive, posNode);
-    v->AddNode(SchematicDevice::Negative, negNode);
+    v->AddNode(Positive, posNode);
+    v->AddNode(Negative, negNode);
 
     posNode->AddDevice(v);
     negNode->AddDevice(v);

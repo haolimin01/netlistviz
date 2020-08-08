@@ -75,7 +75,7 @@ private:
     /* Insert Item */
     void InsertSchematicDevice(SchematicDevice::DeviceType, const QPointF &);
     void InsertSchematicTextItem(const QPointF &);
-    void InsertSchematicWire(SchematicDevice *, SchematicDevice *, int, int,
+    void InsertSchematicWire(SchematicDevice *, SchematicDevice *, NodeType, NodeType,
                             const QVector<QPointF>&);
 
     /* For ASG */
@@ -93,10 +93,11 @@ private:
 
     /* For wire */
     SchematicDevice   *m_startDevice;
-    int                m_startTer;
+    NodeType           m_startTerminal;
     QPointF            m_startPoint;
+
     SchematicDevice   *m_endDevice;
-    int                m_endTer;
+    NodeType           m_endTerminal;
     QPointF            m_endPoint;
     QVector<QPointF>   m_curWirePathPoints;
 

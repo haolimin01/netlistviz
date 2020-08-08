@@ -52,11 +52,12 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
 
     m_imag = nullptr;
     m_showNodeFlag = false;
-    m_wiresAtTerminal.resize(m_terNumber);
+    // m_wiresAtTerminal.resize(m_terNumber);
     m_id = -1;
     m_idGiven = false;
     m_sceneX = -1;
     m_sceneY = -1;
+    m_placed = false;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -93,7 +94,7 @@ int SchematicDevice::NodeId(NodeType type) const
     else  return -1;
 }
 
-SchematicDevice::NodeType SchematicDevice::GetNodeType(CktNode *node) const
+NodeType SchematicDevice::GetNodeType(CktNode *node) const
 {
     NodeType type = m_terminals.key(node, Positive);
     return type;
@@ -112,9 +113,10 @@ QRectF SchematicDevice::boundingRect() const
 QPainterPath SchematicDevice::shape() const
 {
     QPainterPath path;
-    for (int i = 0; i < m_terRects.size(); ++ i) {
-        path.addRect(m_terRects.at(i));
-    }
+
+    QMap<NodeType, QRectF>::const_iterator cit;
+    for (cit = m_terRects.constBegin(); cit != m_terRects.constEnd(); ++ cit)
+        path.addRect(cit.value());
 
     path.addRect(DashRect());
 
@@ -143,7 +145,10 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     if (m_showNodeFlag) {
         painter->setBrush(QBrush(m_color));
         painter->setPen(Qt::NoPen);
-        painter->drawRects(m_terRects);
+
+        QMap<NodeType, QRectF>::const_iterator cit;
+        for (cit = m_terRects.constBegin(); cit != m_terRects.constEnd(); ++ cit)
+            painter->drawRect(cit.value());
     }
 
     if (isSelected()) {
@@ -187,11 +192,11 @@ void SchematicDevice::DrawResistor()
     int width = TerminalSize;
     int upperCornerX = -halfTerSize;
     int upperCornerY = -BASE_LEN - TerminalSize;
-    m_terRects.append(QRectF(upperCornerX, upperCornerY, width, width));
+    m_terRects.insert(Positive, QRectF(upperCornerX, upperCornerY, width, width));
 
     int lowerCornerX = - halfTerSize;
     int lowerCornerY = BASE_LEN;
-    m_terRects.append(QRectF(lowerCornerX, lowerCornerY, width, width));
+    m_terRects.insert(Negative, QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
 void SchematicDevice::DrawCapacitor()
@@ -225,10 +230,11 @@ void SchematicDevice::DrawCapacitor()
     int width = TerminalSize;
     int upperCornerX = -halfTerSize;
     int upperCornerY = -BASE_LEN - TerminalSize;
-    m_terRects.append(QRectF(upperCornerX, upperCornerY, width, width));
+    m_terRects.insert(Positive, QRectF(upperCornerX, upperCornerY, width, width));
+
     int lowerCornerX = -halfTerSize;
     int lowerCornerY = BASE_LEN;
-    m_terRects.append(QRectF(lowerCornerX, lowerCornerY, width, width));
+    m_terRects.insert(Negative, QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
 void SchematicDevice::DrawInductor()
@@ -258,10 +264,11 @@ void SchematicDevice::DrawInductor()
     int width = TerminalSize;
     int upperCornerX = -halfTerSize;
     int upperCornerY = -BASE_LEN - TerminalSize;
-    m_terRects.append(QRectF(upperCornerX, upperCornerY, width, width));
+    m_terRects.insert(Positive, QRectF(upperCornerX, upperCornerY, width, width));
+
     int lowerCornerX = -halfTerSize;
     int lowerCornerY = BASE_LEN;
-    m_terRects.append(QRectF(lowerCornerX, lowerCornerY, width, width));
+    m_terRects.insert(Negative, QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
 void SchematicDevice::DrawIsrc()
@@ -302,8 +309,8 @@ void SchematicDevice::DrawIsrc()
     m_terNumber = 2;
 
     int width = TerminalSize;
-    m_terRects.append(QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
-    m_terRects.append(QRectF(-halfTerSize, BASE_LEN, width, width));
+    m_terRects.insert(Positive, QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
+    m_terRects.insert(Negative, QRectF(-halfTerSize, BASE_LEN, width, width));
 }
 
 void SchematicDevice::DrawVsrc()
@@ -345,13 +352,8 @@ void SchematicDevice::DrawVsrc()
     m_terNumber = 2;
 
     int width = TerminalSize;
-    m_terRects.append(QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
-    m_terRects.append(QRectF(-halfTerSize, BASE_LEN, width, width));
-}
-
-QVector<QRectF> SchematicDevice::TerminalRects() const
-{
-    return m_terRects;
+    m_terRects.insert(Positive, QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
+    m_terRects.insert(Negative, QRectF(-halfTerSize, BASE_LEN, width, width));
 }
 
 void SchematicDevice::SetSceneXY(int x, int y)
@@ -387,48 +389,45 @@ QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &
 
 void SchematicDevice::UpdateWirePosition()
 {
-    int i = 0;
-    while (i < m_wiresAtTerminal.size()) {
-        foreach(SchematicWire *wire, m_wiresAtTerminal[i]) {
-            if (NOT wire->isSelected())
-                wire->UpdatePosition(this, i, m_terRects[i].center());
+    QMap<NodeType, QVector<SchematicWire*>>::const_iterator cit;
+    cit = m_wiresAtTerminal.constBegin();
+    for (; cit != m_wiresAtTerminal.constEnd(); ++ cit) {
+        foreach (SchematicWire *wire, cit.value()) {
+            if (NOT wire->isSelected()) 
+                wire->UpdatePosition(this, cit.key(), m_terRects[cit.key()].center());
         }
-        i++;   
     }
 }
 
-void SchematicDevice::AddWire(SchematicWire *wire, int terIndex)
+void SchematicDevice::AddWire(SchematicWire *wire, NodeType type)
 {
-    assert(terIndex < m_terNumber);
-    m_wiresAtTerminal[terIndex].append(wire);
+    m_wiresAtTerminal[type].append(wire);
 }
 
 void SchematicDevice::RemoveWires(bool deletion)
 {
-    int i = 0;
-    int terIndex = 0;
+    NodeType terminal;
     SchematicDevice *device = nullptr;
-    while (i < m_wiresAtTerminal.size()) {
-        foreach(SchematicWire *wire, m_wiresAtTerminal.at(i)) {
-           scene()->removeItem(wire);
-           device = wire->StartDevice();
-           terIndex = wire->StartTerminalIndex();
-           device->RemoveWire(wire, terIndex);
-           device = wire->EndDevice();
-           terIndex = wire->EndTerminalIndex();
-           device->RemoveWire(wire, terIndex);
-           if (deletion)  delete wire;
+    QMap<NodeType, QVector<SchematicWire*>>::iterator cit;
+    for (cit = m_wiresAtTerminal.begin(); cit != m_wiresAtTerminal.end(); ++ cit) {
+        foreach (SchematicWire *wire, cit.value()) {
+            scene()->removeItem(wire);
+            device = wire->StartDevice();
+            terminal = wire->StartTerminal();
+            device->RemoveWire(wire, terminal);
+            device = wire->EndDevice();
+            terminal = wire->EndTerminal();
+            device->RemoveWire(wire, terminal);
+            if (deletion)  delete wire;
         }
-        i++;
     }
 }
 
-void SchematicDevice::RemoveWire(SchematicWire *wire, int terIndex)
+void SchematicDevice::RemoveWire(SchematicWire *wire, NodeType type)
 {
-    assert(terIndex < m_terNumber);
-    int wireIndex = m_wiresAtTerminal.at(terIndex).indexOf(wire);
+    int wireIndex = m_wiresAtTerminal[type].indexOf(wire);
     if (wireIndex != -1)
-        m_wiresAtTerminal[terIndex].removeAt(wireIndex);
+        m_wiresAtTerminal[type].removeAt(wireIndex);
 }
 
 void SchematicDevice::Print() const
@@ -452,11 +451,11 @@ void SchematicDevice::Print() const
         case Inductor:
         case Isrc:
         case Vsrc:
-            node = Node(SchematicDevice::Positive);
+            node = Node(Positive);
             if (node) {
                 ss << "posName(" << node->Name().toStdString() << "), ";
             }
-            node = Node(SchematicDevice::Negative);
+            node = Node(Negative);
             if (node) {
                 ss << "negName(" << node->Name().toStdString() << ")";
             }
@@ -486,9 +485,12 @@ void SchematicDevice::Print() const
 bool SchematicDevice::TerminalsContain(const QPointF &scenePos) const
 {
     QPointF itemPos = mapFromScene(scenePos);
-    for (int i = 0; i < m_terRects.size(); ++ i) {
-        if (m_terRects[i].contains(itemPos))
+    QMap<NodeType, QRectF>::const_iterator cit;
+    cit = m_terRects.constBegin();
+    for (; cit != m_terRects.constEnd(); ++ cit) {
+        if (cit.value().contains(itemPos))
             return true;
     }
+
     return false;
 }
