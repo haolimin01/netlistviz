@@ -9,9 +9,11 @@
 
 #include "SchematicData.h"
 #include "SchematicWire.h"
+#include "Circuit/CktNode.h"
 
 const static int Grid_W = 80;
 const static int Grid_H = 80;
+const static int GND_DIS = 15;
 
 
 SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
@@ -191,8 +193,8 @@ void SchematicScene::SetShowNodeFlag(bool show)
     }
 }
 
-void SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
-                                           const QPointF &pos)
+SchematicDevice* SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
+                                 const QPointF &pos)
 {
     SchematicDevice *dev = new SchematicDevice(type, m_itemMenu);
     dev->setPos(pos);
@@ -201,8 +203,10 @@ void SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
 
     m_deviceNumber++;
     emit DeviceInserted(dev);
+
+    return dev;
 }
-void SchematicScene::InsertSchematicTextItem(const QPointF &pos)
+SchematicTextItem* SchematicScene::InsertSchematicTextItem(const QPointF &pos)
 {
     m_text = new SchematicTextItem();
     m_text->setFont(m_font);
@@ -214,6 +218,8 @@ void SchematicScene::InsertSchematicTextItem(const QPointF &pos)
     m_text->setDefaultTextColor(m_textColor);
     m_text->setPos(pos);
     emit TextInserted(m_text);
+
+    return m_text;
 }
 
 bool SchematicScene::IsItemChange(int type) const
@@ -345,27 +351,46 @@ void SchematicScene::FinishDrawingWireAt(const QPointF &scenePos)
     }
 }
 
-void SchematicScene::InsertSchematicWire(SchematicDevice *startDev, SchematicDevice *endDev,
+SchematicWire* SchematicScene::InsertSchematicWire(SchematicDevice *startDev, SchematicDevice *endDev,
                                 NodeType startTer, NodeType endTer, const QVector<QPointF> &wirePoints)
 {
-    if (NOT startDev || NOT endDev)  return;
+    if (NOT startDev || NOT endDev)  return nullptr;
     // newWire
     SchematicWire *newWire = new SchematicWire(startDev, endDev, startTer, endTer);
     newWire->SetWirePathPoints(wirePoints);
     addItem(newWire);
-    newWire->setPos(0, 0);
+    // newWire->setPos(0, 0);
 
     startDev->AddWire(newWire, startTer);
     endDev->AddWire(newWire, endTer);
+
+    return newWire;
+}
+
+SchematicWire* SchematicScene::InsertSchematicWire(const WireDescriptor *desp)
+{
+    if (NOT desp)  return nullptr;
+    // new wire
+    SchematicWire *newWire = new SchematicWire(desp->startDev,
+        desp->endDev, desp->startTerminal, desp->endTerminal);
+    newWire->SetWirePathPoints(desp->pathPoints);
+    addItem(newWire);
+    // newWire->setPos(0, 0);
+
+    desp->startDev->AddWire(newWire, desp->startTerminal);
+    desp->endDev->AddWire(newWire, desp->endTerminal);
+
+    return newWire;
 }
                     
 /* Render Level Device List to SchematicScene, for ASG */
-void SchematicScene::RenderSchematic(const QVector<QVector<SchematicDevice*>> &m_levels)
+void SchematicScene::RenderSchematic(const QVector<QVector<SchematicDevice*>> &levels,
+    const QVector<WireDescriptor*> &wireDesps)
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-    if (m_levels.size() == 0)  return;
+    if (levels.size() == 0)  return;
 
     /* place device firstly */
     int segment = 0;
@@ -375,22 +400,37 @@ void SchematicScene::RenderSchematic(const QVector<QVector<SchematicDevice*>> &m
     int x = 0, y = 0;
     QVector<SchematicDevice*> curDevices;
     SchematicDevice *device = nullptr;
+    CktNode *node = nullptr;
 
-    for (int i = 0; i < m_levels.size(); ++ i) {
-        curDevices = m_levels.at(i);
+    for (int i = 0; i < levels.size(); ++ i) {
+        curDevices = levels.at(i);
         segment = curDevices.size() + 1;
         perY = maxRowCount / segment;
         for (int j = 0; j < curDevices.size(); ++ j) {
             device = curDevices.at(j);
+            device->SetShowNodeFlag(m_showNodeFlag);
             x = i;
             y = (j + 1) * perY - 1;
             SetDeviceAt(x, y, device);
             if (x != 0)
                 device->SetOrientation(SchematicDevice::Horizontal);
+            /* add GND devices and connect devices */
+            RenderGND(device, x, y);
         }
     }
 
     /* connect devices by wires */
+    QVector<QPointF> pathPoints;
+    WireDescriptor *desp = nullptr;
+    for (int i = 0; i < wireDesps.size(); ++ i) {
+        desp = wireDesps.at(i);
+        pathPoints.push_back(desp->startDev->NodeScenePos(desp->startTerminal));
+        pathPoints.push_back(desp->endDev->NodeScenePos(desp->endTerminal));
+        desp->pathPoints = pathPoints;
+        InsertSchematicWire(desp);
+        pathPoints.clear();
+    }
+
 }
 
 /* row and col start from 0 */
@@ -403,6 +443,68 @@ void SchematicScene::SetDeviceAt(int x, int y, SchematicDevice *device)
     device->setPos(centerX, centerY);
     device->SetSceneXY(x, y);
     device->SetPlaced(true);
+}
+
+void SchematicScene::RenderGND(SchematicDevice *device, int x, int y)
+{
+    SchematicDevice *gnd = nullptr;
+    CktNode *node = nullptr;
+    int gndX = 0, gndY = 0;
+    QPointF gndPos, nodePos;
+    QVector<QPointF> pathPoints;
+    switch (device->GetDeviceType()) {
+        case SchematicDevice::Resistor:
+        case SchematicDevice::Capacitor:
+        case SchematicDevice::Inductor:
+        case SchematicDevice::Isrc:
+        case SchematicDevice::Vsrc:
+            node = device->Node(Positive);
+            if (node->IsGnd()) {
+                nodePos = device->NodeScenePos(Positive);
+                if (device->GetOrientation() == SchematicDevice::Horizontal) {
+                    gndPos.setX(nodePos.x() + GND_DIS);
+                    gndPos.setY(nodePos.y());
+                    gnd = InsertSchematicDevice(SchematicDevice::GND, gndPos);
+                    gnd->SetOrientation(SchematicDevice::Horizontal);
+                }
+                if (device->GetOrientation() == SchematicDevice::Vertical) {
+                    gndPos.setX(nodePos.x());
+                    gndPos.setY(nodePos.y() + GND_DIS);
+                    gnd = InsertSchematicDevice(SchematicDevice::GND, gndPos);
+                    gnd->SetOrientation(SchematicDevice::Vertical);
+                }
+                gnd->SetShowNodeFlag(m_showNodeFlag);
+                pathPoints.push_back(nodePos);
+                pathPoints.push_back(gnd->NodeScenePos(General));
+                InsertSchematicWire(device, gnd, Positive, General, pathPoints);
+            }
+            pathPoints.clear();
+
+            node = device->Node(Negative);
+            if (node->IsGnd()) {
+                nodePos = device->NodeScenePos(Negative);
+                if (device->GetOrientation() == SchematicDevice::Horizontal) {
+                    gndPos.setX(nodePos.x() + GND_DIS);
+                    gndPos.setY(nodePos.y());
+                    gnd = InsertSchematicDevice(SchematicDevice::GND, gndPos);
+                    gnd->SetOrientation(SchematicDevice::Horizontal);
+                }
+                if (device->GetOrientation() == SchematicDevice::Vertical) {
+                    gndPos.setX(nodePos.x());
+                    gndPos.setY(nodePos.y() + GND_DIS);
+                    gnd = InsertSchematicDevice(SchematicDevice::GND, gndPos);
+                    gnd->SetOrientation(SchematicDevice::Vertical);
+                }
+                gnd->SetShowNodeFlag(m_showNodeFlag);
+                pathPoints.push_back(nodePos);
+                pathPoints.push_back(gnd->NodeScenePos(General));
+                InsertSchematicWire(device, gnd, Negative, General, pathPoints);
+            }
+            pathPoints.clear();
+
+            break;
+        default:;
+    }
 }
 
 /* Read and Write SchematicData */

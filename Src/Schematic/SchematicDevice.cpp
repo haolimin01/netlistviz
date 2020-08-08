@@ -11,7 +11,7 @@
 #include "SchematicWire.h"
 
 
-const int TerminalSize = 10;
+const int TerminalSize = 8;
 const int IMAG_LEN = 25;
 const int BASE_LEN = 20;
 const int BRECT_W = 30;
@@ -46,6 +46,10 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
         case Vsrc:
             m_devOrien = Vertical;
             DrawVsrc();
+            break;
+        case GND:
+            m_devOrien = Vertical;
+            DrawGND();
             break;
         default:;
     }
@@ -356,6 +360,40 @@ void SchematicDevice::DrawVsrc()
     m_terRects.insert(Negative, QRectF(-halfTerSize, BASE_LEN, width, width));
 }
 
+void SchematicDevice::DrawGND()
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+/*
+*      |
+*      |
+*    -----
+*     ---
+*      -
+*/
+    m_name = "GND";
+    m_value = 0;
+
+    QPainterPath path;
+    int vWire = 10;   // Length of the vertical wire
+    path.moveTo(0, -vWire);
+    path.lineTo(0, 0);
+    path.moveTo(-8, 0);
+    path.lineTo(8, 0);
+    path.moveTo(-6, 4);
+    path.lineTo(6, 4);
+    path.moveTo(-4, 8);
+    path.lineTo(4, 8);
+    setPath(path);
+
+    m_terNumber = 1;
+    
+    // The terminal-rect is centered at (0, -vWire)
+    QRectF rect(-TerminalSize/2, -vWire-TerminalSize/2, TerminalSize, TerminalSize);
+    m_terRects.insert(General, rect);
+}
+
 void SchematicDevice::SetSceneXY(int x, int y)
 {
     Q_ASSERT(x >= 0 && y >= 0);
@@ -493,4 +531,15 @@ bool SchematicDevice::TerminalsContain(const QPointF &scenePos) const
     }
 
     return false;
+}
+
+QPointF SchematicDevice::NodePos(NodeType type) const
+{
+    return m_terRects[type].center();
+}
+
+QPointF SchematicDevice::NodeScenePos(NodeType type) const
+{
+    QPointF itemPos = m_terRects[type].center();
+    return mapToScene(itemPos);
 }

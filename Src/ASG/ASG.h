@@ -15,6 +15,7 @@ class Matrix;
 class SchematicData;
 class SchematicDevice;
 class TablePlotter;
+struct WireDescriptor;
 
 class ASG
 {
@@ -36,7 +37,8 @@ public:
     bool BubblingFinished() const { return m_bubblingFlag; }
 
     /* 2-d array */
-    QVector<DeviceList> RetDeviceList() const { return m_levelDeviceList; }
+    QVector<DeviceList> FinalDevices() const { return m_levelDevices; }
+    QVector<WireDescriptor*> WireDesps() const { return m_wireDesps; }
 
 private:
     DISALLOW_COPY_AND_ASSIGN(ASG);
@@ -47,6 +49,8 @@ private:
     void InsertRLC(SchematicDevice *device);
     void InsertVI(SchematicDevice *device);
 
+    void GenerateWireDesps();
+
     void PrintLevelDeviceList() const;
     void PlotLevelDeviceList();
 
@@ -55,7 +59,11 @@ private:
     SchematicData *m_ckt;         // circuit infomation
 
     /* level : DeviceList */
-    QVector<DeviceList> m_levelDeviceList;
+    /* Do not contain GND */
+    QVector<DeviceList> m_levelDevices;
+    /* for generate wires */
+    QVector<WireDescriptor*> m_wireDesps;
+
 
     bool           m_buildMatrixFlag;
     bool           m_levellingFlag;

@@ -9,8 +9,8 @@
  */
 
 #include "Define/Define.h"
+#include "Schematic/SchematicDevice.h"
 
-class SchematicDevice;
 class Matrix;
 
 
@@ -18,7 +18,7 @@ class MatrixElement
 {
 public:
     MatrixElement(int row, int col, SchematicDevice *fromDevice,
-        SchematicDevice *toDevice);
+        SchematicDevice *toDevice, NodeType fromTer, NodeType toTer);
     ~MatrixElement();
 
 public:
@@ -30,13 +30,15 @@ public:
     bool  Visited() const { return m_visited; }
     void  SetVisited(bool visited = true) { m_visited = visited; }
 
-    SchematicDevice* FromDevice() const { return m_fromDevice; }
-    SchematicDevice* ToDevice()   const { return m_toDevice; }
-    MatrixElement*   NextInRow() const { return m_nextInRow; }
+    SchematicDevice* FromDevice()   const { return m_fromDevice; }
+    NodeType         FromTerminal() const { return m_fromTerminal; }
+    SchematicDevice* ToDevice()     const { return m_toDevice; }
+    NodeType         ToTerminal()   const { return m_toTerminal; }
+    MatrixElement*   NextInRow()    const { return m_nextInRow; }
+    MatrixElement*   NextInCol()    const { return m_nextInCol; }
+
     /* for Matrix Insert Element */
     MatrixElement**  NextInRowPtr()    { return &m_nextInRow; }
-    MatrixElement*   NextInCol() const { return m_nextInCol; }
-    /* for Matrix Insert Element */
     MatrixElement**  NextInColPtr()    { return &m_nextInCol; }
 
     void             SetNextInRow(MatrixElement *element)
@@ -49,8 +51,12 @@ private:
 
     int              m_rowIndex;
     int              m_colIndex;
+
     SchematicDevice *m_fromDevice;
+    NodeType         m_fromTerminal;
     SchematicDevice *m_toDevice;
+    NodeType         m_toTerminal;
+    
     MatrixElement   *m_nextInRow;
     MatrixElement   *m_nextInCol;
 

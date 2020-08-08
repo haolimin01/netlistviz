@@ -4,6 +4,7 @@
 #include "Matrix.h"
 #include "Schematic/SchematicData.h"
 #include "Schematic/SchematicDevice.h"
+#include "Schematic/SchematicWire.h"
 #include "Circuit/CktNode.h"
 #include "MatrixElement.h"
 #include "Utilities/MyString.h"
@@ -41,6 +42,7 @@ ASG::~ASG()
 {
     if (m_matrix) delete m_matrix;
     if (m_levelPlotter) delete m_levelPlotter;
+    m_wireDesps.clear();
 }
 
 void ASG::SetSchematicData(SchematicData *data)
@@ -94,15 +96,17 @@ void ASG::BuildIncidenceMatrix()
     m_buildMatrixFlag = true;
     m_levellingFlag = false;
     m_bubblingFlag = false;
+
+    GenerateWireDesps();
 }
 
 void ASG::Levelling()
 {
-    m_levelDeviceList.clear();
+    m_levelDevices.clear();
     m_matrix->SetAllVisited(false);
 
     /* level 0 */
-    m_levelDeviceList.push_back(m_ckt->m_firstLevelDeviceList);
+    m_levelDevices.push_back(m_ckt->m_firstLevelDeviceList);
 
     ASG::DeviceList tDeviceList = m_ckt->m_firstLevelDeviceList;
 
@@ -113,7 +117,7 @@ void ASG::Levelling()
     while (tDeviceList.size() > 0) {
         tDeviceList = FillNextLevelDeviceList(tDeviceList);
         if (tDeviceList.size() == 0)  break;
-        m_levelDeviceList.push_back(tDeviceList);
+        m_levelDevices.push_back(tDeviceList);
         curDeviceNumber += tDeviceList.size();
     }
 
@@ -150,7 +154,7 @@ void ASG::InsertRLC(SchematicDevice *device)
             int row = device->Id();
             int col = tDev->Id();
             if (row == col)  continue;
-            m_matrix->InsertElement(row, col, device, tDev);
+            m_matrix->InsertElement(row, col, device, tDev, Negative, Positive);
         }
     }
 }
@@ -168,7 +172,7 @@ void ASG::InsertVI(SchematicDevice *device)
             int row = device->Id();
             int col = tDev->Id();
             if (row == col)  continue;
-            m_matrix->InsertElement(row, col, device, tDev);
+            m_matrix->InsertElement(row, col, device, tDev, Positive, Positive);
         }
     }
 }
@@ -203,12 +207,12 @@ void ASG::PrintLevelDeviceList() const
 {
     printf("--------------- Level Device List ---------------\n");
 
-    int totalLevel = m_levelDeviceList.size();
+    int totalLevel = m_levelDevices.size();
     SchematicDevice *device = nullptr;
 
     ASG::DeviceList tDeviceList;
     for (int i = 0; i < totalLevel; ++ i) {
-        tDeviceList = m_levelDeviceList.at(i);
+        tDeviceList = m_levelDevices.at(i);
         printf("L%-7d", i);
         
         foreach (device, tDeviceList) {
@@ -226,7 +230,7 @@ void ASG::PlotLevelDeviceList()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    if (m_levelDeviceList.size() < 1) {
+    if (m_levelDevices.size() < 1) {
         qInfo() << LINE_INFO << "Please levelling before plotting level device";
         return;
     }
@@ -242,13 +246,13 @@ void ASG::PlotLevelDeviceList()
     qInfo() << LINE_INFO << endl;
 
     /* col count */
-    int totalLevel = m_levelDeviceList.size();
+    int totalLevel = m_levelDevices.size();
 
     /* row count */
     int maxDeviceNumberInLevel = -1;
     ASG::DeviceList tDevList;
 
-    foreach (tDevList, m_levelDeviceList) {
+    foreach (tDevList, m_levelDevices) {
         if (tDevList.size() > maxDeviceNumberInLevel)
             maxDeviceNumberInLevel = tDevList.size();
     }
@@ -263,12 +267,31 @@ void ASG::PlotLevelDeviceList()
     m_levelPlotter->SetColHeaderText(headerText);
 
     /* content */
-    for (int i = 0; i < m_levelDeviceList.size(); ++ i) {
-        tDevList = m_levelDeviceList.at(i);
+    for (int i = 0; i < m_levelDevices.size(); ++ i) {
+        tDevList = m_levelDevices.at(i);
         for (int j = 0; j < tDevList.size(); ++ j) {
             m_levelPlotter->AddItem(j, i, tDevList.at(j)->Name());
         }
     }
 
     m_levelPlotter->Display();
+}
+
+void ASG::GenerateWireDesps()
+{
+    m_wireDesps.clear();
+    int size = m_matrix->Size();
+    MatrixElement *element = nullptr;
+    for (int i = 0; i < size; ++ i) {
+        element = m_matrix->RowHead(i).head;
+        while (element) {
+            WireDescriptor *wd = new WireDescriptor;
+            wd->startDev = element->FromDevice();
+            wd->endDev = element->ToDevice();
+            wd->startTerminal = element->FromTerminal();
+            wd->endTerminal = element->ToTerminal();
+            m_wireDesps.push_back(wd);
+            element = element->NextInRow();
+        }
+    }
 }

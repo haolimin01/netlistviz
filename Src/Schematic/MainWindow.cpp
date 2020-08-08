@@ -297,6 +297,7 @@ void MainWindow::CreateDeviceToolBox()
     layout->addWidget(CreateCellWidget(tr("Inductor"), SchematicDevice::Inductor), 1, 0);
     layout->addWidget(CreateCellWidget(tr("ISource"), SchematicDevice::Isrc), 1, 1);
     layout->addWidget(CreateCellWidget(tr("VSource"), SchematicDevice::Vsrc), 2, 0);
+    layout->addWidget(CreateCellWidget(tr("GND"), SchematicDevice::GND), 2, 1);
 
     layout->setRowStretch(3, 10);
     layout->setColumnStretch(2, 10);
@@ -849,6 +850,6 @@ void MainWindow::GenerateSchematic()
         return;
     }
 
-    m_scene->RenderSchematic(m_asg->RetDeviceList());
+    m_scene->RenderSchematic(m_asg->FinalDevices(), m_asg->WireDesps());
     m_view->centerOn(0, 800);
 }

@@ -11,14 +11,14 @@ QT_END_NAMESPACE;
 class CktNode;
 class SchematicWire;
 
-enum NodeType    { Positive, Negative };
+enum NodeType    { Positive, Negative, General };
 
 class SchematicDevice : public QGraphicsPathItem
 {
 public:
 	enum { Type = UserType + 4 };
 	enum DeviceType { Resistor=0, Capacitor, Inductor,
-					 Vsrc/*3*/, Isrc };
+					 Vsrc/*3*/, Isrc, GND };
 	enum Orientation { Horizontal, Vertical };
 
 public:
@@ -34,11 +34,14 @@ public:
 	void       AddNode(NodeType type, CktNode *node);
 	int        NodeId(NodeType type) const;
 	QPointF    NodePos(NodeType type) const;
+	QPointF    NodeScenePos(NodeType type) const;
+	
 	void       SetId(int id) { m_id = id; m_idGiven = true; }
 	int        Id()  const { return m_id; }
 	bool       IdGiven() const { return m_idGiven; }
 	NodeType   GetNodeType(CktNode *node) const;
 	void       SetOrientation(Orientation orien);
+	Orientation GetOrientation() const { return m_devOrien; }
 	void       SetSceneXY(int x, int y);
 	int        SceneX() const  { return m_sceneX; }
 	int        SceneY() const  { return m_sceneY; }
@@ -80,6 +83,7 @@ private:
 	void DrawInductor();
 	void DrawIsrc();
 	void DrawVsrc();
+	void DrawGND();
 
 	QMap<NodeType, CktNode *> m_terminals;
 	QMap<NodeType, QVector<SchematicWire*>> m_wiresAtTerminal;
