@@ -37,11 +37,26 @@ INDUCTOR    ^[Ll]{STRING}
 RESISTOR    ^[Rr]{STRING}
 VSOURCE     ^[Vv]{STRING}
 
+AC          [Aa][Cc]
+DC          [Dd][Cc]
+TRAN        [Tt][Rr][Aa][Nn]
+
+V           [Vv] 
+VM          [Vv][Mm]
+VP          [Vv][Pp]
+VR          [Vv][Rr]
+I           [Ii]
+
+DOTPRINT    ^[\.][Pp][Rr][Ii][Nn][Tt]
+DOTPLOT     ^[\.][Pp][Ll][Oo][Tt]
 DOTOP       ^[\.][Oo][Pp]
 
 COMMENT     ^\*.*?$
 EOL         [\n\r]+
 DELIMITER   [ \t]+
+LP          \(
+RP          \)
+COMMA       ,
 DOTEND      ^[\.][Ee][Nn][Dd][Ss]?
 
 %%
@@ -89,6 +104,47 @@ DOTEND      ^[\.][Ee][Nn][Dd][Ss]?
                 return token::VSOURCE;
                 }
 
+{AC}            {return token::AC;}
+{DC}            {return token::DC;}
+{TRAN}          {return token::TRAN;}
+
+{V}             {
+                yylval->s = (char*)malloc(2 * sizeof(char));
+                yylval->s[0] = 'V';
+                yylval->s[1] = '\0';
+                return token::VTYPE;
+                }
+                
+{VM}            {
+                yylval->s = (char*)malloc(3 * sizeof(char));
+                yylval->s[0] = 'V';
+                yylval->s[1] = 'M';
+                yylval->s[2] = '\0';
+                return token::VTYPE;
+                }
+
+{VP}            {
+                yylval->s = (char*)malloc(3 * sizeof(char));
+                yylval->s[0] = 'V';
+                yylval->s[1] = 'P';
+                yylval->s[2] = '\0';
+                return token::VTYPE;
+                }
+
+{VR}            {
+                yylval->s = (char*)malloc(3 * sizeof(char));
+                yylval->s[0] = 'V';
+                yylval->s[1] = 'R';
+                yylval->s[2] = '\0';
+                return token::VTYPE;
+                }
+
+{I}             {return token::I;}
+
+{DOTPRINT}      {return token::DOTPRINT;}
+
+{DOTPLOT}       {return token::DOTPLOT;}
+
 {DOTOP}         {return token::DOTOP;}
 
 {COMMENT}       {
@@ -106,10 +162,14 @@ DOTEND      ^[\.][Ee][Nn][Dd][Ss]?
                 }
 
 {EOL}           {
-                lineno++;
+                // lineno++;
                 // printf("line number : %d\n", lineno);
                 return token::EOL;
                 }
+{LP}            {return token::LP;}
+{RP}            {return token::RP;}
+{COMMA}         {return token::COMMA;}
+
 {DOTEND}        {return token::DOTEND;}
 {DELIMITER}     {}
 
