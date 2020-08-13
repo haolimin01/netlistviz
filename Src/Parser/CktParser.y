@@ -21,8 +21,31 @@
     using std::vector;
     using std::string;
 
-    extern FILE *yyin;
-    vector<char*> nodes;
+    struct OutputPara
+    {
+        char *otype;  // output type (V, VM, VR, VP, I)
+        char *pos;    // positive node
+        char *neg;    // negative node
+        OutputPara()  { otype = NULL; pos = NULL; neg = NULL; }
+        OutputPara(char *o, char *p, char *n)
+        {
+            otype = new char[strlen(o) + 1];
+            strcpy(otype, o);
+            otype[strlen(o)] = '\0';
+
+            pos = new char[strlen(p) + 1];
+            strcpy(pos, p);
+            pos[strlen(p)] = '\0';
+
+            neg = new char[strlen(n) + 1];
+            strcpy(neg, n);
+            neg[strlen(n)] = '\0';
+        }
+    };
+
+    extern FILE       *yyin;
+    vector<char*>      nodes;
+    vector<OutputPara> outs;
 
     void PrintDevice(char*, const vector<char*> &, double);
 %}
@@ -42,12 +65,14 @@
 %token<s> STRING
 %token<s> CAPACITOR ISOURCE INDUCTOR RESISTOR VSOURCE COMMENT
 %token<n> INTEGER
+%token<s> VTYPE
 
 %type<s> node
 %type<f> value
-%type<n> nodeList
+%type<n> nodeList outList
 
-%token DOTOP DOTEND EOL
+%token DOTPRINT DOTPLOT LP RP COMMA DOTOP DOTEND EOL
+%token I AC DC TRAN
 
 %{
     extern int yylex(yy::CktParser::semantic_type *yylval, yy::CktParser::location_type *yylloc);
@@ -73,6 +98,7 @@ netlist: line
 line: component EOL
     | analysis EOL
     | ignore EOL
+    | output EOL
     | EOL
 ;
 
@@ -87,6 +113,10 @@ analysis: op
 ;
 
 ignore: COMMENT
+;
+
+output: print
+      | plot
 ;
 
 capacitor: CAPACITOR nodeList value
@@ -153,8 +183,43 @@ vsource: VSOURCE nodeList value
        }
 ;
 
-
 op: DOTOP
+;
+
+print: DOTPRINT outList
+     {
+         outs.clear();
+     }
+     | DOTPRINT DC outList
+     {
+         outs.clear();
+     }
+     | DOTPRINT AC outList
+     {
+         outs.clear();
+     }
+     | DOTPRINT TRAN outList
+     {
+         outs.clear();
+     }
+;
+
+plot: DOTPLOT outList
+    {
+        outs.clear();
+    }
+    | DOTPLOT DC outList
+    {
+        outs.clear();
+    }
+    | DOTPLOT AC outList
+    {
+        outs.clear();
+    }
+    | DOTPLOT TRAN outList
+    {
+        outs.clear();
+    }
 ;
 
 nodeList: node
@@ -167,6 +232,22 @@ nodeList: node
             $$ = $$ + 1;
             nodes.push_back($2);
         }
+;
+
+outList: VTYPE LP node RP
+       {
+           $$ = 1;
+           outs.push_back(OutputPara($1, $3, "0"));
+       }
+       | VTYPE LP node COMMA node RP
+       {
+           $$ = $$ + 1;
+           outs.push_back(OutputPara($1, $3, $5));
+       }
+       | I LP VSOURCE RP
+       {
+           outs.push_back(OutputPara("I", $3, "0"));
+       }
 ;
 
 node: STRING
