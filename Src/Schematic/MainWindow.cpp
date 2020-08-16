@@ -13,6 +13,7 @@
 #include "NetlistDialog.h"
 #include "Parser/MyParser.h"
 #include "ASG/ASG.h"
+#include "ASGDialog.h"
 
 const int DEV_ICON_SIZE = 30;
 
@@ -46,6 +47,8 @@ MainWindow::~MainWindow()
     m_scene->clear();
     if (m_data)  m_data->Clear();
     if (m_asg)  delete m_asg;
+    if (m_netlistDialog)  delete m_netlistDialog;
+    if (m_asgDialog)  delete m_asgDialog;
 }
 
 void MainWindow::InitVariables()
@@ -58,8 +61,12 @@ void MainWindow::InitVariables()
     m_asg = new ASG();
     m_deviceBeingAdded = nullptr;
 
-    m_netlistDialog = new NetlistDialog(this);
+    m_netlistDialog = new NetlistDialog();
     connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::ParseNetlist);
+
+    m_asgPropertySelected = false;
+    // m_asgDialog = new ASGDialog(); 
+    m_asgDialog = nullptr;
 }
 
 void MainWindow::CreateSchematicScene()
@@ -223,7 +230,7 @@ void MainWindow::FontSizeChanged(const QString &)
 /* BUG */
 void MainWindow::SceneScaleChanged(const QString &scale)
 {
-#if 0
+#if 1
     double newScale = scale.left(scale.indexOf(tr("%"))).toDouble() / 100.0;
     QMatrix oldMatrix = m_view->matrix();
     m_view->resetMatrix();
@@ -391,6 +398,10 @@ void MainWindow::CreateActions()
     m_showGridAction->setChecked(true);
     connect(m_showGridAction, &QAction::toggled, this, &MainWindow::ShowGridToggled);
 
+    m_asgPropertyAction = new QAction(QIcon(":/images/asg_property.png"), tr("ASG Property"), this);
+    m_asgPropertyAction->setEnabled(false);
+    connect(m_asgPropertyAction, &QAction::triggered, this, &MainWindow::ASGPropertyTriggered);
+
     m_buildMatrixAction = new QAction(QIcon(":/images/build_matrix.png"), tr("Build Matrix"), this);
     m_buildMatrixAction->setEnabled(false);
     connect(m_buildMatrixAction, &QAction::triggered, this, &MainWindow::BuildIncidenceMatrix);
@@ -430,6 +441,7 @@ void MainWindow::CreateMenus()
     m_viewMenu->addAction(m_showGridAction);
 
     m_asgMenu = menuBar()->addMenu(tr("&ASG"));
+    m_asgMenu->addAction(m_asgPropertyAction);
     m_asgMenu->addAction(m_buildMatrixAction);
     m_asgMenu->addAction(m_levellingAction);
     m_asgMenu->addAction(m_bubblingAction);
@@ -517,6 +529,7 @@ void MainWindow::CreateToolBars()
     m_pointerToolBar->addWidget(m_sceneScaleCombo);
 
     m_asgToolBar = addToolBar(tr("ASG"));
+    m_asgToolBar->addAction(m_asgPropertyAction);
     m_asgToolBar->addAction(m_buildMatrixAction);
     m_asgToolBar->addAction(m_levellingAction);
     m_asgToolBar->addAction(m_bubblingAction);
@@ -629,10 +642,13 @@ void MainWindow::OpenNetlist()
 
 void MainWindow::NetlistChangedSlot()
 {
+    m_asgPropertyAction->setEnabled(true);
     m_buildMatrixAction->setEnabled(true);
     m_levellingAction->setEnabled(true);
     m_bubblingAction->setEnabled(true);
     m_generateDeviceAction->setEnabled(true);
+
+    m_asgPropertySelected = false;
 }
 
 void MainWindow::OpenSchematic()
@@ -805,11 +821,36 @@ void MainWindow::ScrollActionToggled(bool checked)
     m_pointerBtnGroup->button(int(SchematicScene::InsertTextMode))->setChecked(false);
 }
 
+void MainWindow::ASGPropertyTriggered()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    Q_ASSERT(m_data);
+    if (m_asgDialog) delete m_asgDialog;
+    m_asgDialog = new ASGDialog();
+
+    m_asgDialog->SetSchematicData(m_data);
+    m_asgDialog->show();
+    m_asgPropertySelected = true;
+}
+
 void MainWindow::BuildIncidenceMatrix()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
+    if (m_data->FirstLevelDeviceListSize() < 1) {
+        ShowCriticalMsg(tr("Please select first level device(s)"));
+        m_asgPropertySelected = false;
+        return;
+    }
+
+    if (NOT m_asgPropertySelected) {
+        ShowCriticalMsg(tr("Please Select ASG Properties firstly!"));
+        return;
+    }
     m_asg->BuildIncidenceMatrix();
 }
 

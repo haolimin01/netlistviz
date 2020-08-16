@@ -26,6 +26,8 @@ SchematicData::~SchematicData()
 
     m_nodeTable.clear();
     m_deviceTable.clear();
+
+    m_firstLevelDeviceList.clear();
 }
 
 void SchematicData::ParseC(QString name, QString posName, QString negName, double value)
@@ -74,8 +76,8 @@ void SchematicData::ParseI(QString name, QString posName, QString negName, doubl
     m_deviceList.push_back(i);
 
     /* now first level deviceList just contains one */
-    if (m_firstLevelDeviceList.size() < 1)
-        m_firstLevelDeviceList.push_back(i);
+    // if (m_firstLevelDeviceList.size() < 1)
+    //     m_firstLevelDeviceList.push_back(i);
 }
 
 void SchematicData::ParseL(QString name, QString posName, QString negName, double value)
@@ -147,8 +149,8 @@ void SchematicData::ParseV(QString name, QString posName, QString negName, doubl
     m_deviceList.push_back(v);
 
     /* now first level deviceList just contains one */
-    if (m_firstLevelDeviceList.size() < 1)
-        m_firstLevelDeviceList.push_back(v);
+    // if (m_firstLevelDeviceList.size() < 1)
+    //     m_firstLevelDeviceList.push_back(v);
 }
 
 CktNode* SchematicData::GetAddNode(const QString &name)
@@ -210,6 +212,16 @@ void SchematicData::Clear()
     m_nodeTable.clear();
     m_deviceList.clear();
     m_deviceTable.clear();
+}
+
+void SchematicData::SetFirstLevelDeviceList(const DeviceList &deviceList)
+{
+    m_firstLevelDeviceList = deviceList;
+}
+
+SchematicDevice* SchematicData::Device(const QString &name) const
+{
+    return m_deviceTable[name];
 }
 
 void SchematicData::PrintNodeAndDevice() const

@@ -20,6 +20,7 @@
     <file>images/bubbling.png</file>
     <file>images/grid.png</file>
     <file>images/generate_device.png</file>
+    <file>images/asg_property.png</file>
 </qresource>
 </RCC>
 
