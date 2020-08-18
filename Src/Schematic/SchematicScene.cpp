@@ -13,6 +13,7 @@
 
 const static int Grid_W = 80;
 const static int Grid_H = 80;
+const static int DIS = 15;
 const static int GND_DIS = 15;
 
 
@@ -473,6 +474,7 @@ void SchematicScene::RenderSchematic(const QVector<DevLevelDescriptor*> &devices
 
     CktNode *posNode = nullptr, *negNode = nullptr;
     qreal xPos = 0, yPos = 0;
+    QPointF itemPos(0, 0);
     /* Secondly, we consider cap */
     for (int i = 0; i < devices.size(); ++ i) {
 
@@ -487,19 +489,23 @@ void SchematicScene::RenderSchematic(const QVector<DevLevelDescriptor*> &devices
             if (posNode->IsGnd()) {
 
                 xPos = negNode->ScenePos().x();
-                yPos = negNode->ScenePos().y();
+                yPos = negNode->ScenePos().y() + DIS;
+                itemPos = device->ScenePosByTerminalScenePos(Negative, QPointF(xPos, yPos));
 
             } else if (negNode->IsGnd()) {
 
                 xPos = posNode->ScenePos().x();
-                yPos = posNode->ScenePos().y();
+                yPos = posNode->ScenePos().y() + DIS;
+                itemPos = device->ScenePosByTerminalScenePos(Positive, QPointF(xPos, yPos));
 
             } else {
                 xPos = (posNode->ScenePos().x() + negNode->ScenePos().x()) / 2;
                 yPos = (posNode->ScenePos().y() + negNode->ScenePos().y()) / 2;
+                itemPos.rx() = xPos;
+                itemPos.ry() = yPos;
             }
 
-            SetDeviceAt(QPointF(xPos, yPos), device);
+            SetDeviceAt(itemPos, device);
             DecideDeviceOrientation(-1, -1, device);
             RenderGND(-1, -1, device);
         }
@@ -543,7 +549,7 @@ void SchematicScene::SetDeviceAt(const QPointF &pos, SchematicDevice *device)
 /* Set device orientation */
 void SchematicScene::DecideDeviceOrientation(int x, int y, SchematicDevice* device)
 {
-    UNUSED(y);
+    Q_UNUSED(y);
     /* first column */
     CktNode *negNode = nullptr;
     switch (device->GetDeviceType()) {

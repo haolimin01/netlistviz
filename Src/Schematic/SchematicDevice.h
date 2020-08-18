@@ -45,6 +45,7 @@ public:
 	QPointF      TerminalPos(TerminalType type) const;
 	QPointF      TerminalScenePos(TerminalType type) const;
 	void         UpdateTerminalScenePos();
+	QPointF      ScenePosByTerminalScenePos(TerminalType type, const QPointF &scenePos);
 	
 	void         SetId(int id) { m_id = id; m_idGiven = true; }
 	int          Id()  const { return m_id; }
@@ -87,6 +88,7 @@ protected:
 private:
 	void   InitVariables();
 	QRectF DashRect() const;
+	QRectF GNDDashRect() const;
 	void   UpdateWirePosition();
 
 	void DrawResistor();

@@ -128,7 +128,10 @@ QPainterPath SchematicDevice::shape() const
     for (cit = m_terRects.constBegin(); cit != m_terRects.constEnd(); ++ cit)
         path.addRect(cit.value());
 
-    path.addRect(DashRect());
+    if (m_deviceType == GND)
+        path.addRect(GNDDashRect());
+    else
+        path.addRect(DashRect());
 
     return path;
 }
@@ -138,6 +141,13 @@ QRectF SchematicDevice::DashRect() const
     int halfTerSize = TerminalSize / 2;
 
     return QRectF(-12, -BASE_LEN + halfTerSize, 24, (BASE_LEN - halfTerSize) * 2);
+}
+
+QRectF SchematicDevice::GNDDashRect() const
+{
+    int halfTerSize = TerminalSize / 2;
+
+    return QRectF(-12, -10 + halfTerSize, 24, (10 - halfTerSize) * 2);
 }
 
 void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
@@ -519,6 +529,7 @@ void SchematicDevice::Print() const
         setRotation(90);
     }
     m_devOrien = orien;
+    UpdateTerminalScenePos();
  }
 
  void SchematicDevice::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -561,12 +572,18 @@ void SchematicDevice::UpdateTerminalScenePos()
         case Vsrc:
             node = Terminal(Positive);
             if (node)
-                node->SetScenePos(TerminalScenePos(Positive));
+                node->SetScenePos(TerminalScenePos(Positive), this);
             node = Terminal(Negative);
             if (node)
-                node->SetScenePos(TerminalScenePos(Negative));
+                node->SetScenePos(TerminalScenePos(Negative), this);
             break;
         case GND:
         default:;
     }
+}
+
+QPointF SchematicDevice::ScenePosByTerminalScenePos(TerminalType type, const QPointF &scenePos)
+{
+    QPointF pos = TerminalPos(type);
+    return scenePos - pos;
 }
