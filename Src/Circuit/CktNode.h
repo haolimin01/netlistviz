@@ -11,6 +11,7 @@
 #include "Define/Define.h"
 #include <QString>
 #include <QVector>
+#include <QPointF>
  
 class SchematicDevice;
 class ASG;
@@ -31,12 +32,16 @@ public:
     bool IsGnd() const { return m_isGnd; }
     QString Name() const { return m_name; }
 
+    void    SetScenePos(const QPointF &pos) { m_pos = pos; }
+    QPointF ScenePos() const { return m_pos; }
+
 private:
     DISALLOW_COPY_AND_ASSIGN(CktNode);
 
     QString     m_name;
     int         m_id;
     bool        m_isGnd;
+    QPointF     m_pos;
 
     QVector<SchematicDevice *>  m_devices;
 

@@ -9,6 +9,7 @@ class SchematicDevice;
 class NetlistDialog;
 class SchematicData;
 class ASG;
+class ASGDialog;
 
 QT_BEGIN_NAMESPACE
 class QString;
@@ -112,6 +113,7 @@ private slots:
     void ParseNetlist();
 
     /* For ASG */
+    void ASGPropertyTriggered();
     void BuildIncidenceMatrix();
     void Levelling();
     void Bubbling();
@@ -219,6 +221,7 @@ private:
     QAction            *m_showGridAction;
     QAction            *m_scrollPointerAction;
     QAction            *m_openNetlistAction;
+    QAction            *m_parseNetlistAction;
     /* Save and SaveAs Schematic File */
     QAction            *m_saveSchematicFileAction;
     QAction            *m_saveAsSchematicFileAction;
@@ -226,6 +229,7 @@ private:
     QAction            *m_openSchematicFileAction;
 
     /* For ASG Actions */
+    QAction            *m_asgPropertyAction;
     QAction            *m_buildMatrixAction;
     QAction            *m_levellingAction;
     QAction            *m_bubblingAction;
@@ -242,6 +246,8 @@ private:
     NetlistDialog      *m_netlistDialog;
     SchematicData      *m_data;
     ASG                *m_asg;
+    ASGDialog          *m_asgDialog;
+    bool                m_asgPropertySelected;
 
     /* for cursor image */
     SchematicDevice    *m_deviceBeingAdded;

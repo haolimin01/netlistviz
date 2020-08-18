@@ -241,12 +241,28 @@ outList: VTYPE LP node RP
        }
        | VTYPE LP node COMMA node RP
        {
-           $$ = $$ + 1;
+           $$ = 1;
            outs.push_back(OutputPara($1, $3, $5));
        }
        | I LP VSOURCE RP
        {
+           $$ = 1;
            outs.push_back(OutputPara("I", $3, "0"));
+       }
+       | outList VTYPE LP node RP
+       {
+           $$ = $$ + 1;
+           outs.push_back(OutputPara($2, $4, "0"));
+       }
+       | outList VTYPE LP node COMMA node RP
+       {
+           $$ = $$ + 1;
+           outs.push_back(OutputPara($2, $4, $6));
+       }
+       | outList I LP VSOURCE RP
+       {
+           $$ = $$ +1;
+           outs.push_back(OutputPara("I", $4, "0"));
        }
 ;
 

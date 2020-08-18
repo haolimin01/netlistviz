@@ -36,7 +36,7 @@ Matrix::~Matrix()
 }
 
 void Matrix::InsertElement(int row, int col, SchematicDevice *fromDevice,
-    SchematicDevice *toDevice, NodeType fromTer, NodeType toTer)
+    SchematicDevice *toDevice, TerminalType fromTer, TerminalType toTer)
 {
     if ((row >= m_size) || (col >= m_size) || (row < 0) || (col < 0)) {
 #ifdef TRACE

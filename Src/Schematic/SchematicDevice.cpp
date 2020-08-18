@@ -29,26 +29,32 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     switch (m_deviceType) {
         case Resistor:
             m_devOrien = Vertical;
+            m_priority = R_Priority;
             DrawResistor();
             break;
         case Capacitor:
             m_devOrien = Vertical;
+            m_priority = C_Priority;
             DrawCapacitor();
             break;
         case Inductor:
             m_devOrien = Vertical;
+            m_priority = L_Priority;
             DrawInductor();
             break;
         case Isrc:
             m_devOrien = Vertical; 
+            m_priority = I_Priority;
             DrawIsrc();
             break;
         case Vsrc:
             m_devOrien = Vertical;
+            m_priority = V_Priority;
             DrawVsrc();
             break;
         case GND:
             m_devOrien = Vertical;
+            m_priority = GND_Priority;
             DrawGND();
             break;
         default:;
@@ -91,16 +97,16 @@ QPixmap SchematicDevice::Image()
     return m_imag->copy();
 }
 
-int SchematicDevice::NodeId(NodeType type) const
+int SchematicDevice::TerminalId(TerminalType type) const
 {
     CktNode *node = m_terminals.value(type, nullptr);
     if (node)  return node->Id();
     else  return -1;
 }
 
-NodeType SchematicDevice::GetNodeType(CktNode *node) const
+TerminalType SchematicDevice::GetTerminalType(CktNode *node) const
 {
-    NodeType type = m_terminals.key(node, Positive);
+    TerminalType type = m_terminals.key(node, Positive);
     return type;
 }
 
@@ -118,7 +124,7 @@ QPainterPath SchematicDevice::shape() const
 {
     QPainterPath path;
 
-    QMap<NodeType, QRectF>::const_iterator cit;
+    QMap<TerminalType, QRectF>::const_iterator cit;
     for (cit = m_terRects.constBegin(); cit != m_terRects.constEnd(); ++ cit)
         path.addRect(cit.value());
 
@@ -150,7 +156,7 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
         painter->setBrush(QBrush(m_color));
         painter->setPen(Qt::NoPen);
 
-        QMap<NodeType, QRectF>::const_iterator cit;
+        QMap<TerminalType, QRectF>::const_iterator cit;
         for (cit = m_terRects.constBegin(); cit != m_terRects.constEnd(); ++ cit)
             painter->drawRect(cit.value());
     }
@@ -401,12 +407,12 @@ void SchematicDevice::SetSceneXY(int x, int y)
     m_sceneY = y;
 }
 
-void SchematicDevice::AddNode(NodeType type, CktNode *node)
+void SchematicDevice::AddTerminal(TerminalType type, CktNode *node)
 {
     m_terminals.insert(type, node);
 }
 
-CktNode* SchematicDevice::Node(NodeType type) const
+CktNode* SchematicDevice::Terminal(TerminalType type) const
 {
     CktNode *node = nullptr;
     node = m_terminals.value(type, nullptr);
@@ -427,7 +433,7 @@ QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &
 
 void SchematicDevice::UpdateWirePosition()
 {
-    QMap<NodeType, QVector<SchematicWire*>>::const_iterator cit;
+    QMap<TerminalType, QVector<SchematicWire*>>::const_iterator cit;
     cit = m_wiresAtTerminal.constBegin();
     for (; cit != m_wiresAtTerminal.constEnd(); ++ cit) {
         foreach (SchematicWire *wire, cit.value()) {
@@ -437,16 +443,16 @@ void SchematicDevice::UpdateWirePosition()
     }
 }
 
-void SchematicDevice::AddWire(SchematicWire *wire, NodeType type)
+void SchematicDevice::AddWire(SchematicWire *wire, TerminalType type)
 {
     m_wiresAtTerminal[type].append(wire);
 }
 
 void SchematicDevice::RemoveWires(bool deletion)
 {
-    NodeType terminal;
+    TerminalType terminal;
     SchematicDevice *device = nullptr;
-    QMap<NodeType, QVector<SchematicWire*>>::iterator cit;
+    QMap<TerminalType, QVector<SchematicWire*>>::iterator cit;
     for (cit = m_wiresAtTerminal.begin(); cit != m_wiresAtTerminal.end(); ++ cit) {
         foreach (SchematicWire *wire, cit.value()) {
             scene()->removeItem(wire);
@@ -461,7 +467,7 @@ void SchematicDevice::RemoveWires(bool deletion)
     }
 }
 
-void SchematicDevice::RemoveWire(SchematicWire *wire, NodeType type)
+void SchematicDevice::RemoveWire(SchematicWire *wire, TerminalType type)
 {
     int wireIndex = m_wiresAtTerminal[type].indexOf(wire);
     if (wireIndex != -1)
@@ -489,11 +495,11 @@ void SchematicDevice::Print() const
         case Inductor:
         case Isrc:
         case Vsrc:
-            node = Node(Positive);
+            node = Terminal(Positive);
             if (node) {
                 ss << "posName(" << node->Name().toStdString() << "), ";
             }
-            node = Node(Negative);
+            node = Terminal(Negative);
             if (node) {
                 ss << "negName(" << node->Name().toStdString() << ")";
             }
@@ -523,7 +529,7 @@ void SchematicDevice::Print() const
 bool SchematicDevice::TerminalsContain(const QPointF &scenePos) const
 {
     QPointF itemPos = mapFromScene(scenePos);
-    QMap<NodeType, QRectF>::const_iterator cit;
+    QMap<TerminalType, QRectF>::const_iterator cit;
     cit = m_terRects.constBegin();
     for (; cit != m_terRects.constEnd(); ++ cit) {
         if (cit.value().contains(itemPos))
@@ -533,13 +539,34 @@ bool SchematicDevice::TerminalsContain(const QPointF &scenePos) const
     return false;
 }
 
-QPointF SchematicDevice::NodePos(NodeType type) const
+QPointF SchematicDevice::TerminalPos(TerminalType type) const
 {
     return m_terRects[type].center();
 }
 
-QPointF SchematicDevice::NodeScenePos(NodeType type) const
+QPointF SchematicDevice::TerminalScenePos(TerminalType type) const
 {
     QPointF itemPos = m_terRects[type].center();
     return mapToScene(itemPos);
+}
+
+void SchematicDevice::UpdateTerminalScenePos()
+{
+    CktNode *node = nullptr;
+    switch (m_deviceType) {
+        case Resistor:
+        case Capacitor:
+        case Inductor:
+        case Isrc:
+        case Vsrc:
+            node = Terminal(Positive);
+            if (node)
+                node->SetScenePos(TerminalScenePos(Positive));
+            node = Terminal(Negative);
+            if (node)
+                node->SetScenePos(TerminalScenePos(Negative));
+            break;
+        case GND:
+        default:;
+    }
 }

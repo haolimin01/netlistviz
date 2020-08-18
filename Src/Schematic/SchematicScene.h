@@ -4,6 +4,7 @@
 #include "SchematicTextItem.h"
 #include "SchematicDevice.h"
 #include "SchematicWire.h"
+#include "ASG/ASG.h"
 
 #include <QGraphicsScene>
 
@@ -40,7 +41,9 @@ public:
     void SetFont(const QFont &font);
     void SetDeviceType(SchematicDevice::DeviceType type);
 
-    void RenderSchematic(const QVector<QVector<SchematicDevice*>> &levels,
+    // void RenderSchematic(const QVector<QVector<SchematicDevice*>> &levels,
+    //                      const QVector<WireDescriptor*> &wireDesps);
+    void RenderSchematic(const QVector<DevLevelDescriptor*> &devices,
                          const QVector<WireDescriptor*> &wireDesps);
     /* Write Schematic items to stream */
     void WriteSchematicToStream(QTextStream &stream) const;
@@ -76,46 +79,46 @@ private:
     /* Insert Item */
     SchematicDevice*   InsertSchematicDevice(SchematicDevice::DeviceType, const QPointF &);
     SchematicTextItem* InsertSchematicTextItem(const QPointF &);
-    SchematicWire*     InsertSchematicWire(SchematicDevice *, SchematicDevice *, NodeType, NodeType,
-                            const QVector<QPointF>&);
+    SchematicWire*     InsertSchematicWire(SchematicDevice *, SchematicDevice *, TerminalType, TerminalType,
+                            const QVector<QPointF>&, bool branch=false);
     SchematicWire*     InsertSchematicWire(const WireDescriptor *desp);
 
-    void RenderGND(SchematicDevice *device, int x, int y);
+    void DecideDeviceOrientation(int x, int y, SchematicDevice *device);
+    void RenderGND(int x, int y, SchematicDevice *device);
 
     /* For ASG */
     void SetDeviceAt(int x, int y, SchematicDevice *device);
+    void SetDeviceAt(const QPointF &pos, SchematicDevice *device);
 
 
-    QMenu             *m_itemMenu;
-    Mode               m_mode;
-    QFont              m_font;
-
-    SchematicTextItem *m_text;
-    SchematicDevice   *m_device;
+    QMenu                      *m_itemMenu;
+    Mode                        m_mode;
+    QFont                       m_font;
+    SchematicTextItem          *m_text;
+    SchematicDevice            *m_device;
     SchematicDevice::DeviceType m_deviceType;
-    QGraphicsLineItem *m_line;
+    QGraphicsLineItem          *m_line;
 
     /* For wire */
-    SchematicDevice   *m_startDevice;
-    NodeType           m_startTerminal;
-    QPointF            m_startPoint;
+    SchematicDevice            *m_startDevice;
+    TerminalType                m_startTerminal;
+    QPointF                     m_startPoint;
+    SchematicDevice            *m_endDevice;
+    TerminalType                m_endTerminal;
+    QPointF                     m_endPoint;
+    QVector<QPointF>            m_curWirePathPoints;
 
-    SchematicDevice   *m_endDevice;
-    NodeType           m_endTerminal;
-    QPointF            m_endPoint;
-    QVector<QPointF>   m_curWirePathPoints;
 
-
-    QColor             m_textColor;
-    QColor             m_deviceColor;
+    QColor                      m_textColor;
+    QColor                      m_deviceColor;
 
     /* Device number, assign to added device */
     /* Start from 0 */
-    int                m_deviceNumber;
+    int                         m_deviceNumber;
 
-    bool               m_showNodeFlag;
+    bool                        m_showNodeFlag;
 
-    bool               m_backgroundFlag;
+    bool                        m_backgroundFlag;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H

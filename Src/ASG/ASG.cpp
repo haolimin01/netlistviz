@@ -10,7 +10,76 @@
 #include "Utilities/MyString.h"
 #include "TablePlotter.h"
 
+/* =============== DevLevelDescriptor class =============== */
+DevLevelDescriptor::DevLevelDescriptor(int level)
+{
+    Q_ASSERT(level >= 0);
 
+    m_deviceCntWithoutCap = 0;
+    m_capCnt = 0;
+}
+
+DevLevelDescriptor::~DevLevelDescriptor()
+{
+    m_levelDevices.clear();
+}
+
+void DevLevelDescriptor::AddDevice(SchematicDevice *device)
+{
+    int priority = device->Priority();
+    if (m_levelDevices.contains(priority)) {
+        m_levelDevices[priority].push_back(device);
+    } else {
+        DeviceList devices;
+        devices.push_back(device);
+        m_levelDevices.insert(priority, devices);
+    }
+
+    if (device->GetDeviceType() == SchematicDevice::Capacitor)
+        m_capCnt += 1;
+    else
+        m_deviceCntWithoutCap += 1;
+}
+
+void DevLevelDescriptor::AddDevices(const DeviceList &devList)
+{
+    foreach (SchematicDevice *dev, devList) {
+        AddDevice(dev);
+    }
+}
+
+DeviceList DevLevelDescriptor::Devices(int priority) const
+{
+    if (m_levelDevices.contains(priority))
+        return m_levelDevices[priority];
+    else 
+        return DeviceList();  // empty
+}
+
+DeviceList DevLevelDescriptor::AllDevices() const
+{
+    DeviceList devices;
+
+    foreach (DeviceList dev, m_levelDevices.values()) {
+        devices.append(dev);
+    }
+
+    return devices;
+}
+
+DeviceList DevLevelDescriptor::AllDevicesWithoutCap() const
+{
+    DeviceList devices;
+    foreach (int priority, m_levelDevices.keys()) {
+        if (priority != C_Priority)
+            devices.append(m_levelDevices[priority]);
+    }
+
+    return devices;
+}
+
+
+/* =============== ASG class =============== */
 ASG::ASG(SchematicData *data)
 {
     assert(data);
@@ -43,6 +112,10 @@ ASG::~ASG()
     if (m_matrix) delete m_matrix;
     if (m_levelPlotter) delete m_levelPlotter;
     m_wireDesps.clear();
+    foreach (DevLevelDescriptor *desp, m_devices)
+        delete desp;
+    m_devices.clear();
+
 }
 
 void ASG::SetSchematicData(SchematicData *data)
@@ -102,14 +175,22 @@ void ASG::BuildIncidenceMatrix()
 
 void ASG::Levelling()
 {
-    m_levelDevices.clear();
+    // m_levelDevices.clear();
+    m_devices.clear();
     m_matrix->SetAllVisited(false);
 
+    DevLevelDescriptor *dldesp = nullptr;
+
+    int curLevel = 0;
+
     /* level 0 */
-    m_levelDevices.push_back(m_ckt->m_firstLevelDeviceList);
+    dldesp = new DevLevelDescriptor(curLevel);
+    dldesp->AddDevices(m_ckt->m_firstLevelDeviceList);
+    m_devices.push_back(dldesp);
 
-    ASG::DeviceList tDeviceList = m_ckt->m_firstLevelDeviceList;
+    curLevel++;
 
+    DeviceList tDeviceList = m_ckt->m_firstLevelDeviceList;
     int totalDeviceNumber = m_ckt->m_deviceList.size();
     int curDeviceNumber = 0;
     curDeviceNumber += tDeviceList.size();
@@ -117,7 +198,10 @@ void ASG::Levelling()
     while (tDeviceList.size() > 0) {
         tDeviceList = FillNextLevelDeviceList(tDeviceList);
         if (tDeviceList.size() == 0)  break;
-        m_levelDevices.push_back(tDeviceList);
+        dldesp = new DevLevelDescriptor(curLevel);
+        dldesp->AddDevices(tDeviceList);
+        m_devices.push_back(dldesp);
+        curLevel++;
         curDeviceNumber += tDeviceList.size();
     }
 
@@ -126,8 +210,8 @@ void ASG::Levelling()
         EXIT;
     }
 
-    PrintLevelDeviceList();
-    PlotLevelDeviceList();
+    PrintAllDevices();
+    PlotAllDevices();
 
     m_buildMatrixFlag = true;
     m_levellingFlag = true;
@@ -145,12 +229,12 @@ void ASG::Bubbling()
 /* RLC current flows from N+ to N- */
 void ASG::InsertRLC(SchematicDevice *device)
 {
-    CktNode *negNode = device->Node(Negative);
+    CktNode *negNode = device->Terminal(Negative);
     assert(negNode);
     if (negNode->IsGnd())  return;
 
     foreach (SchematicDevice *tDev, negNode->m_devices) {
-        if (tDev->GetNodeType(negNode) == Positive) {
+        if (tDev->GetTerminalType(negNode) == Positive) {
             int row = device->Id();
             int col = tDev->Id();
             if (row == col)  continue;
@@ -163,12 +247,12 @@ void ASG::InsertRLC(SchematicDevice *device)
 /* Isrc current flows from N+ to N- */
 void ASG::InsertVI(SchematicDevice *device)
 {
-    CktNode *posNode = device->Node(Positive);
+    CktNode *posNode = device->Terminal(Positive);
     assert(posNode);
     if (posNode->IsGnd())  return;
 
     foreach (SchematicDevice *tDev, posNode->m_devices) {
-        if (tDev->GetNodeType(posNode) == Positive) {
+        if (tDev->GetTerminalType(posNode) == Positive) {
             int row = device->Id();
             int col = tDev->Id();
             if (row == col)  continue;
@@ -177,11 +261,11 @@ void ASG::InsertVI(SchematicDevice *device)
     }
 }
 
-ASG::DeviceList ASG::FillNextLevelDeviceList(
+DeviceList ASG::FillNextLevelDeviceList(
     const DeviceList curLevelDeviceList ) const
 {
     SchematicDevice *device = nullptr;
-    ASG::DeviceList nextLevelDeviceList;
+    DeviceList nextLevelDeviceList;
 
     int id = 0;
     MatrixElement *element = nullptr;
@@ -203,16 +287,16 @@ ASG::DeviceList ASG::FillNextLevelDeviceList(
     return nextLevelDeviceList;
 }
 
-void ASG::PrintLevelDeviceList() const
+void ASG::PrintAllDevices() const
 {
     printf("--------------- Level Device List ---------------\n");
 
-    int totalLevel = m_levelDevices.size();
+    int totalLevel = m_devices.size();
     SchematicDevice *device = nullptr;
 
-    ASG::DeviceList tDeviceList;
+    DeviceList tDeviceList;
     for (int i = 0; i < totalLevel; ++ i) {
-        tDeviceList = m_levelDevices.at(i);
+        tDeviceList = m_devices.at(i)->AllDevices();
         printf("L%-7d", i);
         
         foreach (device, tDeviceList) {
@@ -224,13 +308,13 @@ void ASG::PrintLevelDeviceList() const
     printf("-------------------------------------------------\n\n");
 }
 
-void ASG::PlotLevelDeviceList()
+void ASG::PlotAllDevices()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
 
-    if (m_levelDevices.size() < 1) {
+    if (m_devices.size() < 1) {
         qInfo() << LINE_INFO << "Please levelling before plotting level device";
         return;
     }
@@ -246,13 +330,15 @@ void ASG::PlotLevelDeviceList()
     qInfo() << LINE_INFO << endl;
 
     /* col count */
-    int totalLevel = m_levelDevices.size();
+    int totalLevel = m_devices.size();
 
     /* row count */
     int maxDeviceNumberInLevel = -1;
-    ASG::DeviceList tDevList;
+    DeviceList tDevList;
+    DevLevelDescriptor *dldesp = nullptr;
 
-    foreach (tDevList, m_levelDevices) {
+    foreach (dldesp, m_devices) {
+        tDevList = dldesp->AllDevices();
         if (tDevList.size() > maxDeviceNumberInLevel)
             maxDeviceNumberInLevel = tDevList.size();
     }
@@ -267,8 +353,8 @@ void ASG::PlotLevelDeviceList()
     m_levelPlotter->SetColHeaderText(headerText);
 
     /* content */
-    for (int i = 0; i < m_levelDevices.size(); ++ i) {
-        tDevList = m_levelDevices.at(i);
+    for (int i = 0; i < m_devices.size(); ++ i) {
+        tDevList = m_devices.at(i)->AllDevices();
         for (int j = 0; j < tDevList.size(); ++ j) {
             m_levelPlotter->AddItem(j, i, tDevList.at(j)->Name());
         }
@@ -288,6 +374,11 @@ void ASG::GenerateWireDesps()
             WireDescriptor *wd = new WireDescriptor;
             wd->startDev = element->FromDevice();
             wd->endDev = element->ToDevice();
+            /* set as branch */
+            if (wd->startDev->GetDeviceType() != SchematicDevice::Capacitor &&
+                wd->endDev->GetDeviceType() != SchematicDevice::Capacitor) {
+                wd->isBranch = true;
+            }
             wd->startTerminal = element->FromTerminal();
             wd->endTerminal = element->ToTerminal();
             m_wireDesps.push_back(wd);

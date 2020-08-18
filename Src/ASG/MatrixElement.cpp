@@ -2,7 +2,7 @@
 #include "Schematic/SchematicDevice.h"
 
 MatrixElement::MatrixElement(int row, int col, SchematicDevice *fromDevice,
-    SchematicDevice *toDevice, NodeType fromTer, NodeType toTer)
+    SchematicDevice *toDevice, TerminalType fromTer, TerminalType toTer)
 {
     m_rowIndex = row;
     m_colIndex = col;

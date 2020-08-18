@@ -46,6 +46,11 @@ public:
     void Clear();
     void PrintNodeAndDevice() const;
 
+    DeviceList GetDeviceList() const { return m_deviceList; }
+    void SetFirstLevelDeviceList(const DeviceList &deviceList);
+    SchematicDevice* Device(const QString &name) const;
+    int FirstLevelDeviceListSize() const  { return m_firstLevelDeviceList.size(); }
+
 private:
     DISALLOW_COPY_AND_ASSIGN(SchematicData);
 
