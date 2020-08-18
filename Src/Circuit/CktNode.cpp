@@ -7,6 +7,7 @@
 CktNode::CktNode(QString nodeName)
 {
     m_name = nodeName;
+    m_isGnd = false;
 }
 
 CktNode::~CktNode()

@@ -7,13 +7,15 @@
 
 
 SchematicWire::SchematicWire(SchematicDevice *startDev, SchematicDevice *endDev,
-    NodeType startTer, NodeType endTer, QGraphicsItem *parent, QGraphicsScene *scene)
+    TerminalType startTer, TerminalType endTer, QGraphicsItem *parent, QGraphicsScene *scene)
 {
     m_startDev = startDev;
     m_endDev = endDev;
     m_color = Qt::black;
     m_startTerminal = startTer;
     m_endTerminal = endTer;
+    
+    m_isBranch = false;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -50,10 +52,17 @@ void SchematicWire::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
 #ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
+
+    int lineWidth = 2;
+    if (m_isBranch) {
+        lineWidth = 3;
+        m_color = Qt::red;
+    }
+
     if (option->state & QStyle::State_Selected)
-        painter->setPen(QPen(m_color, 2, Qt::DashLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(m_color, lineWidth, Qt::DashLine, Qt::RoundCap, Qt::RoundJoin));
     else
-        painter->setPen(QPen(m_color, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(m_color, lineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     
     painter->setRenderHint(QPainter::Antialiasing);
 
@@ -71,7 +80,7 @@ void SchematicWire::SetWirePathPoints(QVector<QPointF> points)
     m_wirePathPoints = points;
 }
 
-void SchematicWire::UpdatePosition(SchematicDevice *device, NodeType terminal, const QPointF &newPos)
+void SchematicWire::UpdatePosition(SchematicDevice *device, TerminalType terminal, const QPointF &newPos)
 {
     QPointF scenePos = mapFromItem(device, newPos);
     prepareGeometryChange();
@@ -91,4 +100,9 @@ void SchematicWire::UpdatePosition(SchematicDevice *device, NodeType terminal, c
         m_wirePathPoints[1].ry() = scenePos.y();
         return;
     }
+}
+
+void SchematicWire::SetAsBranch()
+{
+    m_isBranch = true;
 }

@@ -62,10 +62,8 @@ void MainWindow::InitVariables()
     m_deviceBeingAdded = nullptr;
 
     m_netlistDialog = new NetlistDialog();
-    connect(m_netlistDialog, &NetlistDialog::Accepted, this, &MainWindow::ParseNetlist);
 
     m_asgPropertySelected = false;
-    // m_asgDialog = new ASGDialog(); 
     m_asgDialog = nullptr;
 }
 
@@ -135,7 +133,7 @@ void MainWindow::DeleteItem()
     QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
     foreach (QGraphicsItem *item, qAsConst(selectedItems)) {
         SchematicDevice *device = nullptr;
-        NodeType terminal;
+        TerminalType terminal;
         if (item->type() == SchematicWire::Type) {
             m_scene->removeItem(item);
             SchematicWire *wire = qgraphicsitem_cast<SchematicWire *>(item);
@@ -398,6 +396,10 @@ void MainWindow::CreateActions()
     m_showGridAction->setChecked(true);
     connect(m_showGridAction, &QAction::toggled, this, &MainWindow::ShowGridToggled);
 
+    m_parseNetlistAction = new QAction(QIcon(":/images/parse_netlist.png"), tr("Parse Netlist"), this);
+    m_parseNetlistAction->setEnabled(false);
+    connect(m_parseNetlistAction, &QAction::triggered, this, &MainWindow::ParseNetlist);
+
     m_asgPropertyAction = new QAction(QIcon(":/images/asg_property.png"), tr("ASG Property"), this);
     m_asgPropertyAction->setEnabled(false);
     connect(m_asgPropertyAction, &QAction::triggered, this, &MainWindow::ASGPropertyTriggered);
@@ -441,6 +443,7 @@ void MainWindow::CreateMenus()
     m_viewMenu->addAction(m_showGridAction);
 
     m_asgMenu = menuBar()->addMenu(tr("&ASG"));
+    m_asgMenu->addAction(m_parseNetlistAction);
     m_asgMenu->addAction(m_asgPropertyAction);
     m_asgMenu->addAction(m_buildMatrixAction);
     m_asgMenu->addAction(m_levellingAction);
@@ -529,6 +532,7 @@ void MainWindow::CreateToolBars()
     m_pointerToolBar->addWidget(m_sceneScaleCombo);
 
     m_asgToolBar = addToolBar(tr("ASG"));
+    m_asgToolBar->addAction(m_parseNetlistAction);
     m_asgToolBar->addAction(m_asgPropertyAction);
     m_asgToolBar->addAction(m_buildMatrixAction);
     m_asgToolBar->addAction(m_levellingAction);
@@ -642,6 +646,7 @@ void MainWindow::OpenNetlist()
 
 void MainWindow::NetlistChangedSlot()
 {
+    m_parseNetlistAction->setEnabled(true);
     m_asgPropertyAction->setEnabled(true);
     m_buildMatrixAction->setEnabled(true);
     m_levellingAction->setEnabled(true);

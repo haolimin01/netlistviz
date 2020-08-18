@@ -44,7 +44,7 @@ public:
     void   SetColHeadDevice(int col, SchematicDevice *device);
 
     void   InsertElement(int row, int col, SchematicDevice *fromDevice,
-                SchematicDevice *toDevice, NodeType fromTer, NodeType toTer);
+                SchematicDevice *toDevice, TerminalType fromTer, TerminalType toTer);
     
     HeadElement RowHead(int row) const;
     HeadElement ColHead(int col) const;

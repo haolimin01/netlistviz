@@ -9,18 +9,12 @@
 
 class NetlistDialog : public QDialog
 {
-    Q_OBJECT
+    // Q_OBJECT
 
 public:
     NetlistDialog(QWidget *parent = 0);
 
     void SetNetlistFile(const QString &netlist);
-
-signals:
-    void Accepted();
-
-private slots:
-    void OkButtonClicked();
 
 private:
 

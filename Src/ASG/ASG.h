@@ -9,19 +9,48 @@
  */
 
 #include <QVector>
+#include <QMap>
 #include "Define/Define.h"
 
-class Matrix;
-class SchematicData;
-class SchematicDevice;
-class TablePlotter;
+class  Matrix;
+class  SchematicData;
+class  SchematicDevice;
+class  TablePlotter;
 struct WireDescriptor;
+
+typedef QVector<SchematicDevice *>  DeviceList;
+
+/* each level device list */
+class DevLevelDescriptor
+{
+public:
+    explicit DevLevelDescriptor(int level);
+    ~DevLevelDescriptor();
+
+    void AddDevice(SchematicDevice *device);
+    void AddDevices(const DeviceList &devList);
+    DeviceList AllDevices() const;
+    DeviceList AllDevicesWithoutCap() const;
+    DeviceList Devices(int priority) const;
+
+    int CapCount() const  { return m_capCnt; }
+    int DeviceCntWithoutCap() const  { return m_deviceCntWithoutCap; }
+
+private:
+    DISALLOW_COPY_AND_ASSIGN(DevLevelDescriptor);
+
+    int m_level;
+
+    /* priority : DeviceList */
+    QMap<int, DeviceList> m_levelDevices;
+
+    int m_deviceCntWithoutCap;
+    int m_capCnt;
+};
+
 
 class ASG
 {
-public:
-    typedef QVector<SchematicDevice *>  DeviceList;
-
 public:
     explicit ASG(SchematicData *data);
     ASG();
@@ -37,8 +66,8 @@ public:
     bool BubblingFinished() const { return m_bubblingFlag; }
 
     /* 2-d array */
-    QVector<DeviceList> FinalDevices() const { return m_levelDevices; }
-    QVector<WireDescriptor*> WireDesps() const { return m_wireDesps; }
+    QVector<DevLevelDescriptor*> FinalDevices() const { return m_devices; }
+    QVector<WireDescriptor*>     WireDesps() const { return m_wireDesps; }
 
 private:
     DISALLOW_COPY_AND_ASSIGN(ASG);
@@ -51,16 +80,16 @@ private:
 
     void GenerateWireDesps();
 
-    void PrintLevelDeviceList() const;
-    void PlotLevelDeviceList();
+    void PrintAllDevices() const;
+    void PlotAllDevices();
 
     Matrix        *m_matrix;      // incidence matrix
     int            m_matrixSize;  // matrix size
     SchematicData *m_ckt;         // circuit infomation
 
-    /* level : DeviceList */
+    /* level : DevLevelDescriptor */
     /* Do not contain GND */
-    QVector<DeviceList> m_levelDevices;
+    QVector<DevLevelDescriptor*> m_devices;
     /* for generate wires */
     QVector<WireDescriptor*> m_wireDesps;
 

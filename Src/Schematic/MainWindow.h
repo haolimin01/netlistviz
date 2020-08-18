@@ -221,6 +221,7 @@ private:
     QAction            *m_showGridAction;
     QAction            *m_scrollPointerAction;
     QAction            *m_openNetlistAction;
+    QAction            *m_parseNetlistAction;
     /* Save and SaveAs Schematic File */
     QAction            *m_saveSchematicFileAction;
     QAction            *m_saveAsSchematicFileAction;

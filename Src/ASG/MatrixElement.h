@@ -18,7 +18,7 @@ class MatrixElement
 {
 public:
     MatrixElement(int row, int col, SchematicDevice *fromDevice,
-        SchematicDevice *toDevice, NodeType fromTer, NodeType toTer);
+        SchematicDevice *toDevice, TerminalType fromTer, TerminalType toTer);
     ~MatrixElement();
 
 public:
@@ -31,9 +31,9 @@ public:
     void  SetVisited(bool visited = true) { m_visited = visited; }
 
     SchematicDevice* FromDevice()   const { return m_fromDevice; }
-    NodeType         FromTerminal() const { return m_fromTerminal; }
+    TerminalType         FromTerminal() const { return m_fromTerminal; }
     SchematicDevice* ToDevice()     const { return m_toDevice; }
-    NodeType         ToTerminal()   const { return m_toTerminal; }
+    TerminalType         ToTerminal()   const { return m_toTerminal; }
     MatrixElement*   NextInRow()    const { return m_nextInRow; }
     MatrixElement*   NextInCol()    const { return m_nextInCol; }
 
@@ -53,9 +53,9 @@ private:
     int              m_colIndex;
 
     SchematicDevice *m_fromDevice;
-    NodeType         m_fromTerminal;
+    TerminalType         m_fromTerminal;
     SchematicDevice *m_toDevice;
-    NodeType         m_toTerminal;
+    TerminalType         m_toTerminal;
     
     MatrixElement   *m_nextInRow;
     MatrixElement   *m_nextInCol;

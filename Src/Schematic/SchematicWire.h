@@ -21,10 +21,11 @@ struct WireDescriptor
 {
     SchematicDevice *startDev;
     SchematicDevice *endDev;
-    NodeType         startTerminal;
-    NodeType         endTerminal;
+    TerminalType     startTerminal;
+    TerminalType     endTerminal;
     QVector<QPointF> pathPoints;
     QPointF          pos;       // wire position in the scene
+    bool             isBranch;
 };
 
 
@@ -34,21 +35,23 @@ public:
     enum { Type = UserType + 6 };
 
 public:
-    SchematicWire(SchematicDevice *startDev, SchematicDevice *endDev, NodeType startTer, NodeType endTer,
+    SchematicWire(SchematicDevice *startDev, SchematicDevice *endDev, TerminalType startTer, TerminalType endTer,
                   QGraphicsItem *parent = nullptr, QGraphicsScene *scene = nullptr);
     ~SchematicWire();
 
-    int type() const  { return Type; }
-    QRectF boundingRect() const override;
-
-    void SetWirePathPoints(QVector<QPointF> points);
-    // void CompactPathPoints();
-    void UpdatePosition(SchematicDevice *device, NodeType terminal, const QPointF &newPos);
-
     SchematicDevice* StartDevice() const  { return m_startDev; }
     SchematicDevice* EndDevice()   const  { return m_endDev; }
-    NodeType         StartTerminal() const { return m_startTerminal; }
-    NodeType         EndTerminal()   const { return m_endTerminal; }
+    TerminalType     StartTerminal() const { return m_startTerminal; }
+    TerminalType     EndTerminal()   const { return m_endTerminal; }
+
+    int    type() const  { return Type; }
+    QRectF boundingRect() const override;
+    void   SetWirePathPoints(QVector<QPointF> points);
+    // void CompactPathPoints();
+    void   UpdatePosition(SchematicDevice *device, TerminalType terminal, const QPointF &newPos);
+    void   SetAsBranch();
+    bool   IsBranch() const  { return m_isBranch; }
+
 
 protected:
     void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *widget = nullptr) override;
@@ -57,9 +60,12 @@ private:
     QColor           m_color;
     SchematicDevice *m_startDev;
     SchematicDevice *m_endDev;
-    NodeType         m_startTerminal;
-    NodeType         m_endTerminal;
+    TerminalType     m_startTerminal;
+    TerminalType     m_endTerminal;
     QVector<QPointF> m_wirePathPoints;
+
+    /* For ASG */
+    bool             m_isBranch;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICWIRE_H
