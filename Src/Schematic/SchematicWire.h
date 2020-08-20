@@ -25,7 +25,7 @@ struct WireDescriptor
     TerminalType     endTerminal;
     QVector<QPointF> pathPoints;
     QPointF          pos;       // wire position in the scene
-    bool             isBranch;
+    bool             isBranch = false;
 };
 
 
@@ -49,8 +49,9 @@ public:
     void   SetWirePathPoints(QVector<QPointF> points);
     // void CompactPathPoints();
     void   UpdatePosition(SchematicDevice *device, TerminalType terminal, const QPointF &newPos);
-    void   SetAsBranch();
+    void   SetAsBranch(bool branch);
     bool   IsBranch() const  { return m_isBranch; }
+    void   SetShowBranchFlag(bool show) { m_showBranchFlag = show; }
 
 
 protected:
@@ -66,6 +67,7 @@ private:
 
     /* For ASG */
     bool             m_isBranch;
+    bool             m_showBranchFlag;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICWIRE_H

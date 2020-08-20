@@ -105,6 +105,9 @@ private slots:
     /* Show or Hide node on items */
     void ShowItemNodeToggled(bool show);
 
+    /* Show as branch on wires and devices */
+    void ShowBranchToggled(bool show);
+
     void ShowGridToggled(bool show);
 
     void NetlistChangedSlot();
@@ -218,6 +221,7 @@ private:
     QAction            *m_italicAction;
     QAction            *m_textAction;
     QAction            *m_showNodeAction;
+    QAction            *m_showBranchAction;
     QAction            *m_showGridAction;
     QAction            *m_scrollPointerAction;
     QAction            *m_openNetlistAction;

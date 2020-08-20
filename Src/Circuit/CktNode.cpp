@@ -8,6 +8,7 @@ CktNode::CktNode(QString nodeName)
 {
     m_name = nodeName;
     m_isGnd = false;
+    m_posDevice = nullptr;
 }
 
 CktNode::~CktNode()
@@ -24,6 +25,30 @@ void CktNode::AddDevice(SchematicDevice *device)
 void CktNode::ClearAllDevices()
 {
     m_devices.clear();
+}
+
+void CktNode::SetScenePos(const QPointF &pos, SchematicDevice *device)
+{
+    if (NOT m_posDevice) {
+        m_posDevice = device;
+        m_pos = pos;
+        return;
+    }
+
+    if (m_posDevice != device) {
+        if (m_posDevice->GetDeviceType() == device->GetDeviceType())
+            return;
+        
+        SchematicDevice::DeviceType t = m_posDevice->GetDeviceType();
+        if (t == SchematicDevice::Vsrc || t == SchematicDevice::Isrc) {
+            m_posDevice = device;
+            m_pos = pos;
+            return;
+        }
+        return;
+    }
+    
+    m_pos = pos;
 }
 
 void CktNode::Print() const

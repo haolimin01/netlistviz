@@ -51,6 +51,7 @@ public:
     void LoadSchematicFromStream(QTextStream &stream);
 
     void SetShowNodeFlag(bool show);
+    void SetShowBranchFlag(bool show);
 
 public slots:
     void SetMode(Mode mode)  { m_mode = mode; }
@@ -90,6 +91,8 @@ private:
     void SetDeviceAt(int x, int y, SchematicDevice *device);
     void SetDeviceAt(const QPointF &pos, SchematicDevice *device);
 
+    void TagDeviceOnBranch();
+
 
     QMenu                      *m_itemMenu;
     Mode                        m_mode;
@@ -115,10 +118,9 @@ private:
     /* Device number, assign to added device */
     /* Start from 0 */
     int                         m_deviceNumber;
-
     bool                        m_showNodeFlag;
-
     bool                        m_backgroundFlag;
+    bool                        m_showBranchFlag;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H

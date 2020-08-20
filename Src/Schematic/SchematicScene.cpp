@@ -13,6 +13,7 @@
 
 const static int Grid_W = 80;
 const static int Grid_H = 80;
+const static int DIS = 15;
 const static int GND_DIS = 15;
 
 
@@ -193,12 +194,32 @@ void SchematicScene::SetShowNodeFlag(bool show)
     }
 }
 
+void SchematicScene::SetShowBranchFlag(bool show)
+{
+    m_showBranchFlag = show;
+
+    SchematicDevice *device = nullptr;
+    SchematicWire *wire = nullptr;
+    foreach (QGraphicsItem *item, items()) {
+        if (item->type() == SchematicDevice::Type) {
+            device = qgraphicsitem_cast<SchematicDevice*> (item);
+            device->SetShowOnBranchFlag(show);
+            device->update();
+        } else if (item->type() == SchematicWire::Type) {
+            wire = qgraphicsitem_cast<SchematicWire*> (item);
+            wire->SetShowBranchFlag(show);
+            wire->update();
+        }
+    }
+}
+
 SchematicDevice* SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
                                  const QPointF &pos)
 {
     SchematicDevice *dev = new SchematicDevice(type, m_itemMenu);
     dev->setPos(pos);
     dev->SetShowNodeFlag(m_showNodeFlag);
+    dev->SetShowOnBranchFlag(m_showBranchFlag);
     addItem(dev);
 
     m_deviceNumber++;
@@ -359,8 +380,9 @@ SchematicWire* SchematicScene::InsertSchematicWire(SchematicDevice *startDev, Sc
     SchematicWire *newWire = new SchematicWire(startDev, endDev, startTer, endTer);
     newWire->SetWirePathPoints(wirePoints);
     addItem(newWire);
-    // if (branch)
-    //     newWire->SetAsBranch();
+    if (branch)
+        newWire->SetAsBranch(true);
+    newWire->SetShowBranchFlag(m_showBranchFlag);
     // newWire->setPos(0, 0);
 
     startDev->AddWire(newWire, startTer);
@@ -376,8 +398,9 @@ SchematicWire* SchematicScene::InsertSchematicWire(const WireDescriptor *desp)
     SchematicWire *newWire = new SchematicWire(desp->startDev,
         desp->endDev, desp->startTerminal, desp->endTerminal);
     newWire->SetWirePathPoints(desp->pathPoints);
-    // if (desp->isBranch)
-    //     newWire->SetAsBranch();
+    if (desp->isBranch)
+        newWire->SetAsBranch(true);
+    newWire->SetShowBranchFlag(m_showBranchFlag);
     addItem(newWire);
     // newWire->setPos(0, 0);
 
@@ -473,6 +496,7 @@ void SchematicScene::RenderSchematic(const QVector<DevLevelDescriptor*> &devices
 
     CktNode *posNode = nullptr, *negNode = nullptr;
     qreal xPos = 0, yPos = 0;
+    QPointF itemPos(0, 0);
     /* Secondly, we consider cap */
     for (int i = 0; i < devices.size(); ++ i) {
 
@@ -487,19 +511,23 @@ void SchematicScene::RenderSchematic(const QVector<DevLevelDescriptor*> &devices
             if (posNode->IsGnd()) {
 
                 xPos = negNode->ScenePos().x();
-                yPos = negNode->ScenePos().y();
+                yPos = negNode->ScenePos().y() + DIS;
+                itemPos = device->ScenePosByTerminalScenePos(Negative, QPointF(xPos, yPos));
 
             } else if (negNode->IsGnd()) {
 
                 xPos = posNode->ScenePos().x();
-                yPos = posNode->ScenePos().y();
+                yPos = posNode->ScenePos().y() + DIS;
+                itemPos = device->ScenePosByTerminalScenePos(Positive, QPointF(xPos, yPos));
 
             } else {
                 xPos = (posNode->ScenePos().x() + negNode->ScenePos().x()) / 2;
                 yPos = (posNode->ScenePos().y() + negNode->ScenePos().y()) / 2;
+                itemPos.rx() = xPos;
+                itemPos.ry() = yPos;
             }
 
-            SetDeviceAt(QPointF(xPos, yPos), device);
+            SetDeviceAt(itemPos, device);
             DecideDeviceOrientation(-1, -1, device);
             RenderGND(-1, -1, device);
         }
@@ -516,6 +544,8 @@ void SchematicScene::RenderSchematic(const QVector<DevLevelDescriptor*> &devices
         InsertSchematicWire(desp);
         pathPoints.clear();
     }
+
+    TagDeviceOnBranch();
 }
 
 /* row and col start from 0 */
@@ -543,7 +573,7 @@ void SchematicScene::SetDeviceAt(const QPointF &pos, SchematicDevice *device)
 /* Set device orientation */
 void SchematicScene::DecideDeviceOrientation(int x, int y, SchematicDevice* device)
 {
-    UNUSED(y);
+    Q_UNUSED(y);
     /* first column */
     CktNode *negNode = nullptr;
     switch (device->GetDeviceType()) {
@@ -628,6 +658,25 @@ void SchematicScene::RenderGND(int x, int y, SchematicDevice *device)
 
             break;
         default:;
+    }
+}
+
+/* If terminals contain branch wire, and it's not capacitor,
+ * we tag this device on branch.
+ */
+void SchematicScene::TagDeviceOnBranch()
+{
+    SchematicDevice *dev = nullptr;
+    foreach (QGraphicsItem *item, items()) {
+        if (item->type() == SchematicDevice::Type) {
+            dev = qgraphicsitem_cast<SchematicDevice*> (item);
+            if (dev->GetDeviceType() == SchematicDevice::Capacitor)
+                continue;
+            if (dev->TerminalsContainBranchWire()) {
+                dev->SetOnBranch(true);
+                dev->update();
+            }
+        }
     }
 }
 

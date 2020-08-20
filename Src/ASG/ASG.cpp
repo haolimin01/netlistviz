@@ -171,6 +171,7 @@ void ASG::BuildIncidenceMatrix()
     m_bubblingFlag = false;
 
     GenerateWireDesps();
+    // TagDeviceOnBranch();
 }
 
 void ASG::Levelling()
@@ -347,7 +348,7 @@ void ASG::PlotAllDevices()
     /* header */
     QStringList headerText;
     for (int i = 0; i < totalLevel; ++ i) {
-        QString tmp = "Level" + QString::number(i);
+        QString tmp = "L" + QString::number(i);
         headerText << tmp;
     }
     m_levelPlotter->SetColHeaderText(headerText);
@@ -386,3 +387,18 @@ void ASG::GenerateWireDesps()
         }
     }
 }
+
+/* If terminals contain branch wire, and it's not capacitor,
+ * we tag this device on branch.
+ */
+// void ASG::TagDeviceOnBranch()
+// {
+//     SchematicDevice *device = nullptr;
+//     foreach (device, m_ckt->m_deviceList) {
+//         if (device->GetDeviceType() == SchematicDevice::Capacitor)
+//             continue;
+//         if (device->TerminalsContainBranchWire())
+//             device->SetOnBranch(true);
+//         qInfo() << device->TerminalsContainBranchWire() << endl;
+//     }
+// }

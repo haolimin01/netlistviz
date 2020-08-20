@@ -68,6 +68,8 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     m_sceneX = -1;
     m_sceneY = -1;
     m_placed = false;
+    m_onBranch = false;
+    m_showOnBranchFlag = false;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -128,7 +130,10 @@ QPainterPath SchematicDevice::shape() const
     for (cit = m_terRects.constBegin(); cit != m_terRects.constEnd(); ++ cit)
         path.addRect(cit.value());
 
-    path.addRect(DashRect());
+    if (m_deviceType == GND)
+        path.addRect(GNDDashRect());
+    else
+        path.addRect(DashRect());
 
     return path;
 }
@@ -140,6 +145,13 @@ QRectF SchematicDevice::DashRect() const
     return QRectF(-12, -BASE_LEN + halfTerSize, 24, (BASE_LEN - halfTerSize) * 2);
 }
 
+QRectF SchematicDevice::GNDDashRect() const
+{
+    int halfTerSize = TerminalSize / 2;
+
+    return QRectF(-12, -10 + halfTerSize, 24, (10 - halfTerSize) * 2);
+}
+
 void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
                   QWidget *)
 {
@@ -147,7 +159,15 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     qInfo() << LINE_INFO << endl;
 #endif
 
-    painter->setPen(QPen(m_color, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    int lineWidth = 2;
+    if (m_onBranch && m_showOnBranchFlag) {
+        m_color = Qt::red;
+        lineWidth = 3;
+    } else {
+        m_color = Qt::black;
+    }
+
+    painter->setPen(QPen(m_color, lineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter->setRenderHint(QPainter::Antialiasing);
 
     painter->drawPath(path());
@@ -163,7 +183,7 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
 
     if (isSelected()) {
 
-        painter->setPen(QPen(Qt::black, 1, Qt::DashLine));
+        painter->setPen(QPen(m_color, 1, Qt::DashLine));
         painter->setBrush(QBrush(Qt::NoBrush));
         painter->drawRect(DashRect());
     }
@@ -519,6 +539,7 @@ void SchematicDevice::Print() const
         setRotation(90);
     }
     m_devOrien = orien;
+    UpdateTerminalScenePos();
  }
 
  void SchematicDevice::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -561,12 +582,32 @@ void SchematicDevice::UpdateTerminalScenePos()
         case Vsrc:
             node = Terminal(Positive);
             if (node)
-                node->SetScenePos(TerminalScenePos(Positive));
+                node->SetScenePos(TerminalScenePos(Positive), this);
             node = Terminal(Negative);
             if (node)
-                node->SetScenePos(TerminalScenePos(Negative));
+                node->SetScenePos(TerminalScenePos(Negative), this);
             break;
         case GND:
         default:;
     }
+}
+
+QPointF SchematicDevice::ScenePosByTerminalScenePos(TerminalType type, const QPointF &scenePos)
+{
+    QPointF pos = TerminalPos(type);
+    return scenePos - pos;
+}
+
+bool SchematicDevice::TerminalsContainBranchWire()
+{
+    QMap<TerminalType, QVector<SchematicWire*>>::const_iterator cit;
+    cit = m_wiresAtTerminal.constBegin();
+    for (; cit != m_wiresAtTerminal.constEnd(); ++ cit) {
+        foreach (SchematicWire *wire, cit.value()) {
+            if (wire->IsBranch())
+                return true;
+        }
+    }
+
+    return false;
 }

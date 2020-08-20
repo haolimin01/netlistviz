@@ -22,6 +22,7 @@
     <file>images/generate_device.png</file>
     <file>images/asg_property.png</file>
     <file>images/parse_netlist.png</file>
+    <file>images/show_branch.png</file>
 </qresource>
 </RCC>
 

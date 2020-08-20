@@ -45,6 +45,7 @@ public:
 	QPointF      TerminalPos(TerminalType type) const;
 	QPointF      TerminalScenePos(TerminalType type) const;
 	void         UpdateTerminalScenePos();
+	QPointF      ScenePosByTerminalScenePos(TerminalType type, const QPointF &scenePos);
 	
 	void         SetId(int id) { m_id = id; m_idGiven = true; }
 	int          Id()  const { return m_id; }
@@ -58,6 +59,10 @@ public:
 	bool         Placed() const  { return m_placed; }
 	void         SetPlaced(bool placed)  { m_placed = placed; }
 	int          Priority() const  { return m_priority; }
+	void         SetOnBranch(bool on)  { m_onBranch = on; }
+	bool         OnBranch() const  { return m_onBranch; }
+	void         SetShowOnBranchFlag(bool show)  { m_showOnBranchFlag = show; }
+	bool         TerminalsContainBranchWire();
 
 	DeviceType  GetDeviceType() const { return m_deviceType; }
 	int         type() const override { return Type; }
@@ -87,6 +92,7 @@ protected:
 private:
 	void   InitVariables();
 	QRectF DashRect() const;
+	QRectF GNDDashRect() const;
 	void   UpdateWirePosition();
 
 	void DrawResistor();
@@ -121,6 +127,8 @@ private:
 	int             m_sceneY;
 	bool            m_placed;
 	int             m_priority;
+	bool            m_onBranch;
+	bool            m_showOnBranchFlag;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H

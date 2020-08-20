@@ -16,6 +16,7 @@ SchematicWire::SchematicWire(SchematicDevice *startDev, SchematicDevice *endDev,
     m_endTerminal = endTer;
     
     m_isBranch = false;
+    m_showBranchFlag = false;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -54,9 +55,11 @@ void SchematicWire::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
 #endif
 
     int lineWidth = 2;
-    if (m_isBranch) {
+    if (m_isBranch && m_showBranchFlag) {
         lineWidth = 3;
         m_color = Qt::red;
+    } else {
+        m_color = Qt::black;
     }
 
     if (option->state & QStyle::State_Selected)
@@ -102,7 +105,7 @@ void SchematicWire::UpdatePosition(SchematicDevice *device, TerminalType termina
     }
 }
 
-void SchematicWire::SetAsBranch()
+void SchematicWire::SetAsBranch(bool branch)
 {
-    m_isBranch = true;
+    m_isBranch = branch;
 }
