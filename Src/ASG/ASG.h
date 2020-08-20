@@ -79,6 +79,7 @@ private:
     void InsertVI(SchematicDevice *device);
 
     void GenerateWireDesps();
+    // void TagDeviceOnBranch();
 
     void PrintAllDevices() const;
     void PlotAllDevices();

@@ -68,6 +68,8 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     m_sceneX = -1;
     m_sceneY = -1;
     m_placed = false;
+    m_onBranch = false;
+    m_showOnBranchFlag = false;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -157,7 +159,15 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     qInfo() << LINE_INFO << endl;
 #endif
 
-    painter->setPen(QPen(m_color, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    int lineWidth = 2;
+    if (m_onBranch && m_showOnBranchFlag) {
+        m_color = Qt::red;
+        lineWidth = 3;
+    } else {
+        m_color = Qt::black;
+    }
+
+    painter->setPen(QPen(m_color, lineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter->setRenderHint(QPainter::Antialiasing);
 
     painter->drawPath(path());
@@ -173,7 +183,7 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
 
     if (isSelected()) {
 
-        painter->setPen(QPen(Qt::black, 1, Qt::DashLine));
+        painter->setPen(QPen(m_color, 1, Qt::DashLine));
         painter->setBrush(QBrush(Qt::NoBrush));
         painter->drawRect(DashRect());
     }
@@ -586,4 +596,18 @@ QPointF SchematicDevice::ScenePosByTerminalScenePos(TerminalType type, const QPo
 {
     QPointF pos = TerminalPos(type);
     return scenePos - pos;
+}
+
+bool SchematicDevice::TerminalsContainBranchWire()
+{
+    QMap<TerminalType, QVector<SchematicWire*>>::const_iterator cit;
+    cit = m_wiresAtTerminal.constBegin();
+    for (; cit != m_wiresAtTerminal.constEnd(); ++ cit) {
+        foreach (SchematicWire *wire, cit.value()) {
+            if (wire->IsBranch())
+                return true;
+        }
+    }
+
+    return false;
 }

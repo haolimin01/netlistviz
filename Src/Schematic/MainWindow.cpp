@@ -391,6 +391,11 @@ void MainWindow::CreateActions()
     m_showNodeAction->setChecked(false);
     connect(m_showNodeAction, &QAction::toggled, this, &MainWindow::ShowItemNodeToggled);
 
+    m_showBranchAction = new QAction(QIcon(":/images/show_branch.png"), tr("Show Branch"), this);
+    m_showBranchAction->setCheckable(true);
+    m_showBranchAction->setChecked(false);
+    connect(m_showBranchAction, &QAction::toggled, this, &MainWindow::ShowBranchToggled);
+
     m_showGridAction = new QAction(QIcon(":/images/grid.png"), tr("Show Grid"), this);
     m_showGridAction->setCheckable(true);
     m_showGridAction->setChecked(true);
@@ -440,6 +445,7 @@ void MainWindow::CreateMenus()
     m_viewMenu = menuBar()->addMenu(tr("&View"));
     m_viewMenu->addAction(m_devicePanelDockWidget->toggleViewAction());
     m_viewMenu->addAction(m_showNodeAction);
+    m_viewMenu->addAction(m_showBranchAction);
     m_viewMenu->addAction(m_showGridAction);
 
     m_asgMenu = menuBar()->addMenu(tr("&ASG"));
@@ -467,6 +473,7 @@ void MainWindow::CreateToolBars()
     m_editToolBar->addAction(m_toFrontAction);
     m_editToolBar->addAction(m_sendBackAction);
     m_editToolBar->addAction(m_showNodeAction);
+    m_editToolBar->addAction(m_showBranchAction);
     m_editToolBar->addAction(m_showGridAction);
 
     m_fontCombo = new QFontComboBox();
@@ -612,6 +619,15 @@ QIcon MainWindow::CreateColorIcon(QColor color)
 void MainWindow::ShowItemNodeToggled(bool show)
 {
     m_scene->SetShowNodeFlag(show);
+}
+
+void MainWindow::ShowBranchToggled(bool show)
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    m_scene->SetShowBranchFlag(show);
 }
 
 void MainWindow::ShowGridToggled(bool show)

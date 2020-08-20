@@ -194,12 +194,32 @@ void SchematicScene::SetShowNodeFlag(bool show)
     }
 }
 
+void SchematicScene::SetShowBranchFlag(bool show)
+{
+    m_showBranchFlag = show;
+
+    SchematicDevice *device = nullptr;
+    SchematicWire *wire = nullptr;
+    foreach (QGraphicsItem *item, items()) {
+        if (item->type() == SchematicDevice::Type) {
+            device = qgraphicsitem_cast<SchematicDevice*> (item);
+            device->SetShowOnBranchFlag(show);
+            device->update();
+        } else if (item->type() == SchematicWire::Type) {
+            wire = qgraphicsitem_cast<SchematicWire*> (item);
+            wire->SetShowBranchFlag(show);
+            wire->update();
+        }
+    }
+}
+
 SchematicDevice* SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
                                  const QPointF &pos)
 {
     SchematicDevice *dev = new SchematicDevice(type, m_itemMenu);
     dev->setPos(pos);
     dev->SetShowNodeFlag(m_showNodeFlag);
+    dev->SetShowOnBranchFlag(m_showBranchFlag);
     addItem(dev);
 
     m_deviceNumber++;
@@ -360,8 +380,9 @@ SchematicWire* SchematicScene::InsertSchematicWire(SchematicDevice *startDev, Sc
     SchematicWire *newWire = new SchematicWire(startDev, endDev, startTer, endTer);
     newWire->SetWirePathPoints(wirePoints);
     addItem(newWire);
-    // if (branch)
-    //     newWire->SetAsBranch();
+    if (branch)
+        newWire->SetAsBranch(true);
+    newWire->SetShowBranchFlag(m_showBranchFlag);
     // newWire->setPos(0, 0);
 
     startDev->AddWire(newWire, startTer);
@@ -377,8 +398,9 @@ SchematicWire* SchematicScene::InsertSchematicWire(const WireDescriptor *desp)
     SchematicWire *newWire = new SchematicWire(desp->startDev,
         desp->endDev, desp->startTerminal, desp->endTerminal);
     newWire->SetWirePathPoints(desp->pathPoints);
-    // if (desp->isBranch)
-    //     newWire->SetAsBranch();
+    if (desp->isBranch)
+        newWire->SetAsBranch(true);
+    newWire->SetShowBranchFlag(m_showBranchFlag);
     addItem(newWire);
     // newWire->setPos(0, 0);
 
@@ -522,6 +544,8 @@ void SchematicScene::RenderSchematic(const QVector<DevLevelDescriptor*> &devices
         InsertSchematicWire(desp);
         pathPoints.clear();
     }
+
+    TagDeviceOnBranch();
 }
 
 /* row and col start from 0 */
@@ -634,6 +658,25 @@ void SchematicScene::RenderGND(int x, int y, SchematicDevice *device)
 
             break;
         default:;
+    }
+}
+
+/* If terminals contain branch wire, and it's not capacitor,
+ * we tag this device on branch.
+ */
+void SchematicScene::TagDeviceOnBranch()
+{
+    SchematicDevice *dev = nullptr;
+    foreach (QGraphicsItem *item, items()) {
+        if (item->type() == SchematicDevice::Type) {
+            dev = qgraphicsitem_cast<SchematicDevice*> (item);
+            if (dev->GetDeviceType() == SchematicDevice::Capacitor)
+                continue;
+            if (dev->TerminalsContainBranchWire()) {
+                dev->SetOnBranch(true);
+                dev->update();
+            }
+        }
     }
 }
 
