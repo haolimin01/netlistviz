@@ -49,7 +49,7 @@ public:
     HeadElement RowHead(int row) const;
     HeadElement ColHead(int col) const;
 
-    void  SetAllVisited(bool visited = true);
+    // void  SetAllVisited(bool visited = true);
     
     void   Print() const;
     void   Plot();

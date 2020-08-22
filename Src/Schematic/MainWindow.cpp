@@ -144,6 +144,9 @@ void MainWindow::DeleteItem()
             terminal = wire->EndTerminal();
             device->RemoveWire(wire, terminal);
             delete item;
+        } else if (item->type() == SchematicTextItem::Type) {
+            m_scene->removeItem(item);
+            delete item;
         }
     }
 

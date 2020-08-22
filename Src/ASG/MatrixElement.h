@@ -27,13 +27,13 @@ public:
     int   RowIndex() const { return m_rowIndex; }
     int   ColIndex() const { return m_colIndex; }
 
-    bool  Visited() const { return m_visited; }
-    void  SetVisited(bool visited = true) { m_visited = visited; }
+    // bool  Visited() const { return m_visited; }
+    // void  SetVisited(bool visited = true) { m_visited = visited; }
 
     SchematicDevice* FromDevice()   const { return m_fromDevice; }
-    TerminalType         FromTerminal() const { return m_fromTerminal; }
+    TerminalType     FromTerminal() const { return m_fromTerminal; }
     SchematicDevice* ToDevice()     const { return m_toDevice; }
-    TerminalType         ToTerminal()   const { return m_toTerminal; }
+    TerminalType     ToTerminal()   const { return m_toTerminal; }
     MatrixElement*   NextInRow()    const { return m_nextInRow; }
     MatrixElement*   NextInCol()    const { return m_nextInCol; }
 
@@ -53,14 +53,14 @@ private:
     int              m_colIndex;
 
     SchematicDevice *m_fromDevice;
-    TerminalType         m_fromTerminal;
+    TerminalType     m_fromTerminal;
     SchematicDevice *m_toDevice;
-    TerminalType         m_toTerminal;
+    TerminalType     m_toTerminal;
     
     MatrixElement   *m_nextInRow;
     MatrixElement   *m_nextInCol;
 
-    bool             m_visited;
+    // bool             m_visited;
 };
 
 #endif // NETLISTVIZ_ASG_MATRIXELEMENT_H

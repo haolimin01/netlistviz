@@ -11,7 +11,7 @@ MatrixElement::MatrixElement(int row, int col, SchematicDevice *fromDevice,
     m_fromTerminal = fromTer;
     m_toTerminal = toTer;
 
-    m_visited = false;
+    // m_visited = false;
 }
 
 MatrixElement::~MatrixElement()
