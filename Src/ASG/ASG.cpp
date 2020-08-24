@@ -10,11 +10,14 @@
 #include "Utilities/MyString.h"
 #include "TablePlotter.h"
 
+using std::set;
+
 /* =============== DevLevelDescriptor class =============== */
 DevLevelDescriptor::DevLevelDescriptor(int level)
 {
     Q_ASSERT(level >= 0);
 
+    m_level = level;
     m_deviceCntWithoutCap = 0;
     m_capCnt = 0;
 }
@@ -78,6 +81,20 @@ DeviceList DevLevelDescriptor::AllDevicesWithoutCap() const
     return devices;
 }
 
+void DevLevelDescriptor::PrintAllDevices() const
+{
+    printf("--------------- Device Level %d ----------------\n", m_level);
+
+    QMap<int, DeviceList>::const_iterator cit;
+    cit = m_levelDevices.constBegin();
+    for (; cit != m_levelDevices.constEnd(); ++ cit) {
+        foreach (SchematicDevice *device, cit.value())
+            qInfo() << device->Name();
+    }
+
+    printf("------------------------------------------------\n");
+}
+
 
 /* =============== ASG class =============== */
 ASG::ASG(SchematicData *data)
@@ -93,6 +110,9 @@ ASG::ASG(SchematicData *data)
 
     m_levelPlotter = nullptr;
     m_bubblePlotter = nullptr;
+
+    m_visited = new int[m_ckt->DeviceCnt()];
+    memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCnt());
 }
 
 ASG::ASG()
@@ -105,6 +125,8 @@ ASG::ASG()
 
     m_levelPlotter = nullptr;
     m_bubblePlotter = nullptr;
+
+    m_visited = nullptr;
 }
 
 ASG::~ASG()
@@ -115,6 +137,8 @@ ASG::~ASG()
     foreach (DevLevelDescriptor *desp, m_devices)
         delete desp;
     m_devices.clear();
+
+    delete []m_visited;
 
 }
 
@@ -129,6 +153,9 @@ void ASG::SetSchematicData(SchematicData *data)
     m_bubblingFlag = false;
     m_levellingFlag = false;
     m_buildMatrixFlag = false;
+
+    m_visited = new int[m_ckt->DeviceCnt()];
+    memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCnt());
 }
 
 void ASG::BuildIncidenceMatrix()
@@ -176,17 +203,26 @@ void ASG::BuildIncidenceMatrix()
 
 void ASG::Levelling()
 {
-    // m_levelDevices.clear();
     m_devices.clear();
-    m_matrix->SetAllVisited(false);
 
     DevLevelDescriptor *dldesp = nullptr;
-
     int curLevel = 0;
+    SchematicDevice *device = nullptr;
 
     /* level 0 */
     dldesp = new DevLevelDescriptor(curLevel);
     dldesp->AddDevices(m_ckt->m_firstLevelDeviceList);
+
+    /* set first level devices as visited */
+    foreach (device, m_ckt->m_firstLevelDeviceList) {
+        m_visited[device->Id()] = 1;
+    }
+
+
+#ifdef DEBUG
+        dldesp->PrintAllDevices();
+#endif
+
     m_devices.push_back(dldesp);
 
     curLevel++;
@@ -201,13 +237,21 @@ void ASG::Levelling()
         if (tDeviceList.size() == 0)  break;
         dldesp = new DevLevelDescriptor(curLevel);
         dldesp->AddDevices(tDeviceList);
+
+#ifdef DEBUG
+        dldesp->PrintAllDevices();
+#endif
+
         m_devices.push_back(dldesp);
         curLevel++;
         curDeviceNumber += tDeviceList.size();
     }
 
+
     if (curDeviceNumber != totalDeviceNumber) {
-        qDebug() << LINE_INFO << "Levelling failedd.";
+        qDebug() << LINE_INFO << "Levelling failedd." << endl;
+        qDebug() << "total device number" << totalDeviceNumber;
+        qDebug() << "curr device number" << curDeviceNumber << endl;
         EXIT;
     }
 
@@ -274,14 +318,14 @@ DeviceList ASG::FillNextLevelDeviceList(
         id = device->Id();
         element = m_matrix->RowHead(id).head;
         while (element) {
-            if (element->Visited()) {
+            device = element->ToDevice();
+            if (m_visited[device->Id()]) {
                 element = element->NextInRow();
                 continue;
             }
-            device = element->ToDevice();
             nextLevelDeviceList.push_back(device);
-            element->SetVisited();
             element = element->NextInRow();
+            m_visited[device->Id()] = 1;
         }
     }
 
@@ -367,14 +411,26 @@ void ASG::PlotAllDevices()
 void ASG::GenerateWireDesps()
 {
     m_wireDesps.clear();
+
+    int fromTerId = 0, toTerId = 0;
+    SchematicDevice *startDev = nullptr, *endDev = nullptr;
+
     int size = m_matrix->Size();
     MatrixElement *element = nullptr;
     for (int i = 0; i < size; ++ i) {
         element = m_matrix->RowHead(i).head;
         while (element) {
+
+            startDev = element->FromDevice();
+            endDev = element->ToDevice();
+            fromTerId = startDev->TerminalId(element->FromTerminal());
+            toTerId = endDev->TerminalId(element->ToTerminal());
+
+            printf("from + to (%d, %d)\n", fromTerId, toTerId);
+
             WireDescriptor *wd = new WireDescriptor;
-            wd->startDev = element->FromDevice();
-            wd->endDev = element->ToDevice();
+            wd->startDev = startDev;
+            wd->endDev = endDev;
             /* set as branch */
             if (wd->startDev->GetDeviceType() != SchematicDevice::Capacitor &&
                 wd->endDev->GetDeviceType() != SchematicDevice::Capacitor) {
@@ -382,8 +438,11 @@ void ASG::GenerateWireDesps()
             }
             wd->startTerminal = element->FromTerminal();
             wd->endTerminal = element->ToTerminal();
+
             m_wireDesps.push_back(wd);
             element = element->NextInRow();
+
+            qInfo() << "wire: " << wd->startDev->Name() << " " << wd->endDev->Name() << endl;
         }
     }
 }

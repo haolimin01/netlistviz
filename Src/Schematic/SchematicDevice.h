@@ -67,7 +67,7 @@ public:
 	DeviceType  GetDeviceType() const { return m_deviceType; }
 	int         type() const override { return Type; }
 	QColor      Color() const  { return m_color; }
-	void        SetName(QString name) { m_name = name; }
+	void        SetName(QString name);
 	void        SetValue(double value) { m_value = value; }
     QString     Name() const { return m_name; }
 	double      Value() const { return m_value; }
@@ -77,6 +77,8 @@ public:
 	void        RemoveWires(bool deletion = true);
 	void        RemoveWire(SchematicWire *wire, TerminalType type);
 	bool        TerminalsContain(const QPointF &scenePos) const;
+
+	bool        IsDevice() const  { return m_isDevice; }
 
 	QMap<TerminalType, QRectF> TerminalRects() const  { return m_terRects; }
 	void Print() const;
@@ -94,6 +96,10 @@ private:
 	QRectF DashRect() const;
 	QRectF GNDDashRect() const;
 	void   UpdateWirePosition();
+
+	/* For annotation text */
+	void CreateAnnotation(const QString &text);
+	void SetCustomAnnotRelPos();
 
 	void DrawResistor();
 	void DrawCapacitor();
@@ -117,6 +123,8 @@ private:
 	bool            m_idGiven;
 
 	QMap<TerminalType, QRectF> m_terRects;
+	QGraphicsTextItem         *m_annotText; //Annotation Text
+	QPointF                    m_annotRelPos; // Annotation text relative position
 
 	/* For CktParser */
 	QString         m_name;       // device value
@@ -129,6 +137,7 @@ private:
 	int             m_priority;
 	bool            m_onBranch;
 	bool            m_showOnBranchFlag;
+	bool            m_isDevice;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H

@@ -198,16 +198,16 @@ void Matrix::Plot()
     m_plotter->Display();
 }
 
-void Matrix::SetAllVisited(bool visited)
-{
-    MatrixElement *element = nullptr;
+// void Matrix::SetAllVisited(bool visited)
+// {
+//     MatrixElement *element = nullptr;
 
-    for (int i = 0; i < m_size; ++ i) {
-        element = m_rowHead[i].head;
+//     for (int i = 0; i < m_size; ++ i) {
+//         element = m_rowHead[i].head;
 
-        while (element) {
-            element->SetVisited(visited);
-            element = element->NextInRow();
-        }
-    }
-}
+//         while (element) {
+//             element->SetVisited(visited);
+//             element = element->NextInRow();
+//         }
+//     }
+// }

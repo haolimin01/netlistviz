@@ -10,6 +10,7 @@
 
 #include <QVector>
 #include <QMap>
+#include <set>
 #include "Define/Define.h"
 
 class  Matrix;
@@ -35,6 +36,8 @@ public:
 
     int CapCount() const  { return m_capCnt; }
     int DeviceCntWithoutCap() const  { return m_deviceCntWithoutCap; }
+
+    void PrintAllDevices() const;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(DevLevelDescriptor);
@@ -95,12 +98,13 @@ private:
     QVector<WireDescriptor*> m_wireDesps;
 
 
-    bool           m_buildMatrixFlag;
-    bool           m_levellingFlag;
-    bool           m_bubblingFlag;
+    bool                m_buildMatrixFlag;
+    bool                m_levellingFlag;
+    bool                m_bubblingFlag;
+    int                *m_visited;
 
-    TablePlotter  *m_levelPlotter;
-    TablePlotter  *m_bubblePlotter;
+    TablePlotter       *m_levelPlotter;
+    TablePlotter       *m_bubblePlotter;
 };
 
 #endif // NETLISTVIZ_ASG_ASG_H

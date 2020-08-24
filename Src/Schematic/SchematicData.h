@@ -51,6 +51,8 @@ public:
     SchematicDevice* Device(const QString &name) const;
     int FirstLevelDeviceListSize() const  { return m_firstLevelDeviceList.size(); }
 
+    int DeviceCnt() const  { return m_deviceList.size(); }
+
 private:
     DISALLOW_COPY_AND_ASSIGN(SchematicData);
 
