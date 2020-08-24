@@ -31,31 +31,37 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
             m_devOrien = Vertical;
             m_priority = R_Priority;
             DrawResistor();
+            m_isDevice = true;
             break;
         case Capacitor:
             m_devOrien = Vertical;
             m_priority = C_Priority;
             DrawCapacitor();
+            m_isDevice = true;
             break;
         case Inductor:
             m_devOrien = Vertical;
             m_priority = L_Priority;
             DrawInductor();
+            m_isDevice = true;
             break;
         case Isrc:
             m_devOrien = Vertical; 
             m_priority = I_Priority;
             DrawIsrc();
+            m_isDevice = true;
             break;
         case Vsrc:
             m_devOrien = Vertical;
             m_priority = V_Priority;
             DrawVsrc();
+            m_isDevice = true;
             break;
         case GND:
             m_devOrien = Vertical;
             m_priority = GND_Priority;
             DrawGND();
+            m_isDevice = false;
             break;
         default:;
     }
@@ -70,6 +76,8 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     m_placed = false;
     m_onBranch = false;
     m_showOnBranchFlag = false;
+    
+    CreateAnnotation(m_name);
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -81,6 +89,7 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
 SchematicDevice::~SchematicDevice()
 {
     if (m_imag)  delete m_imag;
+    if (m_annotText) delete m_annotText;
 }
 
 QPixmap SchematicDevice::Image()
@@ -187,6 +196,13 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
         painter->setBrush(QBrush(Qt::NoBrush));
         painter->drawRect(DashRect());
     }
+}
+
+void SchematicDevice::SetName(QString name)
+{
+    m_name = name;
+    if (m_annotText)
+        m_annotText->setHtml(m_name);
 }
 
 void SchematicDevice::DrawResistor()
@@ -398,7 +414,7 @@ void SchematicDevice::DrawGND()
 *     ---
 *      -
 */
-    m_name = "GND";
+    m_name = "G";
     m_value = 0;
 
     QPainterPath path;
@@ -444,8 +460,21 @@ QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &
 #ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
-    if (change == ItemPositionChange && scene()) {
+    if (NOT scene())
+        return QGraphicsItem::itemChange(change, value);
+
+    if (change == ItemPositionHasChanged) {
         UpdateWirePosition();
+    }
+
+    /* deal with annotation text */
+    if (change == ItemSceneChange) {
+        scene()->removeItem(m_annotText);
+    } else if (change == ItemSceneHasChanged) {
+        scene()->addItem(m_annotText);
+        m_annotText->setPos(mapToScene(m_annotRelPos));
+    } else if (change == ItemPositionHasChanged) {
+        m_annotText->setPos(mapToScene(m_annotRelPos));
     }
 
     return QGraphicsItem::itemChange(change, value);
@@ -540,6 +569,11 @@ void SchematicDevice::Print() const
     }
     m_devOrien = orien;
     UpdateTerminalScenePos();
+
+    SetCustomAnnotRelPos();
+    if (orien == Horizontal)
+        m_annotRelPos.rx() += m_annotText->boundingRect().height() / 2;
+    m_annotText->setPos(mapToScene(m_annotRelPos));
  }
 
  void SchematicDevice::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -610,4 +644,32 @@ bool SchematicDevice::TerminalsContainBranchWire()
     }
 
     return false;
+}
+
+void SchematicDevice::CreateAnnotation(const QString &text)
+{
+    m_annotText = new QGraphicsTextItem();
+    m_annotText->setHtml(text);
+
+    m_annotText->setFlag(QGraphicsItem::ItemIsMovable, true);
+    m_annotText->setFlag(QGraphicsItem::ItemIsSelectable, true);
+
+    m_annotText->setFont(QFont("Courier 10 Pitch", 12));
+
+    m_annotText->setZValue(-1);
+
+    SetCustomAnnotRelPos();
+}
+
+void SchematicDevice::SetCustomAnnotRelPos()
+{
+    int offsetX = 0, offsetY = 0;
+    QRectF dRect, bRect;
+    dRect = mapRectToScene(DashRect());
+    bRect = m_annotText->boundingRect();
+
+    offsetX = dRect.width()/2 + 2;
+    offsetY = -bRect.height()/2;
+
+    m_annotRelPos = QPointF(offsetX, offsetY);
 }
