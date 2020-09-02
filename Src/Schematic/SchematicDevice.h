@@ -20,6 +20,7 @@ const int V_Priority = 2;
 const int I_Priority = 3;
 const int C_Priority = 4;
 const int GND_Priority = 5;
+// const int Dot_Priority = 6;
 
 
 class SchematicDevice : public QGraphicsPathItem
@@ -27,7 +28,7 @@ class SchematicDevice : public QGraphicsPathItem
 public:
 	enum { Type = UserType + 4 };
 	enum DeviceType { Resistor=0, Capacitor, Inductor,
-					 Vsrc/*3*/, Isrc, GND };
+					 Vsrc/*3*/, Isrc, GND /*, Dot*/ };
 	enum Orientation { Horizontal, Vertical };
 
 public:
@@ -44,7 +45,9 @@ public:
 	int          TerminalId(TerminalType type) const;
 	QPointF      TerminalPos(TerminalType type) const;
 	QPointF      TerminalScenePos(TerminalType type) const;
-	void         UpdateTerminalScenePos();
+	QPointF      NodeScenePos(TerminalType type) const;
+	// void         UpdateTerminalScenePos();
+	void         UpdateNodeScenePos();
 	QPointF      ScenePosByTerminalScenePos(TerminalType type, const QPointF &scenePos);
 	
 	void         SetId(int id) { m_id = id; m_idGiven = true; }
@@ -94,8 +97,8 @@ protected:
 private:
 	void   InitVariables();
 	QRectF DashRect() const;
-	QRectF GNDDashRect() const;
 	void   UpdateWirePosition();
+	void   UpdateTerminalScenePos();
 
 	/* For annotation text */
 	void CreateAnnotation(const QString &text);
@@ -107,6 +110,7 @@ private:
 	void DrawIsrc();
 	void DrawVsrc();
 	void DrawGND();
+	// void DrawDot(); // represent for node
 
 	QMap<TerminalType, CktNode *> m_terminals;
 	QMap<TerminalType, QVector<SchematicWire*>> m_wiresAtTerminal;

@@ -70,7 +70,7 @@ void MainWindow::InitVariables()
 void MainWindow::CreateSchematicScene()
 {
     m_scene = new SchematicScene(m_editMenu, this);
-    m_scene->setSceneRect(QRectF(0, 0, 80000, 1600));
+    m_scene->setSceneRect(QRectF(0, 0, 80000, 3200));
     m_scene->setFocus(Qt::MouseFocusReason);
 
     connect(m_scene, &SchematicScene::TextInserted,
@@ -305,6 +305,7 @@ void MainWindow::CreateDeviceToolBox()
     layout->addWidget(CreateCellWidget(tr("Inductor"), SchematicDevice::Inductor), 1, 0);
     layout->addWidget(CreateCellWidget(tr("ISource"), SchematicDevice::Isrc), 1, 1);
     layout->addWidget(CreateCellWidget(tr("VSource"), SchematicDevice::Vsrc), 2, 0);
+    // layout->addWidget(CreateCellWidget(tr("Dot"), SchematicDevice::Dot), 2, 1);
     layout->addWidget(CreateCellWidget(tr("GND"), SchematicDevice::GND), 2, 1);
 
     layout->setRowStretch(3, 10);
@@ -529,9 +530,9 @@ void MainWindow::CreateToolBars()
 
     m_sceneScaleCombo = new QComboBox;
     QStringList scales;
-    scales << tr("50%") << tr("75%") << tr("100%") << tr("125%") << tr("150%");
+    scales << tr("25%") << tr("50%") << tr("75%") << tr("100%") << tr("125%") << tr("150%") << tr("175%");
     m_sceneScaleCombo->addItems(scales);
-    m_sceneScaleCombo->setCurrentIndex(2);
+    m_sceneScaleCombo->setCurrentIndex(3);
     connect(m_sceneScaleCombo, &QComboBox::currentTextChanged,
             this, &MainWindow::SceneScaleChanged);
 
@@ -916,5 +917,5 @@ void MainWindow::GenerateSchematic()
     }
 
     m_scene->RenderSchematic(m_asg->FinalDevices(), m_asg->WireDesps());
-    m_view->centerOn(0, 800);
+    m_view->centerOn(0, 1600);
 }

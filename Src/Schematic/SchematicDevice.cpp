@@ -57,6 +57,12 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
             DrawVsrc();
             m_isDevice = true;
             break;
+        // case Dot:
+        //     m_devOrien = Vertical;
+        //     m_priority = Dot_Priority;
+        //     DrawDot();
+        //     m_isDevice = false;
+        //     break;
         case GND:
             m_devOrien = Vertical;
             m_priority = GND_Priority;
@@ -97,9 +103,14 @@ QPixmap SchematicDevice::Image()
     if (m_imag)  return m_imag->copy();
 
     m_imag = new QPixmap(2 * IMAG_LEN, 2 * IMAG_LEN);
-    m_imag->fill(Qt::white);
+    m_imag->fill(Qt::transparent);
 
     QPainter painter(m_imag);
+
+    // if (m_deviceType == Dot) {
+    //     painter.setBrush(QBrush(Qt::black));
+    // }
+
     painter.setPen(QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter.setRenderHint(QPainter::Antialiasing);
     painter.translate(IMAG_LEN, IMAG_LEN);
@@ -135,14 +146,21 @@ QPainterPath SchematicDevice::shape() const
 {
     QPainterPath path;
 
+    // if (m_deviceType == Dot) {
+    //     path.addEllipse(-2, -2, 4, 4);
+    //     return path;
+    // }
+    
     QMap<TerminalType, QRectF>::const_iterator cit;
     for (cit = m_terRects.constBegin(); cit != m_terRects.constEnd(); ++ cit)
         path.addRect(cit.value());
 
-    if (m_deviceType == GND)
-        path.addRect(GNDDashRect());
-    else
+    if (m_deviceType == GND) {
+        int halfTerSize = TerminalSize / 2;
+        path.addRect(QRectF(-12, -10 + halfTerSize, 24, (10 - halfTerSize) * 2));
+    } else {
         path.addRect(DashRect());
+    }
 
     return path;
 }
@@ -151,14 +169,20 @@ QRectF SchematicDevice::DashRect() const
 {
     int halfTerSize = TerminalSize / 2;
 
-    return QRectF(-12, -BASE_LEN + halfTerSize, 24, (BASE_LEN - halfTerSize) * 2);
-}
-
-QRectF SchematicDevice::GNDDashRect() const
-{
-    int halfTerSize = TerminalSize / 2;
-
-    return QRectF(-12, -10 + halfTerSize, 24, (10 - halfTerSize) * 2);
+    switch (m_deviceType) {
+        case Resistor:
+        case Capacitor:
+        case Inductor:
+        case Isrc:
+        case Vsrc:
+            return QRectF(-12, -BASE_LEN + halfTerSize, 24, (BASE_LEN - halfTerSize) * 2);
+        case GND:
+            return QRect(-10, -4, 20, 16);
+        // case Dot:
+        //     return QRect(-8, -8, 16, 16);
+        default:
+            return QRect(-BASE_LEN, -BASE_LEN, BASE_LEN*2, BASE_LEN*2);
+    }
 }
 
 void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
@@ -176,7 +200,15 @@ void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
         m_color = Qt::black;
     }
 
+    // if (m_deviceType == Dot) {
+    //     painter->setPen(Qt::NoPen);
+    //     painter->setBrush(QBrush(m_color));
+    // } else {
+    //     painter->setPen(QPen(m_color, lineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    // }
+
     painter->setPen(QPen(m_color, lineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+
     painter->setRenderHint(QPainter::Antialiasing);
 
     painter->drawPath(path());
@@ -414,7 +446,8 @@ void SchematicDevice::DrawGND()
 *     ---
 *      -
 */
-    m_name = "G";
+    // m_name = "G";
+    m_name = "";
     m_value = 0;
 
     QPainterPath path;
@@ -435,6 +468,22 @@ void SchematicDevice::DrawGND()
     QRectF rect(-TerminalSize/2, -vWire-TerminalSize/2, TerminalSize, TerminalSize);
     m_terRects.insert(General, rect);
 }
+
+/*
+void SchematicDevice::DrawDot()
+{
+    m_name = "";
+    m_value = 0;
+
+    QPainterPath path;
+    path.addEllipse(-4, -4, 8, 8);
+    setPath(path);
+
+    m_terNumber = 1;
+    QRectF rect(-TerminalSize/2, -TerminalSize/2, TerminalSize, TerminalSize);
+    m_terRects.insert(General, rect);
+}
+*/
 
 void SchematicDevice::SetSceneXY(int x, int y)
 {
@@ -568,8 +617,9 @@ void SchematicDevice::Print() const
         setRotation(90);
     }
     m_devOrien = orien;
-    UpdateTerminalScenePos();
+    // UpdateTerminalScenePos();
 
+    /* For annotation text */
     SetCustomAnnotRelPos();
     if (orien == Horizontal)
         m_annotRelPos.rx() += m_annotText->boundingRect().height() / 2;
@@ -605,23 +655,47 @@ QPointF SchematicDevice::TerminalScenePos(TerminalType type) const
     return mapToScene(itemPos);
 }
 
+QPointF SchematicDevice::NodeScenePos(TerminalType type) const
+{
+    CktNode *node = Terminal(type);
+    return node->ScenePos();
+}
+
+/*
 void SchematicDevice::UpdateTerminalScenePos()
 {
     CktNode *node = nullptr;
     switch (m_deviceType) {
         case Resistor:
-        case Capacitor:
+        // case Capacitor:
         case Inductor:
         case Isrc:
         case Vsrc:
             node = Terminal(Positive);
-            if (node)
-                node->SetScenePos(TerminalScenePos(Positive), this);
+            node->SetScenePos(TerminalScenePos(Positive));
+
             node = Terminal(Negative);
-            if (node)
-                node->SetScenePos(TerminalScenePos(Negative), this);
+            node->SetScenePos(TerminalScenePos(Negative));
             break;
-        case GND:
+        default:;
+    }
+}
+*/
+
+void SchematicDevice::UpdateNodeScenePos()
+{
+    CktNode *node = nullptr;
+    switch (m_deviceType) {
+        case Resistor:
+        case Inductor:
+        case Isrc:
+        case Vsrc:
+            node = Terminal(Positive);
+            node->SetScenePos(TerminalScenePos(Positive));
+
+            node = Terminal(Negative);
+            node->SetScenePos(TerminalScenePos(Negative));
+            break;
         default:;
     }
 }
