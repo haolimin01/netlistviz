@@ -74,10 +74,6 @@ void SchematicData::ParseI(QString name, QString posName, QString negName, doubl
 
     m_deviceTable.insert(name, i);
     m_deviceList.push_back(i);
-
-    /* now first level deviceList just contains one */
-    // if (m_firstLevelDeviceList.size() < 1)
-    //     m_firstLevelDeviceList.push_back(i);
 }
 
 void SchematicData::ParseL(QString name, QString posName, QString negName, double value)
@@ -147,15 +143,11 @@ void SchematicData::ParseV(QString name, QString posName, QString negName, doubl
 
     m_deviceTable.insert(name, v);
     m_deviceList.push_back(v);
-
-    /* now first level deviceList just contains one */
-    // if (m_firstLevelDeviceList.size() < 1)
-    //     m_firstLevelDeviceList.push_back(v);
 }
 
 CktNode* SchematicData::GetAddNode(const QString &name)
 {
-    NodeTable::const_iterator finder;
+    NodeTableCIter finder;
     finder = m_nodeTable.find(name);
     if (finder != m_nodeTable.constEnd()) {
         return finder.value();

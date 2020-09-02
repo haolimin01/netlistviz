@@ -446,18 +446,3 @@ void ASG::GenerateWireDesps()
         }
     }
 }
-
-/* If terminals contain branch wire, and it's not capacitor,
- * we tag this device on branch.
- */
-// void ASG::TagDeviceOnBranch()
-// {
-//     SchematicDevice *device = nullptr;
-//     foreach (device, m_ckt->m_deviceList) {
-//         if (device->GetDeviceType() == SchematicDevice::Capacitor)
-//             continue;
-//         if (device->TerminalsContainBranchWire())
-//             device->SetOnBranch(true);
-//         qInfo() << device->TerminalsContainBranchWire() << endl;
-//     }
-// }

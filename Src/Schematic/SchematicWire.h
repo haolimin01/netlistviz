@@ -47,7 +47,6 @@ public:
     int    type() const  { return Type; }
     QRectF boundingRect() const override;
     void   SetWirePathPoints(QVector<QPointF> points);
-    // void CompactPathPoints();
     void   UpdatePosition(SchematicDevice *device, TerminalType terminal, const QPointF &newPos);
     void   SetAsBranch(bool branch);
     bool   IsBranch() const  { return m_isBranch; }

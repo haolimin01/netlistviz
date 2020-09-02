@@ -9,27 +9,18 @@
  * 
  */
 
-#include <QMap>
-#include <QVector>
-#include <QString>
 #include "Define/Define.h"
+#include "Define/TypeDefine.h"
 
 class CktNode;
 class SchematicDevice;
 class SchematicTextItem;
-class SchematicLayout;
 class SchematicScene;
 class ASG;
 
 
 class SchematicData
 {
-public:
-    typedef QMap<QString, CktNode *>          NodeTable;
-    typedef QMap<QString, SchematicDevice *>  DeviceTable;
-    typedef QVector<CktNode *>                NodeList;
-    typedef QVector<SchematicDevice *>        DeviceList;
-
 public:
     SchematicData();
     ~SchematicData();

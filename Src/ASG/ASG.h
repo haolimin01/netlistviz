@@ -8,10 +8,9 @@
  * @desp     : Automatic Schematic Generator.
  */
 
-#include <QVector>
-#include <QMap>
 #include <set>
 #include "Define/Define.h"
+#include "Define/TypeDefine.h"
 
 class  Matrix;
 class  SchematicData;
@@ -19,7 +18,6 @@ class  SchematicDevice;
 class  TablePlotter;
 struct WireDescriptor;
 
-typedef QVector<SchematicDevice *>  DeviceList;
 
 /* each level device list */
 class DevLevelDescriptor
@@ -82,7 +80,6 @@ private:
     void InsertVI(SchematicDevice *device);
 
     void GenerateWireDesps();
-    // void TagDeviceOnBranch();
 
     void PrintAllDevices() const;
     void PlotAllDevices();

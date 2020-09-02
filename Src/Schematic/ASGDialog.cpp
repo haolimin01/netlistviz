@@ -9,6 +9,7 @@
 
 #include "Schematic/SchematicData.h"
 #include "Schematic/SchematicDevice.h"
+#include "Define/TypeDefine.h"
 
 ASGDialog::ASGDialog(QWidget *parent)
     : QDialog(parent)
@@ -60,7 +61,7 @@ void ASGDialog::CreateFirstLevelWidget()
     QGridLayout *firstLevelDeviceLayout = new QGridLayout;
     // firstLevelDeviceLayout->setSpacing(10);
 
-    QVector<SchematicDevice*> deviceList = m_data->GetDeviceList();
+    DeviceList deviceList = m_data->GetDeviceList();
     int colIndex = 0, rowIndex = 0;
     QCheckBox *ckBox = nullptr;
     foreach (SchematicDevice *dev, deviceList) {
@@ -96,7 +97,7 @@ void ASGDialog::Accept()
     QAbstractButton *button = nullptr;
     QCheckBox *ckBox = nullptr;
 
-    QVector<SchematicDevice*> checkedDeviceList;
+    DeviceList checkedDeviceList;
     SchematicDevice *device = nullptr;
 
     foreach (button, m_firstLevelSelectionButtonGroup->buttons()) {
