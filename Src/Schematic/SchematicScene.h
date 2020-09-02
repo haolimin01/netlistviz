@@ -6,6 +6,7 @@
 #include "SchematicWire.h"
 #include "ASG/ASG.h"
 
+#include <set>
 #include <QGraphicsScene>
 
 QT_BEGIN_NAMESPACE
@@ -19,6 +20,26 @@ class QColor;
 class QTextStream;
 QT_END_NAMESPACE
 class SchematicData;
+
+/* For deleting duplicated wires */
+struct PointPair
+{
+    QPointF p1;
+    QPointF p2;
+    PointPair() {p1.rx() = 0; p1.ry() = 0; p2.rx() = 0; p2.ry() = 0;}
+    PointPair(const QPointF &pf1, const QPointF &pf2): p1(pf1), p2(pf2) {}
+    bool operator <(const PointPair &p) const {
+        if (p.p1 == p1 && p.p2 == p2)  return false;
+        if (p.p2 == p1 && p.p1 == p2)  return false;
+        if (p.p1 == p1) {
+            if (p2.x() == p.p2.x()) return p2.y() < p.p2.y();
+            else return p2.x() < p.p2.x();
+        } else {
+            if (p1.x() == p.p1.x()) return p1.y() < p.p1.y();
+            else return p1.x() < p.p1.x();
+        } 
+    }
+};
 
 
 class SchematicScene : public QGraphicsScene
@@ -92,6 +113,7 @@ private:
     void SetDeviceAt(const QPointF &pos, SchematicDevice *device);
 
     void TagDeviceOnBranch();
+    bool ContainsWire(const QPointF &p1, const QPointF &p2);
 
 
     QMenu                      *m_itemMenu;
@@ -121,6 +143,8 @@ private:
     bool                        m_showNodeFlag;
     bool                        m_backgroundFlag;
     bool                        m_showBranchFlag;
+
+    std::set<PointPair>         m_pointPairs;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H
