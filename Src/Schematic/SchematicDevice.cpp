@@ -74,7 +74,6 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
 
     m_imag = nullptr;
     m_showNodeFlag = false;
-    // m_wiresAtTerminal.resize(m_terNumber);
     m_id = -1;
     m_idGiven = false;
     m_sceneX = -1;
@@ -617,7 +616,6 @@ void SchematicDevice::Print() const
         setRotation(90);
     }
     m_devOrien = orien;
-    // UpdateTerminalScenePos();
 
     /* For annotation text */
     SetCustomAnnotRelPos();

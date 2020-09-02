@@ -41,6 +41,8 @@ struct PointPair
     }
 };
 
+const static int Grid_W = 80;
+const static int Grid_H = 80;
 
 class SchematicScene : public QGraphicsScene
 {
@@ -62,10 +64,11 @@ public:
     void SetFont(const QFont &font);
     void SetDeviceType(SchematicDevice::DeviceType type);
 
-    // void RenderSchematic(const QVector<QVector<SchematicDevice*>> &levels,
-    //                      const QVector<WireDescriptor*> &wireDesps);
+    /* render schematic from ASG result, implemented in RenderSchematic.cpp */
     void RenderSchematic(const QVector<DevLevelDescriptor*> &devices,
                          const QVector<WireDescriptor*> &wireDesps);
+
+    /* these 2 functions are implemented in IOSchematic.cpp */
     /* Write Schematic items to stream */
     void WriteSchematicToStream(QTextStream &stream) const;
     /* Load Schematic from stream to scene */
@@ -105,13 +108,13 @@ private:
                             const QVector<QPointF>&, bool branch=false);
     SchematicWire*     InsertSchematicWire(const WireDescriptor *desp);
 
-    void DecideDeviceOrientation(int x, int y, SchematicDevice *device);
-    void RenderGND(int x, int y, SchematicDevice *device);
 
     /* For ASG */
+    /* these functions are implemented in RenderSchematic.cpp */
+    void DecideDeviceOrientation(int x, int y, SchematicDevice *device);
+    void RenderGND(int x, int y, SchematicDevice *device);
     void SetDeviceAt(int x, int y, SchematicDevice *device);
     void SetDeviceAt(const QPointF &pos, SchematicDevice *device);
-
     void TagDeviceOnBranch();
     bool ContainsWire(const QPointF &p1, const QPointF &p2);
 
@@ -144,6 +147,7 @@ private:
     bool                        m_backgroundFlag;
     bool                        m_showBranchFlag;
 
+    /* for deleting duplicated wires */
     std::set<PointPair>         m_pointPairs;
 };
 

@@ -50,6 +50,8 @@ HEADERS += ./Src/Schematic/MainWindow.h\
            ./Src/Parser/CktParser.hpp\
            ./Src/Parser/MyParser.h\
            ./Src/Circuit/CktNode.h\
+           ./Src/Define/Define.h\
+           ./Src/Define/TypeDefine.h\
            ./Src/ASG/ASG.h\
            ./Src/ASG/MatrixElement.h\
            ./Src/ASG/Matrix.h\
@@ -66,6 +68,8 @@ SOURCES += ./Src/Main/Main.cpp\
            ./Src/Schematic/SchematicData.cpp\
            ./Src/Schematic/SchematicWire.cpp\
            ./Src/Schematic/ASGDialog.cpp\
+           ./Src/Schematic/RenderSchematic.cpp\
+           ./Src/Schematic/IOSchematic.cpp\
            ./Src/Parser/CktScanner.cpp\
            ./Src/Parser/CktParser.cpp\
            ./Src/Parser/MyParser.cpp\

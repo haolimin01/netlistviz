@@ -9,6 +9,7 @@
  */
 
 #include "Define/Define.h"
+#include "Define/TypeDefine.h"
 #include <QString>
 #include <QVector>
 #include <QPointF>
@@ -33,12 +34,8 @@ public:
     bool    IsGnd() const { return m_isGnd; }
     QString Name() const { return m_name; }
 
-    // void    SetScenePos(const QPointF &pos, SchematicDevice *device);
     void    SetScenePos(const QPointF &pos);
-    // void    UpdateScenePos(const QPointF &pos);
     QPointF ScenePos() const { return m_pos; }
-
-    // void    AddToScene(QGraphicsScene *scene);
 
 private:
     DISALLOW_COPY_AND_ASSIGN(CktNode);
@@ -48,10 +45,8 @@ private:
     bool             m_isGnd;
     QPointF          m_pos;
     bool             m_posGiven;
-    // SchematicDevice *m_posDevice; // this device's terminal pos.
-    // SchematicDevice *m_dotDevice; // will add to scene
 
-    QVector<SchematicDevice *>  m_devices;
+    DeviceList       m_devices;
 
     friend class ASG;
 };

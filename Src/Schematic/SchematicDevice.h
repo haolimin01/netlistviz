@@ -46,7 +46,6 @@ public:
 	QPointF      TerminalPos(TerminalType type) const;
 	QPointF      TerminalScenePos(TerminalType type) const;
 	QPointF      NodeScenePos(TerminalType type) const;
-	// void         UpdateTerminalScenePos();
 	void         UpdateNodeScenePos();
 	QPointF      ScenePosByTerminalScenePos(TerminalType type, const QPointF &scenePos);
 	
@@ -67,21 +66,20 @@ public:
 	void         SetShowOnBranchFlag(bool show)  { m_showOnBranchFlag = show; }
 	bool         TerminalsContainBranchWire();
 
-	DeviceType  GetDeviceType() const { return m_deviceType; }
-	int         type() const override { return Type; }
-	QColor      Color() const  { return m_color; }
-	void        SetName(QString name);
-	void        SetValue(double value) { m_value = value; }
-    QString     Name() const { return m_name; }
-	double      Value() const { return m_value; }
-	void        SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
-	void        SetShowNodeFlag(bool show = true)  { m_showNodeFlag = show; }
-	void        AddWire(SchematicWire *wire, TerminalType type);
-	void        RemoveWires(bool deletion = true);
-	void        RemoveWire(SchematicWire *wire, TerminalType type);
-	bool        TerminalsContain(const QPointF &scenePos) const;
-
-	bool        IsDevice() const  { return m_isDevice; }
+	DeviceType   GetDeviceType() const { return m_deviceType; }
+	int          type() const override { return Type; }
+	QColor       Color() const  { return m_color; }
+	void         SetName(QString name);
+	void         SetValue(double value) { m_value = value; }
+    QString      Name() const { return m_name; }
+	double       Value() const { return m_value; }
+	void         SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
+	void         SetShowNodeFlag(bool show = true)  { m_showNodeFlag = show; }
+	void         AddWire(SchematicWire *wire, TerminalType type);
+	void         RemoveWires(bool deletion = true);
+	void         RemoveWire(SchematicWire *wire, TerminalType type);
+	bool         TerminalsContain(const QPointF &scenePos) const;
+	bool         IsDevice() const  { return m_isDevice; }
 
 	QMap<TerminalType, QRectF> TerminalRects() const  { return m_terRects; }
 	void Print() const;
