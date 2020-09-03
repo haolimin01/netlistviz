@@ -46,6 +46,7 @@ void SchematicScene::InitVariables()
     m_line = nullptr;
     m_showNodeFlag = false;
     m_backgroundFlag = true;
+    m_showBranchFlag = false;
 }
 
 void SchematicScene::SetTextColor(const QColor &color)

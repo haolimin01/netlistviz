@@ -15,6 +15,7 @@ QT_BEGIN_NAMESPACE
 class QDialogButtonBox;
 class QButtonGroup;
 class QLabel;
+class QCheckBox;
 QT_END_NAMESPACE;
 
 class SchematicData;
@@ -32,15 +33,18 @@ public:
 
 private slots:
     void Accept();
+    void FirstLevelSelectAllCheckBoxClicked(bool checked);
+    void FirstLevelSelectDeviceButtonGroupClicked(int id);
 
 private:
     void CreatePropertyWidgets();
     void CreateFirstLevelWidget();
 
     QVBoxLayout   *m_mainLayout;
-    QLabel        *m_firstLevelSelectionLabel;
-    QButtonGroup  *m_firstLevelSelectionButtonGroup;
+    QLabel        *m_firstLevelSelectLabel;
+    QButtonGroup  *m_firstLevelSelectButtonGroup;
     SchematicData *m_data;
+    QCheckBox     *m_firstLevelSelectAllCheckBox;
 
     QDialogButtonBox *m_buttonBox;
 };

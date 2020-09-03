@@ -33,7 +33,7 @@ void CktNode::SetScenePos(const QPointF &scenePos)
     if (NOT m_posGiven) {
         m_pos = scenePos;
         m_posGiven = true;
-        qDebug() << scenePos << endl;
+        // qDebug() << scenePos << endl;
     }
 }
 
