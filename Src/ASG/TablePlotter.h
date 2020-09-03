@@ -2,6 +2,8 @@
 #define NETLISTVIZ_ASG_TABLEPLOTTER_H
 
 #include <QTableWidget>
+#include <QGraphicsScene>
+#include <QWheelEvent>
 #include "Define/Define.h"
 
 class Matrix;
@@ -24,11 +26,15 @@ public:
 
     void Clear();
 
+protected:
+    void wheelEvent(QWheelEvent *event) override;
+
 private:
     DISALLOW_COPY_AND_ASSIGN(TablePlotter);
 
     int m_rowCount;
     int m_colCount;
+
 };
 
 #endif // NETLISTVIZ_ASG_TABLEPLOTTER_H
