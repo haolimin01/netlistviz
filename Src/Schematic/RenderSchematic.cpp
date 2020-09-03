@@ -115,7 +115,6 @@ void SchematicScene::RenderSchematic(const QVector<DevLevelDescriptor*> &devices
         pathPoints.push_back(endPoint);
 
         desp->pathPoints = pathPoints;
-        qDebug() << pathPoints << endl;
         InsertSchematicWire(desp);
         pathPoints.clear();
     }
@@ -129,7 +128,15 @@ void SchematicScene::SetDeviceAt(int x, int y, SchematicDevice *device)
     qreal centerY = y * Grid_H + Grid_H * 0.5;
 
     addItem(device);
-    device->setPos(centerX, centerY);
+
+    /* If x == 0, device is on first level */
+    /* First level device is Vsrc or Isrc now */
+    QPointF itemPos(centerX, centerY);
+    if (x == 0) {
+        itemPos = device->ScenePosByTerminalScenePos(Positive, QPointF(centerX, centerY));
+    }
+
+    device->setPos(itemPos);
     device->SetSceneXY(x, y);
     device->SetPlaced(true);
 }
