@@ -8,13 +8,14 @@
  * @desp     : Automatic Schematic Generator.
  */
 
-#include <set>
+#include <QMultiMap>
+#include <QPair>
 #include "Define/Define.h"
 #include "Define/TypeDefine.h"
+#include "Schematic/SchematicDevice.h"
 
 class  Matrix;
 class  SchematicData;
-class  SchematicDevice;
 class  TablePlotter;
 struct WireDescriptor;
 
@@ -53,6 +54,9 @@ private:
 class ASG
 {
 public:
+    typedef QPair<int, TerminalType>  DeviceTerminal;
+
+public:
     explicit ASG(SchematicData *data);
     ASG();
     ~ASG();
@@ -76,13 +80,19 @@ private:
     /* return next level device list. */
     DeviceList FillNextLevelDeviceList(const DeviceList) const;
 
+    /* Directed graph */
     void InsertRLC(SchematicDevice *device);
     void InsertVI(SchematicDevice *device);
 
+    /* R, L, C, V, I : Undirected graph */
+    void InsertBasicDevice(SchematicDevice *device);
+
     void GenerateWireDesps();
+    bool ContainsWire(int id1, int id2, TerminalType type1, TerminalType type2);
 
     void PrintAllDevices() const;
     void PlotAllDevices();
+    void PrintDeviceTerminals() const;
 
     Matrix        *m_matrix;      // incidence matrix
     int            m_matrixSize;  // matrix size
@@ -95,13 +105,14 @@ private:
     QVector<WireDescriptor*> m_wireDesps;
 
 
-    bool                m_buildMatrixFlag;
-    bool                m_levellingFlag;
-    bool                m_bubblingFlag;
-    int                *m_visited;
+    bool                   m_buildMatrixFlag;
+    bool                   m_levellingFlag;
+    bool                   m_bubblingFlag;
+    int                   *m_visited;
+    QMultiMap<DeviceTerminal, DeviceTerminal> m_devTers; // For removing the same wires
 
-    TablePlotter       *m_levelPlotter;
-    TablePlotter       *m_bubblePlotter;
+    TablePlotter          *m_levelPlotter;
+    TablePlotter          *m_bubblePlotter;
 };
 
 #endif // NETLISTVIZ_ASG_ASG_H
