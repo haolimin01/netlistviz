@@ -10,7 +10,6 @@
 #include "Utilities/MyString.h"
 #include "TablePlotter.h"
 
-using std::set;
 
 /* =============== DevLevelDescriptor class =============== */
 DevLevelDescriptor::DevLevelDescriptor(int level)
@@ -139,7 +138,7 @@ ASG::~ASG()
     m_devices.clear();
 
     delete []m_visited;
-
+    m_devTers.clear();
 }
 
 void ASG::SetSchematicData(SchematicData *data)
@@ -164,6 +163,7 @@ void ASG::BuildIncidenceMatrix()
     int size = m_ckt->m_deviceList.size();
     m_matrix = new Matrix(size);
 
+    /* Row and Col header */
     int row = 0, col = 0;
     foreach (SchematicDevice *device, m_ckt->m_deviceList) {
         row = device->Id();
@@ -178,11 +178,12 @@ void ASG::BuildIncidenceMatrix()
             case SchematicDevice::Resistor:
             case SchematicDevice::Capacitor:
             case SchematicDevice::Inductor:
-                InsertRLC(dev);
-                break;
+                // InsertRLC(dev);
+                // break;
             case SchematicDevice::Isrc:
             case SchematicDevice::Vsrc:
-                InsertVI(dev);
+                // InsertVI(dev);
+                InsertBasicDevice(dev);
                 break;
             default:;
         }
@@ -198,7 +199,6 @@ void ASG::BuildIncidenceMatrix()
     m_bubblingFlag = false;
 
     GenerateWireDesps();
-    // TagDeviceOnBranch();
 }
 
 void ASG::Levelling()
@@ -272,6 +272,7 @@ void ASG::Bubbling()
 }
 
 /* RLC current flows from N+ to N- */
+/* directed graph */
 void ASG::InsertRLC(SchematicDevice *device)
 {
     CktNode *negNode = device->Terminal(Negative);
@@ -290,6 +291,7 @@ void ASG::InsertRLC(SchematicDevice *device)
 
 /* Vsrc current flows from N+ to N- */
 /* Isrc current flows from N+ to N- */
+/* directed graph */
 void ASG::InsertVI(SchematicDevice *device)
 {
     CktNode *posNode = device->Terminal(Positive);
@@ -302,6 +304,37 @@ void ASG::InsertVI(SchematicDevice *device)
             int col = tDev->Id();
             if (row == col)  continue;
             m_matrix->InsertElement(row, col, device, tDev, Positive, Positive);
+        }
+    }
+}
+
+/* R, L, C, V, I */
+/* undirected graph */
+void ASG::InsertBasicDevice(SchematicDevice *device)
+{
+    CktNode *posNode = device->Terminal(Positive);
+    CktNode *negNode = device->Terminal(Negative);
+
+    assert(posNode && negNode);
+
+    if (NOT posNode->IsGnd()) {
+        foreach (SchematicDevice *dev, posNode->m_devices) {
+            int row = device->Id();
+            int col = dev->Id();
+            if (row == col)  continue;
+            TerminalType t = dev->GetTerminalType(posNode);
+            m_matrix->InsertElement(row, col, device, dev, Positive, t);
+        }
+
+    }
+
+    if (NOT negNode->IsGnd()) {
+        foreach (SchematicDevice *dev, negNode->m_devices) {
+            int row = device->Id();
+            int col = dev->Id();
+            if (row == col)  continue;
+            TerminalType t = dev->GetTerminalType(negNode);
+            m_matrix->InsertElement(row, col, device, dev, Negative, t);
         }
     }
 }
@@ -411,6 +444,7 @@ void ASG::PlotAllDevices()
 void ASG::GenerateWireDesps()
 {
     m_wireDesps.clear();
+    m_devTers.clear();
 
     int fromTerId = 0, toTerId = 0;
     SchematicDevice *startDev = nullptr, *endDev = nullptr;
@@ -426,7 +460,10 @@ void ASG::GenerateWireDesps()
             fromTerId = startDev->TerminalId(element->FromTerminal());
             toTerId = endDev->TerminalId(element->ToTerminal());
 
-            printf("from + to (%d, %d)\n", fromTerId, toTerId);
+            if (ContainsWire(startDev->Id(), endDev->Id(), element->FromTerminal(), element->ToTerminal())) {
+                element = element->NextInRow();
+                continue;
+            }
 
             WireDescriptor *wd = new WireDescriptor;
             wd->startDev = startDev;
@@ -442,7 +479,44 @@ void ASG::GenerateWireDesps()
             m_wireDesps.push_back(wd);
             element = element->NextInRow();
 
-            qInfo() << "wire: " << wd->startDev->Name() << " " << wd->endDev->Name() << endl;
+            /* Print m_devTers */
+            // PrintDeviceTerminals();
         }
     }
+}
+
+/* smaller id as key id, smaller type as key type */
+bool ASG::ContainsWire(int id1, int id2, TerminalType type1, TerminalType type2)
+{
+    int kId = id1, vId = id2;
+    if (id1 > id2) {
+        kId = id2;
+        vId = id1;
+    }
+    TerminalType kType = type1, vType = type2;
+    if (type1 > type2) {
+        kType = type2;
+        vType = type1;
+    }
+
+    QList<DeviceTerminal> values = m_devTers.values(qMakePair(kId, kType));
+    DeviceTerminal value(vId, vType);
+    foreach (DeviceTerminal dt, values) {
+        if (dt == value) {
+            return true; // found !!!
+        }
+    }
+
+    // not found
+    m_devTers.insert(qMakePair(kId, kType), qMakePair(vId, vType));
+    return false;
+}
+
+void ASG::PrintDeviceTerminals() const
+{
+    foreach (const DeviceTerminal &key, m_devTers.uniqueKeys()) {
+        qInfo() << key;
+        qInfo() << m_devTers.values(key) << endl;
+    }
+    qInfo() << "========================" << endl;
 }

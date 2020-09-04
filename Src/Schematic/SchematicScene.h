@@ -6,8 +6,10 @@
 #include "SchematicWire.h"
 #include "ASG/ASG.h"
 
-#include <set>
 #include <QGraphicsScene>
+#include <QMultiMap>
+#include <QPair>
+#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 class QGraphicsSceneMouseEvent;
@@ -21,23 +23,22 @@ class QTextStream;
 QT_END_NAMESPACE
 class SchematicData;
 
-/* For deleting duplicated wires */
-struct PointPair
+
+/* For supporting comparision */
+class MyPointF : public QPointF
 {
-    QPointF p1;
-    QPointF p2;
-    PointPair() {p1.rx() = 0; p1.ry() = 0; p2.rx() = 0; p2.ry() = 0;}
-    PointPair(const QPointF &pf1, const QPointF &pf2): p1(pf1), p2(pf2) {}
-    bool operator <(const PointPair &p) const {
-        if (p.p1 == p1 && p.p2 == p2)  return false;
-        if (p.p2 == p1 && p.p1 == p2)  return false;
-        if (p.p1 == p1) {
-            if (p2.x() == p.p2.x()) return p2.y() < p.p2.y();
-            else return p2.x() < p.p2.x();
-        } else {
-            if (p1.x() == p.p1.x()) return p1.y() < p.p1.y();
-            else return p1.x() < p.p1.x();
-        } 
+public:
+    MyPointF(qreal xpos, qreal ypos) : QPointF(xpos, ypos) {}
+    MyPointF(const QPointF &p) : QPointF(p.x(), p.y()) {}
+
+    bool operator < (const MyPointF &pf) const
+    {
+        if (x() < pf.x())
+            return true;
+        else if (x() == pf.x())
+            return y() < pf.y();
+        else
+            return false;
     }
 };
 
@@ -112,11 +113,11 @@ private:
     /* For ASG */
     /* these functions are implemented in RenderSchematic.cpp */
     void DecideDeviceOrientation(int x, int y, SchematicDevice *device);
-    void RenderGND(int x, int y, SchematicDevice *device);
+    void RenderGND(SchematicDevice *device);
     void SetDeviceAt(int x, int y, SchematicDevice *device);
     void SetDeviceAt(const QPointF &pos, SchematicDevice *device);
     void TagDeviceOnBranch();
-    bool ContainsWire(const QPointF &p1, const QPointF &p2);
+    bool ContainsWire(const MyPointF &p1, const MyPointF &p2);
 
 
     QMenu                      *m_itemMenu;
@@ -148,7 +149,7 @@ private:
     bool                        m_showBranchFlag;
 
     /* for deleting duplicated wires */
-    std::set<PointPair>         m_pointPairs;
+    QMultiMap<MyPointF, MyPointF>  m_pointPairs;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H
