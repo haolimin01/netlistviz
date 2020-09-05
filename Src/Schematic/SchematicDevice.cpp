@@ -81,6 +81,7 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     m_placed = false;
     m_onBranch = false;
     m_showOnBranchFlag = false;
+    m_maybeAtFirstLevel = false;
     
     CreateAnnotation(m_name);
 

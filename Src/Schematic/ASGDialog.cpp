@@ -79,6 +79,7 @@ void ASGDialog::CreateFirstLevelWidget()
     foreach (SchematicDevice *dev, deviceList) {
         SchematicDevice::DeviceType t = dev->GetDeviceType();
         if (t != SchematicDevice::Vsrc && t != SchematicDevice::Isrc)  continue;
+        if (NOT dev->MaybeAtFirstLevel())  continue;
 
         ckBox = new QCheckBox(dev->Name());
         ckBox->setChecked(false);

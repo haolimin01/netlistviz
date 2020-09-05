@@ -119,7 +119,7 @@ void SchematicScene::RenderSchematic(const QVector<DevLevelDescriptor*> &devices
         desp->pathPoints = pathPoints;
         InsertSchematicWire(desp);
         // qDebug() << desp->startDev->Name() << " " << desp->endDev->Name() << desp->startTerminal << " " << desp->endTerminal;
-        qDebug() << pathPoints << endl;
+        // qDebug() << pathPoints << endl;
         pathPoints.clear();
     }
 
