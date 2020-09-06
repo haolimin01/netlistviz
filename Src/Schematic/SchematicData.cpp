@@ -74,6 +74,9 @@ void SchematicData::ParseI(QString name, QString posName, QString negName, doubl
 
     m_deviceTable.insert(name, i);
     m_deviceList.push_back(i);
+
+    if (posNode->IsGnd() || negNode->IsGnd())
+        i->SetMaybeAtFirstLevel(true);
 }
 
 void SchematicData::ParseL(QString name, QString posName, QString negName, double value)
@@ -143,6 +146,9 @@ void SchematicData::ParseV(QString name, QString posName, QString negName, doubl
 
     m_deviceTable.insert(name, v);
     m_deviceList.push_back(v);
+
+    if (posNode->IsGnd() || negNode->IsGnd())
+        v->SetMaybeAtFirstLevel(true);
 }
 
 CktNode* SchematicData::GetAddNode(const QString &name)

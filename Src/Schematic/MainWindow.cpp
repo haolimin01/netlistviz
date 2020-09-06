@@ -70,7 +70,7 @@ void MainWindow::InitVariables()
 void MainWindow::CreateSchematicScene()
 {
     m_scene = new SchematicScene(m_editMenu, this);
-    m_scene->setSceneRect(QRectF(0, 0, 80000, 3200));
+    m_scene->setSceneRect(QRectF(0, 0, 5000, 5000));
     m_scene->setFocus(Qt::MouseFocusReason);
 
     connect(m_scene, &SchematicScene::TextInserted,
@@ -917,5 +917,6 @@ void MainWindow::GenerateSchematic()
     }
 
     m_scene->RenderSchematic(m_asg->FinalDevices(), m_asg->WireDesps());
-    m_view->centerOn(0, 1600);
+    qreal height = m_scene->height();
+    m_view->centerOn(0, height / 2);
 }

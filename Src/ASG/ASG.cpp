@@ -204,6 +204,8 @@ void ASG::BuildIncidenceMatrix()
 void ASG::Levelling()
 {
     m_devices.clear();
+    /* set all device unvisited */
+    memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCnt());
 
     DevLevelDescriptor *dldesp = nullptr;
     int curLevel = 0;

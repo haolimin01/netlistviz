@@ -80,6 +80,10 @@ public:
 	void         RemoveWire(SchematicWire *wire, TerminalType type);
 	bool         TerminalsContain(const QPointF &scenePos) const;
 	bool         IsDevice() const  { return m_isDevice; }
+	void         SetMaybeAtFirstLevel(bool is) { m_maybeAtFirstLevel = is; }
+	bool         MaybeAtFirstLevel() const  { return m_maybeAtFirstLevel; }
+    bool         GroundCap() const;
+    bool         CoupledCap() const;
 
 	QMap<TerminalType, QRectF> TerminalRects() const  { return m_terRects; }
 	void Print() const;
@@ -140,6 +144,7 @@ private:
 	bool            m_onBranch;
 	bool            m_showOnBranchFlag;
 	bool            m_isDevice;
+	bool            m_maybeAtFirstLevel;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H
