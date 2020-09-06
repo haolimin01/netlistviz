@@ -35,6 +35,7 @@ public:
 
     int CapCount() const  { return m_capCnt; }
     int DeviceCntWithoutCap() const  { return m_deviceCntWithoutCap; }
+    int AllDeviceCount() const  { return m_capCnt + m_deviceCntWithoutCap; }
 
     void PrintAllDevices() const;
 

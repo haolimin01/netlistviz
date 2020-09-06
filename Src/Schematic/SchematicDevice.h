@@ -82,6 +82,8 @@ public:
 	bool         IsDevice() const  { return m_isDevice; }
 	void         SetMaybeAtFirstLevel(bool is) { m_maybeAtFirstLevel = is; }
 	bool         MaybeAtFirstLevel() const  { return m_maybeAtFirstLevel; }
+    bool         GroundCap() const;
+    bool         CoupledCap() const;
 
 	QMap<TerminalType, QRectF> TerminalRects() const  { return m_terRects; }
 	void Print() const;

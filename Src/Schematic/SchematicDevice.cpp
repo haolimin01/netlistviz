@@ -727,7 +727,7 @@ void SchematicDevice::CreateAnnotation(const QString &text)
     m_annotText->setFlag(QGraphicsItem::ItemIsMovable, true);
     m_annotText->setFlag(QGraphicsItem::ItemIsSelectable, true);
 
-    m_annotText->setFont(QFont("Courier 10 Pitch", 12));
+    m_annotText->setFont(QFont("Courier 10 Pitch", 10));
 
     m_annotText->setZValue(-1);
 
@@ -741,8 +741,42 @@ void SchematicDevice::SetCustomAnnotRelPos()
     dRect = mapRectToScene(DashRect());
     bRect = m_annotText->boundingRect();
 
-    offsetX = dRect.width()/2 + 2;
+    offsetX = dRect.width()/2 + 1;
     offsetY = -bRect.height()/2;
 
     m_annotRelPos = QPointF(offsetX, offsetY);
+}
+
+bool SchematicDevice::GroundCap() const
+{
+    if (m_deviceType != Capacitor)
+        return false;
+
+    CktNode *posNode = Terminal(Positive);
+    if (posNode->IsGnd())
+        return true;
+
+    CktNode *negNode = Terminal(Negative);
+    if (negNode->IsGnd())
+        return true;
+
+    /* device isn't ground cap */
+    return false;
+}
+
+bool SchematicDevice::CoupledCap() const
+{
+    if (m_deviceType != Capacitor)
+        return false;
+
+    CktNode *posNode = Terminal(Positive);
+    if (posNode->IsGnd())
+        return false;
+
+    CktNode *negNode = Terminal(Negative);
+    if (negNode->IsGnd())
+        return false;
+
+    /* device is coupled cap */
+    return true;
 }

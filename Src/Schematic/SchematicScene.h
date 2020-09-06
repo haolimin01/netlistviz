@@ -9,7 +9,6 @@
 #include <QGraphicsScene>
 #include <QMultiMap>
 #include <QPair>
-#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 class QGraphicsSceneMouseEvent;
@@ -42,8 +41,8 @@ public:
     }
 };
 
-const static int Grid_W = 80;
-const static int Grid_H = 80;
+const static int Grid_W = 50;
+const static int Grid_H = 50;
 
 class SchematicScene : public QGraphicsScene
 {
@@ -113,11 +112,13 @@ private:
     /* For ASG */
     /* these functions are implemented in RenderSchematic.cpp */
     void DecideDeviceOrientation(int x, int y, SchematicDevice *device);
-    void RenderGND(SchematicDevice *device);
+    void RenderFlexiableGnd(SchematicDevice *device);
+    void RenderFixedGnd(SchematicDevice *device);
     void SetDeviceAt(int x, int y, SchematicDevice *device);
     void SetDeviceAt(const QPointF &pos, SchematicDevice *device);
     void TagDeviceOnBranch();
-    bool ContainsWire(const MyPointF &p1, const MyPointF &p2);
+    bool ContainsWire(const MyPointF &p1, const MyPointF &p2); // startPoint, endPoint
+    void DecideSceneRect(int levelCount, int maxDevCount); // change scene rect
 
 
     QMenu                      *m_itemMenu;
