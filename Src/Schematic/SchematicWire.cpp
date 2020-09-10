@@ -5,12 +5,14 @@
 #include <QDebug>
 #include "Define/Define.h"
 
+static int tempInt = 0;
+
 
 SchematicWire::SchematicWire(SchematicDevice *startDev, SchematicDevice *endDev,
     TerminalType startTer, TerminalType endTer, QGraphicsItem *parent, QGraphicsScene *scene)
 {
-    m_startDev = startDev;
-    m_endDev = endDev;
+    m_startDevice = startDev;
+    m_endDevice = endDev;
     m_color = Qt::black;
     m_startTerminal = startTer;
     m_endTerminal = endTer;
@@ -77,35 +79,79 @@ void SchematicWire::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     }
 }
 
-void SchematicWire::SetWirePathPoints(QVector<QPointF> points)
+void SchematicWire::SetWirePathPoints(const QVector<QPointF> &points)
 {
     m_wirePathPoints.clear();
-    m_wirePathPoints = points;
+    // m_wirePathPoints = points;
+    /* points contains start and end points, size = 2 */
+    Q_ASSERT(points.size() == 2);
+    const QPointF &p1 = points.front();
+    const QPointF &p2 = points.back();
+    GenerateManhattanPathPoints(p1, p2);
 }
 
 void SchematicWire::UpdatePosition(SchematicDevice *device, TerminalType terminal, const QPointF &newPos)
 {
-    QPointF scenePos = mapFromItem(device, newPos);
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+    QPointF newScenePos = mapFromItem(device, newPos);
     prepareGeometryChange();
-    int size = m_wirePathPoints.size();
 
-    /* Now we just simply connect terminals of start device and end device */
-    assert(size == 2);
+    bool isStartPoint = true;
 
-    if (device == m_startDev AND terminal == m_startTerminal) {
-        m_wirePathPoints[0].rx() = scenePos.x();
-        m_wirePathPoints[0].ry() = scenePos.y();
-        return;
+    if (device == m_startDevice AND terminal == m_startTerminal) {
+        isStartPoint = true;
     }
 
-    if (device == m_endDev AND terminal == m_endTerminal) {
-        m_wirePathPoints[1].rx() = scenePos.x();
-        m_wirePathPoints[1].ry() = scenePos.y();
-        return;
+    if (device == m_endDevice AND terminal == m_endTerminal) {
+        isStartPoint = false;
     }
+
+    QPointF startPoint = newScenePos, endPoint = m_wirePathPoints.back();
+    if (NOT isStartPoint) {
+        startPoint = m_wirePathPoints.front();
+        endPoint = newScenePos;
+    }
+
+    m_wirePathPoints.clear();
+    GenerateManhattanPathPoints(startPoint, endPoint);
 }
 
 void SchematicWire::SetAsBranch(bool branch)
 {
     m_isBranch = branch;
+}
+
+/* p1 is wire startPoint, p2 is wire endPoint */
+void SchematicWire::GenerateManhattanPathPoints(const QPointF &p1, const QPointF &p2)
+{
+    QPointF startPoint = p1;
+    QPointF endPoint = p2;
+    if (p1.x() > p2.x()) {
+        startPoint = p2;
+        endPoint = p1;
+    }
+
+    QPointF insertPoint;
+    insertPoint.rx() = endPoint.x();
+    insertPoint.ry() = startPoint.y();
+
+    m_wirePathPoints.push_back(p1);
+    m_wirePathPoints.push_back(insertPoint);
+    m_wirePathPoints.push_back(p2);
+}
+
+QVariant SchematicWire::itemChange(GraphicsItemChange change, const QVariant &value)
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << tempInt << endl;
+    tempInt++;
+#endif
+    if (NOT m_startDevice->isSelected())
+        m_startDevice->UpdateWirePosition();
+    if (NOT m_endDevice->isSelected())
+        m_endDevice->UpdateWirePosition();
+
+    return QGraphicsItem::itemChange(change, value);
 }

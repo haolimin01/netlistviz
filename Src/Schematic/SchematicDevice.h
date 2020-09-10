@@ -84,6 +84,7 @@ public:
 	bool         MaybeAtFirstLevel() const  { return m_maybeAtFirstLevel; }
     bool         GroundCap() const;
     bool         CoupledCap() const;
+	void         UpdateWirePosition();
 
 	QMap<TerminalType, QRectF> TerminalRects() const  { return m_terRects; }
 	void Print() const;
@@ -99,7 +100,6 @@ protected:
 private:
 	void   InitVariables();
 	QRectF DashRect() const;
-	void   UpdateWirePosition();
 	void   UpdateTerminalScenePos();
 
 	/* For annotation text */
