@@ -39,14 +39,14 @@ public:
                   QGraphicsItem *parent = nullptr, QGraphicsScene *scene = nullptr);
     ~SchematicWire();
 
-    SchematicDevice* StartDevice() const  { return m_startDev; }
-    SchematicDevice* EndDevice()   const  { return m_endDev; }
+    SchematicDevice* StartDevice() const  { return m_startDevice; }
+    SchematicDevice* EndDevice()   const  { return m_endDevice; }
     TerminalType     StartTerminal() const { return m_startTerminal; }
     TerminalType     EndTerminal()   const { return m_endTerminal; }
 
     int    type() const  { return Type; }
     QRectF boundingRect() const override;
-    void   SetWirePathPoints(QVector<QPointF> points);
+    void   SetWirePathPoints(const QVector<QPointF> &points);
     void   UpdatePosition(SchematicDevice *device, TerminalType terminal, const QPointF &newPos);
     void   SetAsBranch(bool branch);
     bool   IsBranch() const  { return m_isBranch; }
@@ -55,11 +55,17 @@ public:
 
 protected:
     void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *widget = nullptr) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value) override; 
 
 private:
+    /* Generate Manhattan wire points (create one intermediate point)
+     * Save them to m_wirePathPoints
+     */
+    void GenerateManhattanPathPoints(const QPointF &p1, const QPointF &p2);
+
     QColor           m_color;
-    SchematicDevice *m_startDev;
-    SchematicDevice *m_endDev;
+    SchematicDevice *m_startDevice;
+    SchematicDevice *m_endDevice;
     TerminalType     m_startTerminal;
     TerminalType     m_endTerminal;
     QVector<QPointF> m_wirePathPoints;

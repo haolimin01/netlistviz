@@ -375,7 +375,7 @@ void SchematicScene::DecideSceneRect(int levelCount, int maxDevCount)
     int currHeight = height();
 
     int newWidth = (levelCount + 10) * Grid_W;  // margin
-    int newHeight = (maxDevCount * 3) * Grid_H; // leave some space
+    int newHeight = (maxDevCount * 5) * Grid_H; // leave some space
     bool update = false;
     if (newWidth > currWidth)
         update = true;

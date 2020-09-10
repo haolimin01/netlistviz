@@ -535,8 +535,8 @@ void SchematicDevice::UpdateWirePosition()
     cit = m_wiresAtTerminal.constBegin();
     for (; cit != m_wiresAtTerminal.constEnd(); ++ cit) {
         foreach (SchematicWire *wire, cit.value()) {
-            if (NOT wire->isSelected()) 
-                wire->UpdatePosition(this, cit.key(), m_terRects[cit.key()].center());
+            //if (NOT wire->isSelected()) 
+            wire->UpdatePosition(this, cit.key(), m_terRects[cit.key()].center());
         }
     }
 }
