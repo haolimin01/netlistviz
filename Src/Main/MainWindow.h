@@ -2,14 +2,14 @@
 #define NETLISTVIZ_SCHEMATIC_MAINWINDOW_H
 
 #include <QMainWindow>
-#include "SchematicDevice.h"
+#include "Schematic/SchematicDevice.h"
 
 class SchematicScene;
 class SchematicDevice;
 class NetlistDialog;
-class SchematicData;
 class ASG;
 class ASGDialog;
+class CircuitGraph;
 
 QT_BEGIN_NAMESPACE
 class QString;
@@ -156,7 +156,7 @@ private:
 
     /* Using by CreateToolBox, Create SchematicDevice */
     QWidget *CreateCellWidget(const QString &text,
-                              SchematicDevice::DeviceType type);
+                              DeviceType type);
 
     /* Color */
     QMenu *CreateColorMenu(const char *slot, QColor defaultColor);
@@ -248,7 +248,7 @@ private:
     QString             m_curSchematicFile;
 
     NetlistDialog      *m_netlistDialog;
-    SchematicData      *m_data;
+    CircuitGraph       *m_ckt;
     ASG                *m_asg;
     ASGDialog          *m_asgDialog;
     bool                m_asgPropertySelected;

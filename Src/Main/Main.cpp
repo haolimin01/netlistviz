@@ -6,7 +6,7 @@
  * @email    : haolimin01@sjtu.edu.cn
  */
 
-#include "Schematic/MainWindow.h"
+#include "MainWindow.h"
 
 #include <QApplication>
 

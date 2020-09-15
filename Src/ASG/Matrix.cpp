@@ -1,7 +1,7 @@
 #include "Matrix.h"
 #include <QDebug>
 #include "MatrixElement.h"
-#include "Schematic/SchematicDevice.h"
+#include "Circuit/Device.h"
 #include "Utilities/MyString.h"
 #include "TablePlotter.h"
 
@@ -35,8 +35,8 @@ Matrix::~Matrix()
     if (m_plotter)  delete m_plotter;
 }
 
-void Matrix::InsertElement(int row, int col, SchematicDevice *fromDevice,
-    SchematicDevice *toDevice, TerminalType fromTer, TerminalType toTer)
+void Matrix::InsertElement(int row, int col, Device *fromDevice,
+    Terminal *fromTerminal, Device *toDevice, Terminal *toTerminal)
 {
     if ((row >= m_size) || (col >= m_size) || (row < 0) || (col < 0)) {
 #ifdef TRACE
@@ -57,7 +57,7 @@ void Matrix::InsertElement(int row, int col, SchematicDevice *fromDevice,
     }
 
     /* Create and insert it */
-    MatrixElement *newElement = new MatrixElement(row, col, fromDevice, toDevice, fromTer, toTer);
+    MatrixElement *newElement = new MatrixElement(row, col, fromDevice, fromTerminal, toDevice, toTerminal);
 
     /* Insert element in row */
     MatrixElement **rowPtrPtr = &(m_rowHead[row].head);
@@ -82,13 +82,13 @@ void Matrix::InsertElement(int row, int col, SchematicDevice *fromDevice,
     m_colHead[col].seqElementNum++;
 }
 
-void Matrix::SetRowHeadDevice(int row, SchematicDevice *device)
+void Matrix::SetRowHeadDevice(int row, Device *device)
 {
     assert(row >= 0 && row < m_size);
     m_rowHead[row].device = device;
 }
 
-void Matrix::SetColHeadDevice(int col, SchematicDevice *device)
+void Matrix::SetColHeadDevice(int col, Device *device)
 {
     assert(col >= 0 && col < m_size);
     m_colHead[col].device = device;
@@ -112,7 +112,7 @@ void Matrix::Print() const
     /* Print Row Head String */
     printf("%-8s", " ");
 
-    SchematicDevice *device = nullptr;
+    Device *device = nullptr;
     for (int i = 0; i < m_size; ++ i) {
         device = m_colHead[i].device;
         assert(device->Id() == i);
@@ -164,7 +164,7 @@ void Matrix::Plot()
     m_plotter->SetTableRowColCount(m_size, m_size);
 
     QStringList headerText;
-    SchematicDevice *device = nullptr;
+    Device *device = nullptr;
 
     /* row header text */
     for (int i = 0; i < m_size; ++ i) {
@@ -195,19 +195,9 @@ void Matrix::Plot()
             element = element->NextInRow();
         }
     }
+
+    /* window title */
+    m_plotter->setWindowTitle(QObject::tr("Incidence Matrix"));
+
     m_plotter->Display();
 }
-
-// void Matrix::SetAllVisited(bool visited)
-// {
-//     MatrixElement *element = nullptr;
-
-//     for (int i = 0; i < m_size; ++ i) {
-//         element = m_rowHead[i].head;
-
-//         while (element) {
-//             element->SetVisited(visited);
-//             element = element->NextInRow();
-//         }
-//     }
-// }

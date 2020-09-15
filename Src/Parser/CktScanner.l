@@ -5,7 +5,7 @@
     /************** Scanner for Netlist *************/
     #include <stdio.h>
     #include <stdlib.h>
-    #include "Schematic/SchematicData.h"
+    #include "Circuit/CircuitGraph.h"
     #include "CktParser.hpp"
     #include "Define/Define.h"
 

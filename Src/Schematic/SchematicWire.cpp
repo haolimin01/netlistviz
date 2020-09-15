@@ -148,10 +148,12 @@ QVariant SchematicWire::itemChange(GraphicsItemChange change, const QVariant &va
     qInfo() << LINE_INFO << tempInt << endl;
     tempInt++;
 #endif
+#if 0
     if (NOT m_startDevice->isSelected())
         m_startDevice->UpdateWirePosition();
     if (NOT m_endDevice->isSelected())
         m_endDevice->UpdateWirePosition();
 
     return QGraphicsItem::itemChange(change, value);
+#endif
 }

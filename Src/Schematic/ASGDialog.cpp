@@ -8,8 +8,8 @@
 #include <QDebug>
 #include <QPushButton>
 
-#include "Schematic/SchematicData.h"
-#include "Schematic/SchematicDevice.h"
+#include "Circuit/CircuitGraph.h"
+#include "Circuit/Device.h"
 #include "Define/TypeDefine.h"
 
 ASGDialog::ASGDialog(QWidget *parent)
@@ -27,10 +27,10 @@ ASGDialog::~ASGDialog()
 
 }
 
-void ASGDialog::SetSchematicData(SchematicData *data)
+void ASGDialog::SetCircuitGraph(CircuitGraph *ckt)
 {
-    Q_ASSERT(data);
-    m_data = data;
+    Q_ASSERT(ckt);
+    m_ckt = ckt;
 
     CreatePropertyWidgets();
 }
@@ -73,12 +73,11 @@ void ASGDialog::CreateFirstLevelWidget()
 
     QGridLayout *firstLevelDeviceLayout = new QGridLayout;
 
-    DeviceList deviceList = m_data->GetDeviceList();
     int colIndex = 0, rowIndex = 0;
     QCheckBox *ckBox = nullptr;
-    foreach (SchematicDevice *dev, deviceList) {
-        SchematicDevice::DeviceType t = dev->GetDeviceType();
-        if (t != SchematicDevice::Vsrc && t != SchematicDevice::Isrc)  continue;
+
+    foreach (Device *dev, m_ckt->GetDeviceList()) {
+        DeviceType dtype = dev->GetDeviceType();
         if (NOT dev->MaybeAtFirstLevel())  continue;
 
         ckBox = new QCheckBox(dev->Name());
@@ -113,19 +112,18 @@ void ASGDialog::Accept()
     QAbstractButton *button = nullptr;
     QCheckBox *ckBox = nullptr;
 
-    DeviceList checkedDeviceList;
-    SchematicDevice *device = nullptr;
+    Device *device = nullptr;
+    DeviceList  checkedDeviceList;
 
     foreach (button, m_firstLevelSelectButtonGroup->buttons()) {
         ckBox = static_cast<QCheckBox*>(button);
         if (ckBox->isChecked()) {
-            qDebug() << ckBox->text() << endl;
-            device = m_data->Device(ckBox->text());
+            device = m_ckt->GetDevice(ckBox->text());
             checkedDeviceList.push_back(device);
         }
     }
 
-    m_data->SetFirstLevelDeviceList(checkedDeviceList);
+    m_ckt->SetFirstLevelDeviceList(checkedDeviceList);
 
     accept();
 }

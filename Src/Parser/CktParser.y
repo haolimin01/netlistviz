@@ -14,7 +14,7 @@
     #include <iostream>
     #include <vector>
     #include "Define/Define.h"
-    #include "Schematic/SchematicData.h"
+    #include "Circuit/CircuitGraph.h"
 
     using std::cout;
     using std::endl;
@@ -53,7 +53,7 @@
 %output "CktParser.cpp"
 %verbose
 
-%parse-param { SchematicData *data }
+%parse-param { CircuitGraph *ckt }
 
 %union {
     int n;
@@ -126,7 +126,7 @@ capacitor: CAPACITOR nodeList value
                 EXIT;
             }
 
-            data->ParseC($1, nodes.at(0), nodes.at(1), $3);
+            ckt->InsertC($1, nodes.at(0), nodes.at(1), $3);
 
             nodes.clear();
          }
@@ -139,7 +139,7 @@ isource: ISOURCE nodeList value
                 EXIT;
             }
 
-            data->ParseI($1, nodes.at(0), nodes.at(1), $3);
+            ckt->InsertI($1, nodes.at(0), nodes.at(1), $3);
 
             nodes.clear();
        }
@@ -152,7 +152,7 @@ inductor: INDUCTOR nodeList value
                 EXIT;
             }
 
-            data->ParseL($1, nodes.at(0), nodes.at(1), $3);
+            ckt->InsertL($1, nodes.at(0), nodes.at(1), $3);
 
             nodes.clear();
         }
@@ -164,7 +164,7 @@ resistor: RESISTOR nodeList value
                 EXIT;
             }
 
-            data->ParseR($1, nodes.at(0), nodes.at(1), $3);
+            ckt->InsertR($1, nodes.at(0), nodes.at(1), $3);
 
             nodes.clear();
         }
@@ -177,7 +177,7 @@ vsource: VSOURCE nodeList value
                 EXIT;
             }
 
-            data->ParseV($1, nodes.at(0), nodes.at(1), $3);
+            ckt->InsertV($1, nodes.at(0), nodes.at(1), $3);
 
             nodes.clear();
        }

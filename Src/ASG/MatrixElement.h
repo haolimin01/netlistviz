@@ -6,19 +6,19 @@
  * @ahthor   : Hao Limin
  * @date:    : 2020.07.30
  * @desp     : MatrixElement for Matrix.
+ * @modified : Hao Limin, 2020.09.12
  */
 
 #include "Define/Define.h"
-#include "Schematic/SchematicDevice.h"
 
-class Matrix;
-
+class Device;
+class Terminal;
 
 class MatrixElement
 {
 public:
-    MatrixElement(int row, int col, SchematicDevice *fromDevice,
-        SchematicDevice *toDevice, TerminalType fromTer, TerminalType toTer);
+    MatrixElement(int row, int col, Device *fromDevice, Terminal *fromTerminal,
+        Device *toDevice, Terminal *toTerminal);
     ~MatrixElement();
 
 public:
@@ -27,13 +27,10 @@ public:
     int   RowIndex() const { return m_rowIndex; }
     int   ColIndex() const { return m_colIndex; }
 
-    // bool  Visited() const { return m_visited; }
-    // void  SetVisited(bool visited = true) { m_visited = visited; }
-
-    SchematicDevice* FromDevice()   const { return m_fromDevice; }
-    TerminalType     FromTerminal() const { return m_fromTerminal; }
-    SchematicDevice* ToDevice()     const { return m_toDevice; }
-    TerminalType     ToTerminal()   const { return m_toTerminal; }
+    Device*          FromDevice()   const { return m_fromDevice; }
+    Terminal*        FromTerminal() const { return m_fromTerminal; }
+    Device*          ToDevice()     const { return m_toDevice; }
+    Terminal*        ToTerminal()   const { return m_toTerminal; }
     MatrixElement*   NextInRow()    const { return m_nextInRow; }
     MatrixElement*   NextInCol()    const { return m_nextInCol; }
 
@@ -52,15 +49,13 @@ private:
     int              m_rowIndex;
     int              m_colIndex;
 
-    SchematicDevice *m_fromDevice;
-    TerminalType     m_fromTerminal;
-    SchematicDevice *m_toDevice;
-    TerminalType     m_toTerminal;
+    Device          *m_fromDevice;
+    Terminal        *m_fromTerminal;
+    Device          *m_toDevice;
+    Terminal        *m_toTerminal;
     
     MatrixElement   *m_nextInRow;
     MatrixElement   *m_nextInCol;
-
-    // bool             m_visited;
 };
 
 #endif // NETLISTVIZ_ASG_MATRIXELEMENT_H

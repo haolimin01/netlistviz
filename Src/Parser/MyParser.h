@@ -3,9 +3,8 @@
 
 #include <fstream>
 #include <string>
-#include "Schematic/SchematicData.h"
+#include "Circuit/CircuitGraph.h"
 #include "CktParser.hpp"
-
 
 class MyParser
 {
@@ -13,7 +12,7 @@ public:
     MyParser();
     ~MyParser();
 
-    int ParseNetlist(const std::string &netlist, SchematicData *data);
+    int ParseNetlist(const std::string &netlist, CircuitGraph *ckt);
 
 private:
     yy::CktParser *m_cktParser;

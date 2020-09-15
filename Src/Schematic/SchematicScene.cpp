@@ -7,9 +7,7 @@
 #include <QDebug>
 #include <QGraphicsView>
 
-#include "SchematicData.h"
 #include "SchematicWire.h"
-#include "Circuit/CktNode.h"
 
 #if 0
 const static int Grid_W = 80;
@@ -40,7 +38,7 @@ void SchematicScene::InitVariables()
     m_startDevice = nullptr;
     m_endDevice = nullptr;
     m_textColor = Qt::black;
-    m_deviceType = SchematicDevice::Resistor;
+    m_deviceType = RESISTOR;
     m_deviceColor = Qt::black;
     m_deviceNumber = 0;
     m_line = nullptr;
@@ -73,7 +71,7 @@ void SchematicScene::SetFont(const QFont &font)
     }
 }
 
-void SchematicScene::SetDeviceType(SchematicDevice::DeviceType type)
+void SchematicScene::SetDeviceType(DeviceType type)
 {
     m_deviceType = type;
 }
@@ -199,6 +197,7 @@ void SchematicScene::SetShowNodeFlag(bool show)
 
 void SchematicScene::SetShowBranchFlag(bool show)
 {
+#if 0
     m_showBranchFlag = show;
 
     SchematicDevice *device = nullptr;
@@ -214,11 +213,13 @@ void SchematicScene::SetShowBranchFlag(bool show)
             wire->update();
         }
     }
+#endif
 }
 
-SchematicDevice* SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceType type,
+SchematicDevice* SchematicScene::InsertSchematicDevice(DeviceType type,
                                  const QPointF &pos)
 {
+#if 0
     SchematicDevice *dev = new SchematicDevice(type, m_itemMenu);
     dev->setPos(pos);
     dev->SetShowNodeFlag(m_showNodeFlag);
@@ -229,7 +230,9 @@ SchematicDevice* SchematicScene::InsertSchematicDevice(SchematicDevice::DeviceTy
     emit DeviceInserted(dev);
 
     return dev;
+#endif
 }
+
 SchematicTextItem* SchematicScene::InsertSchematicTextItem(const QPointF &pos)
 {
     m_text = new SchematicTextItem();
@@ -264,6 +267,8 @@ void SchematicScene::SenseDeviceTerminal(const QPointF &scenePos) const
 #ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
+
+#if 0
     QGraphicsItem *item;
     SchematicDevice *device;
 
@@ -280,6 +285,7 @@ void SchematicScene::SenseDeviceTerminal(const QPointF &scenePos) const
     }
 
     views().first()->setCursor(Qt::ArrowCursor);
+#endif
 }
 
 /*
@@ -294,6 +300,7 @@ void SchematicScene::ProcessMousePress(const QPointF &scenePos)
     qInfo() << LINE_INFO << endl;
 #endif
 
+#if 0
     QGraphicsItem *item = nullptr;
     SchematicDevice *device = nullptr;
     QPainterPath path;
@@ -326,6 +333,7 @@ void SchematicScene::ProcessMousePress(const QPointF &scenePos)
             }
         }
     }
+#endif
 }
 
 void SchematicScene::DrawWireTowardDeviceTerminal(const QPointF &scenePos)
@@ -339,6 +347,7 @@ void SchematicScene::DrawWireTowardDeviceTerminal(const QPointF &scenePos)
 
 void SchematicScene::FinishDrawingWireAt(const QPointF &scenePos)
 {
+#if 0
     QGraphicsItem *item = nullptr;
     SchematicDevice *device = nullptr;
 
@@ -373,11 +382,13 @@ void SchematicScene::FinishDrawingWireAt(const QPointF &scenePos)
             }
         }
     }
+#endif
 }
 
 SchematicWire* SchematicScene::InsertSchematicWire(SchematicDevice *startDev, SchematicDevice *endDev,
                                 TerminalType startTer, TerminalType endTer, const QVector<QPointF> &wirePoints, bool branch)
 {
+#if 0
     if (NOT startDev || NOT endDev)  return nullptr;
     // newWire
     SchematicWire *newWire = new SchematicWire(startDev, endDev, startTer, endTer);
@@ -391,10 +402,12 @@ SchematicWire* SchematicScene::InsertSchematicWire(SchematicDevice *startDev, Sc
     endDev->AddWire(newWire, endTer);
 
     return newWire;
+#endif
 }
 
 SchematicWire* SchematicScene::InsertSchematicWire(const WireDescriptor *desp)
 {
+#if 0
     if (NOT desp)  return nullptr;
     // new wire
     SchematicWire *newWire = new SchematicWire(desp->startDev,
@@ -409,4 +422,5 @@ SchematicWire* SchematicScene::InsertSchematicWire(const WireDescriptor *desp)
     desp->endDev->AddWire(newWire, desp->endTerminal);
 
     return newWire;
+#endif
 }

@@ -20,7 +20,6 @@ class QGraphicsTextItem;
 class QColor;
 class QTextStream;
 QT_END_NAMESPACE
-class SchematicData;
 
 
 /* For supporting comparision */
@@ -62,11 +61,11 @@ public:
 
     void SetTextColor(const QColor &color);
     void SetFont(const QFont &font);
-    void SetDeviceType(SchematicDevice::DeviceType type);
+    void SetDeviceType(DeviceType type);
 
     /* render schematic from ASG result, implemented in RenderSchematic.cpp */
-    void RenderSchematic(const QVector<DevLevelDescriptor*> &devices,
-                         const QVector<WireDescriptor*> &wireDesps);
+    // void RenderSchematic(const QVector<DevLevelDescriptor*> &devices,
+    //                      const QVector<WireDescriptor*> &wireDesps);
 
     /* these 2 functions are implemented in IOSchematic.cpp */
     /* Write Schematic items to stream */
@@ -102,7 +101,7 @@ private:
     void FinishDrawingWireAt(const QPointF &scenePos);
 
     /* Insert Item */
-    SchematicDevice*   InsertSchematicDevice(SchematicDevice::DeviceType, const QPointF &);
+    SchematicDevice*   InsertSchematicDevice(DeviceType, const QPointF &);
     SchematicTextItem* InsertSchematicTextItem(const QPointF &);
     SchematicWire*     InsertSchematicWire(SchematicDevice *, SchematicDevice *, TerminalType, TerminalType,
                             const QVector<QPointF>&, bool branch=false);
@@ -126,7 +125,7 @@ private:
     QFont                       m_font;
     SchematicTextItem          *m_text;
     SchematicDevice            *m_device;
-    SchematicDevice::DeviceType m_deviceType;
+    DeviceType                  m_deviceType;
     QGraphicsLineItem          *m_line;
 
     /* For wire */

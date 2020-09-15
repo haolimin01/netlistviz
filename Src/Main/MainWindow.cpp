@@ -6,14 +6,14 @@
 #include <QDebug>
 #include <QRectF>
 #include <QList>
-#include "SchematicScene.h"
-#include "SchematicTextItem.h"
-#include "SchematicWire.h"
+#include "Schematic/SchematicScene.h"
+#include "Schematic/SchematicTextItem.h"
+#include "Schematic/SchematicWire.h"
 #include "Define/Define.h"
-#include "NetlistDialog.h"
+#include "Schematic/NetlistDialog.h"
 #include "Parser/MyParser.h"
 #include "ASG/ASG.h"
-#include "ASGDialog.h"
+#include "Schematic/ASGDialog.h"
 
 const int DEV_ICON_SIZE = 30;
 
@@ -45,7 +45,7 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow()
 {
     m_scene->clear();
-    if (m_data)  m_data->Clear();
+    // if (m_data)  m_data->Clear();
     if (m_asg)  delete m_asg;
     if (m_netlistDialog)  delete m_netlistDialog;
     if (m_asgDialog)  delete m_asgDialog;
@@ -57,8 +57,8 @@ void MainWindow::InitVariables()
     m_curNetlistFile = "";
     m_curSchematicPath = ".";
     m_curSchematicFile = "";
-    m_data = nullptr;
-    m_asg = new ASG();
+    m_ckt = nullptr;
+    m_asg = nullptr;
     m_deviceBeingAdded = nullptr;
 
     m_netlistDialog = new NetlistDialog();
@@ -100,6 +100,7 @@ void MainWindow::CreateCenterWidget()
 
 void MainWindow::DeviceBtnGroupClicked(int id)
 {
+#if 0
     const QList<QAbstractButton *> buttons = m_deviceBtnGroup->buttons();
     for (QAbstractButton *button : buttons) {
         if (m_deviceBtnGroup->button(id) != button) {
@@ -107,16 +108,17 @@ void MainWindow::DeviceBtnGroupClicked(int id)
         }
     }
     m_scene->SetMode(SchematicScene::InsertDeviceMode);
-    m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
+    m_scene->SetDeviceType(DeviceType(id));
 
     if (m_deviceBeingAdded) {
         delete m_deviceBeingAdded;
         m_deviceBeingAdded = nullptr;
     }
 
-    m_deviceBeingAdded = new SchematicDevice(SchematicDevice::DeviceType(id), m_editMenu);
+    m_deviceBeingAdded = new SchematicDevice(DeviceType(id), m_editMenu);
     QPixmap image(m_deviceBeingAdded->Image());
     m_view->setCursor(QCursor(image.scaled(30, 30)));
+#endif
 }
 
 void MainWindow::closeEvent(QCloseEvent *closeEvent)
@@ -130,6 +132,7 @@ void MainWindow::closeEvent(QCloseEvent *closeEvent)
 
 void MainWindow::DeleteItem()
 {
+#if 0
     QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
     foreach (QGraphicsItem *item, qAsConst(selectedItems)) {
         SchematicDevice *device = nullptr;
@@ -159,6 +162,7 @@ void MainWindow::DeleteItem()
             delete item;
         }
     }
+#endif
 }
 
 /* BUG */
@@ -300,13 +304,13 @@ void MainWindow::CreateDeviceToolBox()
     QGridLayout *layout = new QGridLayout;
 
     /* Add device(s) */
-    layout->addWidget(CreateCellWidget(tr("Resistor"), SchematicDevice::Resistor), 0, 0);
-    layout->addWidget(CreateCellWidget(tr("Capacitor"), SchematicDevice::Capacitor), 0, 1);
-    layout->addWidget(CreateCellWidget(tr("Inductor"), SchematicDevice::Inductor), 1, 0);
-    layout->addWidget(CreateCellWidget(tr("ISource"), SchematicDevice::Isrc), 1, 1);
-    layout->addWidget(CreateCellWidget(tr("VSource"), SchematicDevice::Vsrc), 2, 0);
+    layout->addWidget(CreateCellWidget(tr("Resistor"), RESISTOR), 0, 0);
+    layout->addWidget(CreateCellWidget(tr("Capacitor"), CAPACITOR), 0, 1);
+    layout->addWidget(CreateCellWidget(tr("Inductor"), INDUCTOR), 1, 0);
+    layout->addWidget(CreateCellWidget(tr("ISource"), ISRC), 1, 1);
+    layout->addWidget(CreateCellWidget(tr("VSource"), VSRC), 2, 0);
     // layout->addWidget(CreateCellWidget(tr("Dot"), SchematicDevice::Dot), 2, 1);
-    layout->addWidget(CreateCellWidget(tr("GND"), SchematicDevice::GND), 2, 1);
+    layout->addWidget(CreateCellWidget(tr("GND"), GND), 2, 1);
 
     layout->setRowStretch(3, 10);
     layout->setColumnStretch(2, 10);
@@ -468,9 +472,9 @@ void MainWindow::CreateToolBars()
 {
     m_fileToolBar = addToolBar(tr("File"));
     m_fileToolBar->addAction(m_openNetlistAction);
-    m_fileToolBar->addAction(m_openSchematicFileAction);
-    m_fileToolBar->addAction(m_saveSchematicFileAction);
-    m_fileToolBar->addAction(m_saveAsSchematicFileAction);
+    // m_fileToolBar->addAction(m_openSchematicFileAction);
+    // m_fileToolBar->addAction(m_saveSchematicFileAction);
+    // m_fileToolBar->addAction(m_saveAsSchematicFileAction);
 
     m_editToolBar = addToolBar(tr("Edit"));
     m_editToolBar->addAction(m_deleteAction);
@@ -551,7 +555,7 @@ void MainWindow::CreateToolBars()
     m_asgToolBar->addAction(m_generateDeviceAction);
 }
 
-QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::DeviceType type)
+QWidget *MainWindow::CreateCellWidget(const QString &text, DeviceType type)
 {
 
     SchematicDevice device(type, nullptr);
@@ -802,23 +806,21 @@ void MainWindow::ParseNetlist()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    if (m_data) delete m_data;
-    /* delete all devices */
+    if (m_ckt) delete m_ckt;
+    /* delete all devices, nodes, terminals */
     m_scene->clear();
 
     MyParser parser;
-    m_data = new SchematicData();
-    int error = parser.ParseNetlist(m_curNetlistFile.toStdString(), m_data);
+    m_ckt = new CircuitGraph();
+    int error = parser.ParseNetlist(m_curNetlistFile.toStdString(), m_ckt);
     if (error) {
-        delete m_data;
+        delete m_ckt;
         ShowCriticalMsg(tr("Parse Netlist failed."));
         return;
     }
 
-    m_asg->SetSchematicData(m_data);
-
 #ifdef DEBUG
-    m_data->PrintNodeAndDevice();
+    m_ckt->PrintCircuit();
 #endif
     ShowInfoMsg(tr("Parse Netlist successfully."));
 }
@@ -852,13 +854,16 @@ void MainWindow::ASGPropertyTriggered()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    Q_ASSERT(m_data);
+    Q_ASSERT(m_ckt);
     if (m_asgDialog) delete m_asgDialog;
     m_asgDialog = new ASGDialog();
 
-    m_asgDialog->SetSchematicData(m_data);
+    m_asgDialog->SetCircuitGraph(m_ckt);
     m_asgDialog->show();
     m_asgPropertySelected = true;
+
+    if (m_asg) delete m_asg;
+    m_asg = new ASG(m_ckt);
 }
 
 void MainWindow::BuildIncidenceMatrix()
@@ -866,7 +871,8 @@ void MainWindow::BuildIncidenceMatrix()
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-    if (m_data->FirstLevelDeviceListSize() < 1) {
+
+    if (m_ckt->FirstLevelDeviceListSize() < 1) {
         ShowCriticalMsg(tr("Please select first level device(s)"));
         m_asgPropertySelected = false;
         return;
@@ -876,7 +882,11 @@ void MainWindow::BuildIncidenceMatrix()
         ShowCriticalMsg(tr("Please Select ASG Properties firstly!"));
         return;
     }
-    m_asg->BuildIncidenceMatrix();
+
+    int error = m_asg->LogicalPlacement();
+    if (error) {
+        ShowCriticalMsg(tr("[ERROR ASG] Logicl Placement failed."));
+    }
 }
 
 void MainWindow::Levelling()
@@ -884,11 +894,19 @@ void MainWindow::Levelling()
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
+
+#if 0
     if (NOT m_asg->BuildMatrixFinished()) {
         ShowCriticalMsg(tr("Please Build Incidence Matrix firstly!"));
         return;
     }
     m_asg->Levelling();
+#endif
+
+    int error = m_asg->LogicalRouting();
+    if (error) {
+        ShowCriticalMsg(tr("[ERROR ASG] Logical Routing failed."));
+    }
 }
 
 void MainWindow::Bubbling()
@@ -897,11 +915,13 @@ void MainWindow::Bubbling()
     qInfo() << LINE_INFO << endl;
 #endif
 
+#if 0
     if (NOT m_asg->LevellingFinished()) {
         ShowCriticalMsg(tr("Please Levelling firstly!"));
         return;
     }
     m_asg->Bubbling();
+#endif
 }
 
 /* before or after bubbling */
@@ -911,6 +931,7 @@ void MainWindow::GenerateSchematic()
     qInfo() << LINE_INFO << endl;
 #endif
 
+#if 0
     if (NOT m_asg->LevellingFinished()) {
         ShowCriticalMsg(tr("Please Levelling firstly!"));
         return;
@@ -919,4 +940,5 @@ void MainWindow::GenerateSchematic()
     m_scene->RenderSchematic(m_asg->FinalDevices(), m_asg->WireDesps());
     qreal height = m_scene->height();
     m_view->centerOn(0, height / 2);
+#endif
 }
