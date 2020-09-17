@@ -34,4 +34,14 @@
 #define OKAY  0
 #define ERROR 1
 
+/* For Scene */
+const static int Row_Device_Factor = 2;
+const static int DFT_Grid_W = 50;
+const static int DFT_Grid_H = 50;
+const static int DFT_DIS = 15;
+const static int Scene_Margin = 100;
+const static int Scene_Available = 1250;
+const static int Scene_W = Scene_Margin + 2 * Scene_Available;
+const static int Scene_H = Scene_Margin + 2 * Scene_Available;
+
 #endif //NETLISTVIZ_DEFINE_DEFINE_H

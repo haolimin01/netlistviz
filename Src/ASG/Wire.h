@@ -15,6 +15,7 @@
 class Device;
 class Terminal;
 class Channel;
+class SchematicWire;
 
 class Wire
 {
@@ -42,6 +43,7 @@ private:
     bool        m_trackGiven;
 
     friend class Channel;
+    friend class SchematicWire;
 };
 
 #endif //  NETLISTVIZ_ASG_WIRE_H

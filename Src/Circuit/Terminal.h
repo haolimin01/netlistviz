@@ -15,6 +15,8 @@
 
 class Node;
 class Device;
+class Wire;
+class SchematicTerminal;
 
 class Terminal
 {
@@ -41,6 +43,8 @@ private:
     int           m_id;
     Device       *m_device;
     TerminalType  m_type;
+
+    friend class SchematicTerminal;
 };
 
 #endif // NETLISTVIZ_CIRCUIT_TERMINAL_H

@@ -12,6 +12,7 @@ QT_END_NAMESPACE;
 
 class Device;
 class SchematicWire;
+class SchematicTerminal;
 
 class SchematicDevice : public QGraphicsPathItem
 {
@@ -19,18 +20,39 @@ public:
     enum { Type = UserType + 4 };
 
 public:
-    SchematicDevice(Device *dev, QMenu *contextMenu,
+    /* ASG entrance */
+    SchematicDevice(Device *dev, QMenu *contextMenu = nullptr,
                 QTransform transform = QTransform(), QGraphicsItem *parent = nullptr);
 
+    /* Insert SchematicDevice (in Scene) entrance*/
     SchematicDevice(DeviceType type, QMenu *contextMenu,
                 QTransform transform = QTransform(), QGraphicsItem *parent = nullptr);
     
     ~SchematicDevice();
 
+    void         Initialize(); // draw device shape, set annotation and terminals shape
     QPixmap      Image();
+    int          type() const override { return Type; }
     QRectF       boundingRect() const override;
     DeviceType   GetDeviceType() const { return m_deviceType; }
-    void         SetShowNodeFlag(bool show) { m_showNodeFlag = show; }
+    void         SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
+    void         AddTerminal(TerminalType type, SchematicTerminal *terminal);
+    QString      Name() const { return m_name; }
+    void         SetShowTerminal(bool show) { m_showTerminal = show; }
+    void         SetGeometricalPos(int col, int row);
+    int          LogicalCol() const { return m_logCol; }
+    int          LogicalRow() const { return m_logRow; }
+	void         SetOrientation(Orientation orien);
+	Orientation  GetOrientation() const { return m_devOrien; }
+    void         SetScale(qreal newScale);
+    void         SetReverse(bool reverse);
+    bool         GroundCap() const;
+    bool         CoupledCap() const;
+
+    SchematicTerminal* GetTerminal(TerminalType type) const;
+
+    /* Print and Plot */
+    void         Print() const;
 
 protected:
     void         paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
@@ -38,12 +60,15 @@ protected:
     void         contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
     QPainterPath shape() const override;
     void         mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    QVariant     itemChange(GraphicsItemChange change, const QVariant &value) override;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(SchematicDevice);
 
-    void         Initialize();
+    /* For Insert SchematicDevice entrance */
+    void         CreateTerminalsBySelf();
     QRectF       DashRect() const;
+    void         SetTerminalRect(TerminalType type, const QRectF &rect);
 
     /* For annotation text */
     void         CreateAnnotation(const QString &text);
@@ -57,16 +82,26 @@ private:
     void         DrawGnd();
 
     QMenu             *m_contextMenu;
-    QColor             m_color;     // device color
-    Orientation        m_devOrien;  // device orientation
+    QColor             m_color;        // device color
+    Orientation        m_devOrien;     // device orientation
     QPixmap           *m_imag;
-    bool               m_showNodeFlag;
-    QGraphicsTextItem *m_annotText;   // annotation text
-    QPointF            m_annotRelPos; // annoatiton text relative position
-    Device            *m_cktdev;
+    QGraphicsTextItem *m_annotText;    // annotation text
+    QPointF            m_annotRelPos;  // annoatiton text relative position
+    bool               m_isDevice;     // (gnd is not device)
+    STerminalTable     m_terminals;    // type : SchematicTerminal Ptr
+    bool               m_showTerminal; // draw terminal rect on scene
+
+    /* Copy from Circuit Device (Logical) */
+    int                m_id;
+    int                m_logCol;   // logical col
+    int                m_logRow;   // logical row
     DeviceType         m_deviceType;
-    bool               m_isDevice;    // (gnd is not device)
-    TerminalRectTable  m_terRects; // terminal type and it's rect
+    QString            m_name;
+    bool               m_reverse;
+
+    /* Geometrical Position */
+    int                m_geoCol; // geometrical column
+    int                m_geoRow; // geometrical row
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H

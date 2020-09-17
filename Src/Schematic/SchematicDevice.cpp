@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QGraphicsScene>
 #include "Circuit/Device.h"
+#include "SchematicTerminal.h"
 
 
 static const int TerminalSize = 8;
@@ -16,26 +17,49 @@ SchematicDevice::SchematicDevice(Device *dev, QMenu *contextMenu,
     QTransform transform, QGraphicsItem *parent)
 {
     Q_ASSERT(dev);
-    m_cktdev = dev;
     m_contextMenu = contextMenu;
-    m_deviceType = dev->GetDeviceType();
+
+    m_deviceType = dev->m_deviceType;
+    m_id = dev->m_id;
+    m_logCol = dev->m_levelId;
+    m_name = dev->m_name;
+    m_logRow = dev->m_row;
+    m_reverse = dev->m_reverse;
 
     setTransform(transform);
-    Initialize();
+    m_terminals.clear();
+
+    /* ASG entrance */
+    /* add terminals by AddTerminal() */
+    /* then call Initialize() to draw device shape */
 }
 
 SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     QTransform transform, QGraphicsItem *parent)
 {
+    m_contextMenu = contextMenu;
 
+    m_deviceType = type;
+    m_id = -1;
+    m_logCol = -1;
+    m_name = "";
+    m_logRow = -1;
+    m_reverse = false;
+
+    setTransform(transform);
+
+    /* Insert SchematicDevice entrance */
+    /* create terminals by self */
+    CreateTerminalsBySelf();
+
+    Initialize();
 }
 
 SchematicDevice::~SchematicDevice()
 {
-    /* delete Device here */
     if (m_imag) delete m_imag;
     if (m_annotText) delete m_annotText;
-    if (m_cktdev) delete m_cktdev;
+    /* delete its terminals here */
 }
 
 void SchematicDevice::Initialize()
@@ -78,15 +102,44 @@ void SchematicDevice::Initialize()
     }
 
     m_imag = nullptr;
-    m_showNodeFlag = false;
+    m_showTerminal = false;
 
-    CreateAnnotation(m_cktdev->Name());
+    m_geoCol = 0;
+    m_geoRow = 0;
+
+    CreateAnnotation(m_name);
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 
+    if (m_reverse)
+        setRotation(180);
+
     setZValue(0);
+}
+
+void SchematicDevice::CreateTerminalsBySelf()
+{
+    m_terminals.clear();
+    SchematicTerminal *terminal = nullptr;
+    switch (m_deviceType) {
+        case RESISTOR:
+        case CAPACITOR:
+        case INDUCTOR:
+        case ISRC:
+        case VSRC:
+            terminal = new SchematicTerminal(Positive, this);
+            m_terminals.insert(Positive, terminal);
+            terminal = new SchematicTerminal(Negative, this);
+            m_terminals.insert(Negative, terminal);
+            break;
+        case GND:
+            terminal = new SchematicTerminal(General, this);
+            m_terminals.insert(General, terminal);
+            break;
+        default:;
+    }
 }
 
 QPixmap SchematicDevice::Image()
@@ -120,9 +173,10 @@ QPainterPath SchematicDevice::shape() const
 {
     QPainterPath path;
 
-    TerminalRectTable::const_iterator cit;
-    for (cit = m_terRects.constBegin(); cit != m_terRects.constEnd(); ++ cit)
-        path.addRect(cit.value());
+    STerminalTable::const_iterator cit;
+    cit = m_terminals.constBegin();
+    for (; cit != m_terminals.constEnd(); ++ cit)
+        path.addRect(cit.value()->Rect());
 
     if (m_deviceType == GND) {
         int halfTerSize = TerminalSize / 2;
@@ -142,7 +196,29 @@ void SchematicDevice::mousePressEvent(QGraphicsSceneMouseEvent *event)
 void SchematicDevice::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
                   QWidget *)
 {
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+    int lineWidth = 2;
 
+    painter->setPen(QPen(m_color, lineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->drawPath(path());
+
+    if (m_showTerminal) {
+        painter->setBrush(QBrush(m_color));
+        painter->setPen(Qt::NoPen);
+        STerminalTable::const_iterator cit;
+        cit = m_terminals.constBegin();
+        for (; cit != m_terminals.constEnd(); ++ cit)
+            painter->drawRect(cit.value()->Rect());
+    }
+
+    if (isSelected()) {
+        painter->setPen(QPen(m_color, 1, Qt::DashLine));
+        painter->setBrush(QBrush(Qt::NoBrush));
+        painter->drawRect(DashRect());
+    }
 }
 
 QRectF SchematicDevice::DashRect() const
@@ -189,6 +265,87 @@ void SchematicDevice::SetAnnotRelPos()
     m_annotRelPos = QPointF(offsetX, offsetY);
 }
 
+void SchematicDevice::AddTerminal(TerminalType type, SchematicTerminal *terminal)
+{
+    terminal->SetDevice(this);
+    m_terminals.insert(type, terminal);
+}
+
+void SchematicDevice::SetTerminalRect(TerminalType type, const QRectF &rect)
+{
+    if (NOT m_terminals.contains(type)) {
+        qDebug() << m_name << " doesn't contain " << QString::number(type);
+        EXIT;
+    }
+
+    SchematicTerminal *terminal = m_terminals[type];
+    terminal->SetRect(rect);
+}
+
+void SchematicDevice::SetScale(qreal newScale)
+{
+    setScale(newScale);
+    if (m_annotText)
+        m_annotText->setScale(newScale);
+}
+
+QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &value)
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+    if (NOT scene())
+        return QGraphicsItem::itemChange(change, value);
+
+    /* deal with annotation text */
+    if (change == ItemSceneChange) {
+        scene()->removeItem(m_annotText);
+    } else if (change == ItemSceneHasChanged) {
+        scene()->addItem(m_annotText);
+        m_annotText->setPos(mapToScene(m_annotRelPos));
+    } else if (change == ItemPositionHasChanged) {
+        m_annotText->setPos(mapToScene(m_annotRelPos));
+    }
+
+    return QGraphicsItem::itemChange(change, value);
+}
+
+ void SchematicDevice::SetOrientation(Orientation orien)
+ {
+    if (orien == m_devOrien)  return;
+    qreal angle = 0;
+    if (orien == Horizontal) {
+        angle = -90;
+    } else {
+        angle = 90;
+    }
+    if (m_reverse)
+        angle += 180;
+
+    setRotation(angle);
+
+    m_devOrien = orien;
+
+    /* For annotation text */
+    SetAnnotRelPos();
+
+    qreal dx = 0, dy = 0;
+
+    if (orien == Horizontal) {
+        if (m_reverse) {
+            dx -= m_annotText->boundingRect().height() / 2;
+            dy += m_annotText->boundingRect().width();
+        } else {
+            dx += m_annotText->boundingRect().height() / 2;
+        }
+    }
+
+    m_annotRelPos.rx() += dx;
+    m_annotRelPos.ry() += dy;
+
+    m_annotText->setPos(mapToScene(m_annotRelPos));
+ }
+
 void SchematicDevice::DrawResistor()
 {
     QPainterPath path;
@@ -204,20 +361,21 @@ void SchematicDevice::DrawResistor()
     path.lineTo(8, 2);
     path.lineTo(-8, 6);
     path.lineTo(8, 10);
-
     path.lineTo(0, 12);
     path.lineTo(0, +BASE_LEN + halfTerSize);
 
     setPath(path);
 
-    // int width = TerminalSize;
-    // int upperCornerX = -halfTerSize;
-    // int upperCornerY = -BASE_LEN - TerminalSize;
-    // m_terRects.insert(Positive, QRectF(upperCornerX, upperCornerY, width, width));
+    SchematicTerminal *terminal = nullptr;
 
-    // int lowerCornerX = - halfTerSize;
-    // int lowerCornerY = BASE_LEN;
-    // m_terRects.insert(Negative, QRectF(lowerCornerX, lowerCornerY, width, width));
+    int width = TerminalSize;
+    int upperCornerX = -halfTerSize;
+    int upperCornerY = -BASE_LEN - TerminalSize;
+    SetTerminalRect(Positive, QRectF(upperCornerX, upperCornerY, width, width));
+
+    int lowerCornerX = - halfTerSize;
+    int lowerCornerY = BASE_LEN;
+    SetTerminalRect(Negative, QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
 void SchematicDevice::DrawCapacitor()
@@ -240,14 +398,15 @@ void SchematicDevice::DrawCapacitor()
 
     setPath(path);
 
-    // int width = TerminalSize;
-    // int upperCornerX = -halfTerSize;
-    // int upperCornerY = -BASE_LEN - TerminalSize;
-    // m_terRects.insert(Positive, QRectF(upperCornerX, upperCornerY, width, width));
+    SchematicTerminal *terminal = nullptr;
+    int width = TerminalSize;
+    int upperCornerX = -halfTerSize;
+    int upperCornerY = -BASE_LEN - TerminalSize;
+    SetTerminalRect(Positive, QRectF(upperCornerX, upperCornerY, width, width));
 
-    // int lowerCornerX = -halfTerSize;
-    // int lowerCornerY = BASE_LEN;
-    // m_terRects.insert(Negative, QRectF(lowerCornerX, lowerCornerY, width, width));
+    int lowerCornerX = -halfTerSize;
+    int lowerCornerY = BASE_LEN;
+    SetTerminalRect(Negative, QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
 void SchematicDevice::DrawInductor()
@@ -267,14 +426,14 @@ void SchematicDevice::DrawInductor()
 
     setPath(path);
 
-    // int width = TerminalSize;
-    // int upperCornerX = -halfTerSize;
-    // int upperCornerY = -BASE_LEN - TerminalSize;
-    // m_terRects.insert(Positive, QRectF(upperCornerX, upperCornerY, width, width));
+    int width = TerminalSize;
+    int upperCornerX = -halfTerSize;
+    int upperCornerY = -BASE_LEN - TerminalSize;
+    SetTerminalRect(Positive, QRectF(upperCornerX, upperCornerY, width, width));
 
-    // int lowerCornerX = -halfTerSize;
-    // int lowerCornerY = BASE_LEN;
-    // m_terRects.insert(Negative, QRectF(lowerCornerX, lowerCornerY, width, width));
+    int lowerCornerX = -halfTerSize;
+    int lowerCornerY = BASE_LEN;
+    SetTerminalRect(Negative, QRectF(lowerCornerX, lowerCornerY, width, width));
 }
 
 void SchematicDevice::DrawIsrc()
@@ -310,9 +469,9 @@ void SchematicDevice::DrawIsrc()
     path.lineTo(0, BASE_LEN + halfTerSize);
     setPath(path);
 
-    // int width = TerminalSize;
-    // m_terRects.insert(Positive, QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
-    // m_terRects.insert(Negative, QRectF(-halfTerSize, BASE_LEN, width, width));
+    int width = TerminalSize;
+    SetTerminalRect(Positive, QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
+    SetTerminalRect(Negative, QRectF(-halfTerSize, BASE_LEN, width, width));
 }
 
 void SchematicDevice::DrawVsrc()
@@ -348,9 +507,9 @@ void SchematicDevice::DrawVsrc()
     path.lineTo(0, BASE_LEN + halfTerSize);
     setPath(path);
 
-    // int width = TerminalSize;
-    // m_terRects.insert(Positive, QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
-    // m_terRects.insert(Negative, QRectF(-halfTerSize, BASE_LEN, width, width));
+    int width = TerminalSize;
+    SetTerminalRect(Positive, QRectF(-halfTerSize, -BASE_LEN-TerminalSize, width, width));
+    SetTerminalRect(Negative, QRectF(-halfTerSize, BASE_LEN, width, width));
 }
 
 void SchematicDevice::DrawGnd()
@@ -368,6 +527,72 @@ void SchematicDevice::DrawGnd()
     setPath(path);
 
     // The terminal-rect is centered at (0, -vWire)
-    // QRectF rect(-TerminalSize/2, -vWire-TerminalSize/2, TerminalSize, TerminalSize);
-    // m_terRects.insert(General, rect);
+    QRectF rect(-TerminalSize/2, -vWire-TerminalSize/2, TerminalSize, TerminalSize);
+    SetTerminalRect(General, rect);
+}
+
+void SchematicDevice::SetGeometricalPos(int col, int row)
+{
+    Q_ASSERT(col >= 0);
+    Q_ASSERT(row >= 0);
+    m_geoCol = col;
+    m_geoRow = row;
+}
+
+void SchematicDevice::SetReverse(bool reverse)
+{
+    if (m_reverse != reverse)
+        setRotation(180);
+    m_reverse = reverse;
+}
+
+SchematicTerminal* SchematicDevice::GetTerminal(TerminalType type) const
+{
+    return m_terminals[type];
+}
+
+bool SchematicDevice::GroundCap() const
+{
+    if (m_deviceType != CAPACITOR)
+        return false;
+
+    bool is = false;
+    foreach (SchematicTerminal *terminal, m_terminals.values())
+        if (terminal->ConnectToGnd()) {
+            is = true;
+            break;
+        }
+
+    return is;
+}
+
+bool SchematicDevice::CoupledCap() const
+{
+    if (m_deviceType != CAPACITOR)
+        return false;
+
+    bool is = true;
+    foreach (SchematicTerminal *terminal, m_terminals.values())
+        if (terminal->ConnectToGnd()) {
+            is = false;
+            break;
+        }
+
+    return is;
+}
+
+/* Print and Plot */
+void SchematicDevice::Print() const
+{
+    printf("-------------------------\n");
+    QString tmp;
+    tmp += (m_name + " " + "type(" + QString::number(m_deviceType) + "), ");
+    tmp += ("id(" + QString::number(m_id) + "), ");
+    tmp += ("levelId(" + QString::number(m_logCol) + "), ");
+    tmp += ("row(" + QString::number(m_logRow) + "), ");
+    qInfo() << tmp;
+    qInfo() << "Terminals";
+    foreach (SchematicTerminal *ter, m_terminals.values())
+        qInfo() << ter->PrintString();
+    printf("-------------------------\n");
 }

@@ -12,7 +12,7 @@ Device::Device(DeviceType type, QString name)
     m_deviceType = type;
     m_id = -1;
     m_maybeAtFirstLevel = false;
-    m_level = -1;
+    m_levelId = -1;
     m_reverse = false;
     m_bubbleValue = -1;
     m_reverse = false;
@@ -21,7 +21,7 @@ Device::Device(DeviceType type, QString name)
 
 Device::~Device()
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << "deleting " << m_name << " and terminals" << endl;
 #endif
     TerminalTable::iterator it;
@@ -195,6 +195,85 @@ WireList Device::WiresFromPredecessors() const
     }
 
     return result;
+}
+
+TerminalList Device::GetTerminalList() const
+{
+    TerminalList result;
+    TerminalTable::const_iterator cit;
+    cit = m_terminals.constBegin();
+    for (; cit != m_terminals.constEnd(); ++ cit) {
+        result.push_back(cit.value());
+    }
+
+    return result;
+}
+
+/* just consider R, L, C, V, I */
+void Device::DecideReverseByPredecessors()
+{
+    int connectionsAtPos = 0;
+    int connectionsAtNeg = 0;
+    Device *device = nullptr;
+    foreach (device, m_predecessors) {
+        if (device->m_reverse) { // to predecessor's positive terminal
+            Terminal *posTer = device->GetTerminal(Positive);
+            if (HasConnectionIgnoreGnd(posTer, Positive))
+                connectionsAtPos++;
+            else if (HasConnectionIgnoreGnd(posTer, Negative))
+                connectionsAtNeg++;
+        } else { // to predecessor's negative terminal
+            Terminal *negTer = device->GetTerminal(Negative);
+            if (HasConnectionIgnoreGnd(negTer, Positive))
+                connectionsAtPos++;
+            else if (HasConnectionIgnoreGnd(negTer, Negative))
+                connectionsAtNeg++;
+        }
+    }
+
+    if (connectionsAtNeg > connectionsAtPos)
+        m_reverse = true;
+    else
+        m_reverse = false;
+}
+
+void Device::DecideReverseBySuccessors()
+{
+    int connectionsAtPos = 0;
+    int connectionsAtNeg = 0;
+    Device *device = nullptr;
+    foreach (device, m_successors) {
+        if (device->m_reverse) { // to successor's negative terminal
+            Terminal *negTer = device->GetTerminal(Negative);
+            if (HasConnectionIgnoreGnd(negTer, Positive))
+                connectionsAtPos++;
+            else if (HasConnectionIgnoreGnd(negTer, Negative))
+                connectionsAtNeg++;
+        } else { // to successor's positive terminal
+            Terminal *posTer = device->GetTerminal(Positive);
+            if (HasConnectionIgnoreGnd(posTer, Positive))
+                connectionsAtPos++;
+            else if (HasConnectionIgnoreGnd(posTer, Negative))
+                connectionsAtNeg++;
+        }
+    }
+
+    if (connectionsAtPos > connectionsAtNeg)
+        m_reverse = true;
+    else
+        m_reverse = false;
+}
+
+bool Device::HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType)
+{
+    bool has = false;
+    Terminal *thisTer = m_terminals[thisType];
+    if (thisTer->NodeId() != 0 && otherTer->NodeId() != 0) {
+        if (thisTer->NodeId() == otherTer->NodeId())
+            has = true;
+    }
+
+    return has;
 }
 
 void Device::Print() const

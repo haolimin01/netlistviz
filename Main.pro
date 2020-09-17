@@ -45,7 +45,9 @@ HEADERS += ./Src/Main/MainWindow.h\
            ./Src/Schematic/SchematicDevice.h\
            ./Src/Schematic/NetlistDialog.h\
            ./Src/Schematic/SchematicWire.h\
+           ./Src/Schematic/SchematicTerminal.h\
            ./Src/Schematic/ASGDialog.h\
+           ./Src/Schematic/SchematicView.h\
            ./Src/Parser/CktParser.hpp\
            ./Src/Parser/MyParser.h\
            ./Src/Circuit/Node.h\
@@ -71,9 +73,11 @@ SOURCES += ./Src/Main/Main.cpp\
            ./Src/Schematic/SchematicDevice.cpp\
            ./Src/Schematic/NetlistDialog.cpp\
            ./Src/Schematic/SchematicWire.cpp\
+           ./Src/Schematic/SchematicTerminal.cpp\
            ./Src/Schematic/ASGDialog.cpp\
            ./Src/Schematic/RenderSchematic.cpp\
            ./Src/Schematic/IOSchematic.cpp\
+           ./Src/Schematic/SchematicView.cpp\
            ./Src/Parser/CktScanner.cpp\
            ./Src/Parser/CktParser.cpp\
            ./Src/Parser/MyParser.cpp\

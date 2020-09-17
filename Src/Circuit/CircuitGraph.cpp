@@ -14,6 +14,9 @@ CircuitGraph::CircuitGraph()
 
 CircuitGraph::~CircuitGraph()
 {
+    /* delete all devices, terminals here */
+    foreach (Device *device, m_deviceList)
+        delete device;
     Clear();
 }
 

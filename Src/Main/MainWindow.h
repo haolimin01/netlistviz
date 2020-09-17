@@ -10,6 +10,7 @@ class NetlistDialog;
 class ASG;
 class ASGDialog;
 class CircuitGraph;
+class SchematicView;
 
 QT_BEGIN_NAMESPACE
 class QString;
@@ -25,7 +26,6 @@ class QGraphicsItem;
 class QFont;
 class QToolButton;
 class QAbstractButton;
-class QGraphicsView;
 class QRectF;
 QT_END_NAMESPACE
 
@@ -62,8 +62,8 @@ private slots:
     void CurrentFontChanged(const QFont &font);
     void FontSizeChanged(const QString &size);
 
-    /* SchematicScene scale changed */
-    void SceneScaleChanged(const QString &scale);
+    /* Enable zoom scene by wheel */
+    void ZoomActionToggled(bool enable);
 
     /* Text color changed */
     void TextColorChanged();
@@ -102,8 +102,8 @@ private slots:
     /* Scroll action toggled */
     void ScrollActionToggled(bool checked);
 
-    /* Show or Hide node on items */
-    void ShowItemNodeToggled(bool show);
+    /* Show or Hide terminal on items */
+    void ShowItemTerminalToggled(bool show);
 
     /* Show as branch on wires and devices */
     void ShowBranchToggled(bool show);
@@ -178,7 +178,7 @@ private:
     SchematicScene     *m_scene;
 
     /* The view */
-    QGraphicsView      *m_view;
+    SchematicView      *m_view;
 
     QAction            *m_exitAction;
     QAction            *m_deleteAction;
@@ -200,7 +200,7 @@ private:
     QToolBar           *m_pointerToolBar;
     QToolBar           *m_asgToolBar;
 
-    QComboBox          *m_sceneScaleCombo;
+    // QComboBox          *m_sceneScaleCombo;
     QComboBox          *m_fontSizeCombo;
     QFontComboBox      *m_fontCombo;
 
@@ -220,9 +220,10 @@ private:
     QAction            *m_underlineAction;
     QAction            *m_italicAction;
     QAction            *m_textAction;
-    QAction            *m_showNodeAction;
+    QAction            *m_showTerminalAction;
     QAction            *m_showBranchAction;
     QAction            *m_showGridAction;
+    QAction            *m_zoomAction;
     QAction            *m_scrollPointerAction;
     QAction            *m_openNetlistAction;
     QAction            *m_parseNetlistAction;

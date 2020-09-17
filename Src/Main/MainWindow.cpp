@@ -7,6 +7,7 @@
 #include <QRectF>
 #include <QList>
 #include "Schematic/SchematicScene.h"
+#include "Schematic/SchematicView.h"
 #include "Schematic/SchematicTextItem.h"
 #include "Schematic/SchematicWire.h"
 #include "Define/Define.h"
@@ -70,7 +71,8 @@ void MainWindow::InitVariables()
 void MainWindow::CreateSchematicScene()
 {
     m_scene = new SchematicScene(m_editMenu, this);
-    m_scene->setSceneRect(QRectF(0, 0, 5000, 5000));
+
+    m_scene->setSceneRect(QRectF(0, 0, Scene_W, Scene_H));
     m_scene->setFocus(Qt::MouseFocusReason);
 
     connect(m_scene, &SchematicScene::TextInserted,
@@ -84,7 +86,7 @@ void MainWindow::CreateSchematicScene()
 void MainWindow::CreateCenterWidget()
 {
     QHBoxLayout *layout = new QHBoxLayout;
-    m_view = new QGraphicsView(m_scene);
+    m_view = new SchematicView(m_scene);
     m_view->setRenderHints(QPainter::Antialiasing
                         | QPainter::NonCosmeticDefaultPen
                         | QPainter::TextAntialiasing);
@@ -100,7 +102,6 @@ void MainWindow::CreateCenterWidget()
 
 void MainWindow::DeviceBtnGroupClicked(int id)
 {
-#if 0
     const QList<QAbstractButton *> buttons = m_deviceBtnGroup->buttons();
     for (QAbstractButton *button : buttons) {
         if (m_deviceBtnGroup->button(id) != button) {
@@ -118,7 +119,6 @@ void MainWindow::DeviceBtnGroupClicked(int id)
     m_deviceBeingAdded = new SchematicDevice(DeviceType(id), m_editMenu);
     QPixmap image(m_deviceBeingAdded->Image());
     m_view->setCursor(QCursor(image.scaled(30, 30)));
-#endif
 }
 
 void MainWindow::closeEvent(QCloseEvent *closeEvent)
@@ -220,6 +220,7 @@ void MainWindow::DeviceInserted(SchematicDevice *device)
     m_scene->SetMode(SchematicScene::BaseMode);
 
     m_deviceBtnGroup->button((int)(device->GetDeviceType()))->setChecked(false);
+    m_view->setCursor(Qt::ArrowCursor);
 }
 
 void MainWindow::CurrentFontChanged(const QFont &)
@@ -232,16 +233,12 @@ void MainWindow::FontSizeChanged(const QString &)
     HandleFontChange();
 }
 
-/* BUG */
-void MainWindow::SceneScaleChanged(const QString &scale)
+void MainWindow::ZoomActionToggled(bool enable)
 {
-#if 1
-    double newScale = scale.left(scale.indexOf(tr("%"))).toDouble() / 100.0;
-    QMatrix oldMatrix = m_view->matrix();
-    m_view->resetMatrix();
-    m_view->translate(oldMatrix.dx(), oldMatrix.dy());
-    m_view->scale(newScale, newScale);
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
 #endif
+    m_view->EnableScaleByWheel(enable);
 }
 
 void MainWindow::TextColorChanged()
@@ -394,10 +391,15 @@ void MainWindow::CreateActions()
     m_scrollPointerAction->setChecked(false);
     connect(m_scrollPointerAction, &QAction::toggled, this, &MainWindow::ScrollActionToggled);
 
-    m_showNodeAction = new QAction(QIcon(":/images/show_node.png"), tr("Show Node"), this);
-    m_showNodeAction->setCheckable(true);
-    m_showNodeAction->setChecked(false);
-    connect(m_showNodeAction, &QAction::toggled, this, &MainWindow::ShowItemNodeToggled);
+    m_zoomAction = new QAction(QIcon(":/images/zoom.png"), tr("Zoom by Wheel"), this);
+    m_zoomAction->setCheckable(true);
+    m_zoomAction->setChecked(false);
+    connect(m_zoomAction, &QAction::toggled, this, &MainWindow::ZoomActionToggled);
+
+    m_showTerminalAction = new QAction(QIcon(":/images/show_terminal.png"), tr("Show Terminal"), this);
+    m_showTerminalAction->setCheckable(true);
+    m_showTerminalAction->setChecked(false);
+    connect(m_showTerminalAction, &QAction::toggled, this, &MainWindow::ShowItemTerminalToggled);
 
     m_showBranchAction = new QAction(QIcon(":/images/show_branch.png"), tr("Show Branch"), this);
     m_showBranchAction->setCheckable(true);
@@ -452,9 +454,10 @@ void MainWindow::CreateMenus()
 
     m_viewMenu = menuBar()->addMenu(tr("&View"));
     m_viewMenu->addAction(m_devicePanelDockWidget->toggleViewAction());
-    m_viewMenu->addAction(m_showNodeAction);
+    m_viewMenu->addAction(m_showTerminalAction);
     m_viewMenu->addAction(m_showBranchAction);
     m_viewMenu->addAction(m_showGridAction);
+    m_viewMenu->addAction(m_zoomAction);
 
     m_asgMenu = menuBar()->addMenu(tr("&ASG"));
     m_asgMenu->addAction(m_parseNetlistAction);
@@ -480,9 +483,10 @@ void MainWindow::CreateToolBars()
     m_editToolBar->addAction(m_deleteAction);
     m_editToolBar->addAction(m_toFrontAction);
     m_editToolBar->addAction(m_sendBackAction);
-    m_editToolBar->addAction(m_showNodeAction);
+    m_editToolBar->addAction(m_showTerminalAction);
     m_editToolBar->addAction(m_showBranchAction);
     m_editToolBar->addAction(m_showGridAction);
+    m_editToolBar->addAction(m_zoomAction);
 
     m_fontCombo = new QFontComboBox();
     connect(m_fontCombo, &QFontComboBox::currentFontChanged,
@@ -532,19 +536,19 @@ void MainWindow::CreateToolBars()
     connect(m_pointerBtnGroup, SIGNAL(buttonClicked(int)),
             this, SLOT(PointerBtnGroupClicked(int)));
 
-    m_sceneScaleCombo = new QComboBox;
-    QStringList scales;
-    scales << tr("25%") << tr("50%") << tr("75%") << tr("100%") << tr("125%") << tr("150%") << tr("175%");
-    m_sceneScaleCombo->addItems(scales);
-    m_sceneScaleCombo->setCurrentIndex(3);
-    connect(m_sceneScaleCombo, &QComboBox::currentTextChanged,
-            this, &MainWindow::SceneScaleChanged);
+    // m_sceneScaleCombo = new QComboBox;
+    // QStringList scales;
+    // scales << tr("25%") << tr("50%") << tr("75%") << tr("100%") << tr("125%") << tr("150%") << tr("175%");
+    // m_sceneScaleCombo->addItems(scales);
+    // m_sceneScaleCombo->setCurrentIndex(3);
+    // connect(m_sceneScaleCombo, &QComboBox::currentTextChanged,
+    //         this, &MainWindow::SceneScaleChanged);
 
     m_pointerToolBar = addToolBar(tr("Pointer type"));
     m_pointerToolBar->addWidget(baseModePointerButton);
     m_pointerToolBar->addAction(m_scrollPointerAction);
     m_pointerToolBar->addWidget(insertTextPointerButton);
-    m_pointerToolBar->addWidget(m_sceneScaleCombo);
+    // m_pointerToolBar->addWidget(m_sceneScaleCombo);
 
     m_asgToolBar = addToolBar(tr("ASG"));
     m_asgToolBar->addAction(m_parseNetlistAction);
@@ -624,9 +628,9 @@ QIcon MainWindow::CreateColorIcon(QColor color)
     return QIcon(pixmap);
 }
 
-void MainWindow::ShowItemNodeToggled(bool show)
+void MainWindow::ShowItemTerminalToggled(bool show)
 {
-    m_scene->SetShowNodeFlag(show);
+    m_scene->SetShowTerminal(show);
 }
 
 void MainWindow::ShowBranchToggled(bool show)
@@ -635,12 +639,12 @@ void MainWindow::ShowBranchToggled(bool show)
     qInfo() << LINE_INFO << endl;
 #endif
 
-    m_scene->SetShowBranchFlag(show);
+    // m_scene->SetShowBranchFlag(show);
 }
 
 void MainWindow::ShowGridToggled(bool show)
 {
-    m_scene->SetEnableBackground(show);
+    m_scene->SetShowBackground(show);
     m_scene->update();
 }
 
@@ -922,6 +926,13 @@ void MainWindow::Bubbling()
     }
     m_asg->Bubbling();
 #endif
+
+    int error = m_asg->GeometricalPlacement(m_scene);
+    if (error) {
+        ShowCriticalMsg(tr("[ERROR ASG] Geometrical Placement failed."));
+    }
+
+    m_view->centerOn(m_scene->Center());
 }
 
 /* before or after bubbling */

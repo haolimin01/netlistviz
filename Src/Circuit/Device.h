@@ -14,6 +14,7 @@
 
 class Terminal;
 class Wire;
+class SchematicDevice;
 
 /* defalut device orientation:
  * vertical :  +
@@ -30,7 +31,7 @@ class Device
 {
 public:
     Device(DeviceType, QString name);
-    virtual ~Device();
+    ~Device();
 
     int          AddTerminal(Terminal *terminal, TerminalType type);
     void         SetValue(double value)    { m_value = value; }
@@ -43,14 +44,16 @@ public:
     bool         CoupledCap() const; 
     Terminal*    GetTerminal(TerminalType type) const;
     Terminal*    GetTerminal(Node *node) const;
-    void         SetLevelId(int levelid)   { m_level = levelid; }
-    int          LevelId() const           { return m_level; }
+    void         SetLevelId(int levelid)   { m_levelId = levelid; }
+    int          LevelId() const           { return m_levelId; }
     bool         HasConnection(Device *device) const;
     bool         HasConnectionIgnoreGnd(Device *device) const;
     int          BubbleValue() const       { return m_bubbleValue; }
     void         SetBubbleValue(int value) { m_bubbleValue = value; }
     void         SetReverse(int reverse)   { m_reverse = reverse; }
     bool         Reverse() const           { return m_reverse; }       
+    void         DecideReverseByPredecessors(); // whether to be reverse
+    void         DecideReverseBySuccessors();   // whether to be reverse
     void         SetRow(int row);
     int          Row() const               { return m_row; }
     void         AddPredecessor(Device *dev);
@@ -60,6 +63,7 @@ public:
     void         CalBubbleValueByPredecessors();
     void         CalBubbleValueBySuccessors();
     WireList     WiresFromPredecessors() const;
+    TerminalList GetTerminalList() const;
 
     void SetMaybeAtFirstLevel(bool at) { m_maybeAtFirstLevel = at; }
     bool MaybeAtFirstLevel() const     { return m_maybeAtFirstLevel; }
@@ -68,6 +72,7 @@ public:
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Device);
+    bool    HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType);
 
     TerminalTable                     m_terminals;
     QString                           m_name;
@@ -80,11 +85,13 @@ private:
     bool                              m_reverse; 
 
     /* For Bubble Sort */
-    int                               m_level; // col
+    int                               m_levelId; // col
     DeviceList                        m_predecessors;
     DeviceList                        m_successors;
     int                               m_bubbleValue;
     int                               m_row;   // row
+
+    friend class SchematicDevice;
 };
 
 #endif // NETLISTVIZ_CIRCUIT_DEVICE_H

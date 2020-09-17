@@ -12,7 +12,9 @@ Channel::Channel(int id)
 
 Channel::~Channel()
 {
-    /* just clear WireList, deleing wires in SchematicWire */
+    /* delete wires here */
+    foreach (Wire *wire, m_wires)
+        delete wire;
     m_wires.clear();
 }
 

@@ -11,6 +11,9 @@
 #include "Level.h"
 #include "Channel.h"
 #include "Utilities/MyString.h"
+#include "Schematic/SchematicDevice.h"
+#include "Schematic/SchematicTerminal.h"
+#include "Schematic/SchematicScene.h"
 
 
 ASG::ASG(CircuitGraph *ckt)
@@ -115,11 +118,22 @@ int ASG::LogicalRouting()
     return OKAY;
 }
 
-int ASG::GeometricalPlacement()
+int ASG::GeometricalPlacement(SchematicScene *scene)
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
+    int error = DecideDeviceWhetherToReverse();
+    if (error)
+        return ERROR;
+
+    error = CreateSchematicDevices();
+    if (error)
+        return ERROR;
+
+    error = RenderSchematicDevices(scene);
+    if (error)
+        return ERROR;
 
     return OKAY;
 }
@@ -189,7 +203,7 @@ int ASG::InsertBasicDevice(Device *device)
             if (row == col) continue;
             Terminal *toTer = toDev->GetTerminal(posNode);
             Q_ASSERT(toTer);
-            m_matrix->InsertElement(row, col, device, device->GetTerminal(Positive), toDev, /*toTerminal*/toTer); 
+            m_matrix->InsertElement(row, col, device, device->GetTerminal(Positive), toDev, toTer); 
         }
     }
 
@@ -346,7 +360,7 @@ int ASG::BubbleSortConsiderCap()
     foreach (Device *dev, levelOfMaxDeviceCount->AllDevices()) {
         dev->SetRow(row);
         dev->SetBubbleValue(row); // useless
-        row += 2;
+        row += Row_Device_Factor;
     }
 
     /* Fourth, assign row number to [0, indexOfMaxDeviceCount) */
@@ -441,6 +455,96 @@ int ASG::AssignTrackNumber()
     }
 
     return OKAY;
+}
+
+int ASG::DecideDeviceWhetherToReverse()
+{
+    /* First, set maxDeviceCount Level as no reverse */
+    int maxDeviceCountInLevel = -1;
+    int indexOfMaxDeviceCount = -1;
+    Level *levelOfMaxDeviceCount = nullptr;
+    Level *level = nullptr;
+    for (int i = 0; i < m_levels.size(); ++ i) {
+        level = m_levels.at(i);
+        if (level->AllDeviceCount() > maxDeviceCountInLevel) {
+            maxDeviceCountInLevel = level->AllDeviceCount();
+            indexOfMaxDeviceCount = i;
+            levelOfMaxDeviceCount = level;
+        }
+    }
+
+    foreach (Device *dev, level->AllDevices()) {
+        dev->SetReverse(false);
+    }
+
+    /* Second, deal with [0, indexOfMaxDeviceCount) */
+    for (int i = indexOfMaxDeviceCount - 1; i >= 0; -- i) {
+        level = m_levels.at(i);
+        foreach (Device *dev, level->AllDevices())
+            dev->DecideReverseBySuccessors();
+    }
+
+    /* Third, deal with (indexOfMaxDeviceCount, last] */
+    for (int i = indexOfMaxDeviceCount + 1; i < m_levels.size(); ++ i) {
+        level = m_levels.at(i);
+        foreach (Device *dev, level->AllDevices())
+            dev->DecideReverseByPredecessors();
+    }
+
+#ifdef DEBUG
+    qDebug() << "--------------- Device Reverse ---------------";
+    foreach (Device *dev, m_ckt->GetDeviceList()) {
+        qDebug() << dev->Name() << " reverse(" << dev->Reverse() << ")";
+    }
+    qDebug() << "----------------------------------------------";
+#endif
+
+    return OKAY;
+}
+
+int ASG::CreateSchematicDevices()
+{
+    SchematicDevice *sdevice = nullptr;
+    SchematicTerminal *sterminal = nullptr;
+    Device *device = nullptr;
+    Terminal *terminal = nullptr;
+
+    foreach (device, m_ckt->GetDeviceList()) {
+        sdevice = new SchematicDevice(device);
+        foreach (terminal, device->GetTerminalList()) {
+            sterminal = new SchematicTerminal(terminal);
+            sdevice->AddTerminal(sterminal->GetTerminalType(), sterminal);
+        }
+        /* Initialize schematicDevice (Draw device shape, set annotation and tterminals pos) */
+        sdevice->Initialize();
+        m_sdeviceList.push_back(sdevice);
+    }
+
+#ifdef DEBUG
+    foreach (sdevice, m_sdeviceList)
+        sdevice->Print();
+#endif
+
+    return OKAY;
+}
+
+int ASG::RenderSchematicDevices(SchematicScene *scene)
+{
+    Q_ASSERT(scene);
+
+    int levelCount = m_levels.size();
+    int maxDeviceCountInLevel = -1;
+    foreach (Level *level, m_levels) {
+        if (level->AllDeviceCount() > maxDeviceCountInLevel) {
+            maxDeviceCountInLevel = level->AllDeviceCount();
+        }
+    }
+
+    int rowCount = maxDeviceCountInLevel * Row_Device_Factor; 
+    int colCount = levelCount * 2; // levels + channels
+
+    int error = scene->RenderSchematicDevices(m_sdeviceList, colCount, rowCount);
+    return error;
 }
 
 /* Print and Plot */

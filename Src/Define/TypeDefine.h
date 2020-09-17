@@ -34,12 +34,13 @@ typedef QVector<Device*>                DeviceList;
 typedef QMap<TerminalType, Terminal*>   TerminalTable;
 typedef QVector<Terminal*>              TerminalList;
 typedef QVector<Wire*>                  WireList;
-typedef QMap<TerminalType, QRectF>      TerminalRectTable;
 
 /* Schematic Containers */
 class SchematicDevice;
-typedef QMap<QString, SchematicDevice*> SDeviceTable;
-typedef QVector<SchematicDevice*>       SDeviceList;
-
+class SchematicTerminal;
+typedef QMap<QString, SchematicDevice*>        SDeviceTable;
+typedef QVector<SchematicDevice*>              SDeviceList;
+typedef QMap<TerminalType, SchematicTerminal*> STerminalTable;
+typedef QVector<SchematicTerminal*>            STerminalList;
 
 #endif // NETLISTVIZ_DEFINE_TYPEDEFINE_H
