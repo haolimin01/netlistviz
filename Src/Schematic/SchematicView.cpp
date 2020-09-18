@@ -17,22 +17,27 @@ void SchematicView::wheelEvent(QWheelEvent *event)
     qInfo() << LINE_INFO << endl;
 #endif
 
-    QMatrix currMatrix = matrix();
-    qreal currHScale = currMatrix.m11();
-    qreal currVScale = currMatrix.m22();
+    qreal zoomInFactor = 1.1;
+    qreal zoomOutFactor = 1/ zoomInFactor;
 
-    qreal dScale = 0.05;
-    qreal newHScale, newVScale;
+    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    setResizeAnchor(QGraphicsView::NoAnchor);
 
-    if (event->delta() > 0) { // zoom in
-        newHScale = currHScale + dScale;
-        newVScale = currVScale + dScale;
-    } else { // zoom out
-        newHScale = (currHScale - dScale) > 0? currHScale - dScale : currHScale;
-        newVScale = (currVScale - dScale) > 0? currVScale - dScale : currVScale;
-    }
+    // old pos
+    QPointF oldPos = mapToScene(event->pos());
+    qreal zoomFactor = 1;
 
-    resetMatrix();
-    translate(currMatrix.dx(), currMatrix.dy());
-    scale(newHScale, newVScale);
+    // zooom
+    if (event->angleDelta().y() > 0)
+        zoomFactor = zoomInFactor;
+    else
+        zoomFactor = zoomOutFactor;
+    
+    scale(zoomFactor, zoomFactor);
+
+    // new pos
+    QPointF newPos = mapToScene(event->pos());
+
+    QPointF delta = newPos - oldPos;
+    translate(delta.x(), delta.y());
 }

@@ -65,6 +65,12 @@ private slots:
     /* Enable zoom scene by wheel */
     void ZoomActionToggled(bool enable);
 
+    /* set SchematicView scale to 1 */
+    void ScaleToOriginTriggered();
+
+    /* move to center */
+    void MoveToCenterTriggered();
+
     /* Text color changed */
     void TextColorChanged();
 
@@ -117,10 +123,11 @@ private slots:
 
     /* For ASG */
     void ASGPropertyTriggered();
-    void BuildIncidenceMatrix();
-    void Levelling();
-    void Bubbling();
-    void GenerateSchematic();
+    void LogicalPlacement();
+    void LogicalRouting();
+    void GeometricalPlacement();
+    void GeometricalRouting();
+
 
 signals:
     void NetlistChanged();
@@ -200,7 +207,6 @@ private:
     QToolBar           *m_pointerToolBar;
     QToolBar           *m_asgToolBar;
 
-    // QComboBox          *m_sceneScaleCombo;
     QComboBox          *m_fontSizeCombo;
     QFontComboBox      *m_fontCombo;
 
@@ -224,6 +230,8 @@ private:
     QAction            *m_showBranchAction;
     QAction            *m_showGridAction;
     QAction            *m_zoomAction;
+    QAction            *m_moveToCenterAction;
+    QAction            *m_scaleToOriginAction;
     QAction            *m_scrollPointerAction;
     QAction            *m_openNetlistAction;
     QAction            *m_parseNetlistAction;
@@ -235,10 +243,10 @@ private:
 
     /* For ASG Actions */
     QAction            *m_asgPropertyAction;
-    QAction            *m_buildMatrixAction;
-    QAction            *m_levellingAction;
-    QAction            *m_bubblingAction;
-    QAction            *m_generateDeviceAction;
+    QAction            *m_logPlaceAction;
+    QAction            *m_logRouteAction;
+    QAction            *m_geoPlaceAction;
+    QAction            *m_geoRouteAction;
 
     /* Device Panel */
     QDockWidget        *m_devicePanelDockWidget;
@@ -257,6 +265,5 @@ private:
     /* for cursor image */
     SchematicDevice    *m_deviceBeingAdded;
 };
-//! [0]
 
 #endif // NETLISTVIZ_SCHEMATIC_MAINWINDOW_H

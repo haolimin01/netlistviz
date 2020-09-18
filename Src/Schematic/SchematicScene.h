@@ -73,8 +73,9 @@ private:
     /* --------------- For ASG --------------- */
     void  ChangeDeviceScale(int colCount, int rowCount);
     qreal CalDeviceScale(int colCount, int rowCount);
+    int   CalStartRow(int rowCount) const;
+    int   CalStartCol(int colCount) const;
     void  UpdateDeviceScale(qreal newScale);
-    void  PlaceAllDevices(const SDeviceList &devices); // R, L, C, V, I now
     void  ChangeDeviceOrientation(const SDeviceList &devices);
     void  RenderFixedGnds(const SDeviceList &devices);
     // void RenderFlexibleGnds(const SDeviceList &devices);

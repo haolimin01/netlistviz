@@ -241,6 +241,27 @@ void MainWindow::ZoomActionToggled(bool enable)
     m_view->EnableScaleByWheel(enable);
 }
 
+void MainWindow::ScaleToOriginTriggered()
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    m_view->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    m_view->setResizeAnchor(QGraphicsView::NoAnchor);
+    qreal currHScale = m_view->matrix().m11();
+    qreal currVScale = m_view->matrix().m22();
+    m_view->scale(1 / currHScale, 1 / currVScale);
+}
+
+void MainWindow::MoveToCenterTriggered()
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+    m_view->centerOn(m_scene->Center());
+}
+
 void MainWindow::TextColorChanged()
 {
     m_textAction = qobject_cast<QAction *>(sender());
@@ -396,6 +417,15 @@ void MainWindow::CreateActions()
     m_zoomAction->setChecked(false);
     connect(m_zoomAction, &QAction::toggled, this, &MainWindow::ZoomActionToggled);
 
+    m_moveToCenterAction = new QAction(QIcon(":/images/move_center.png"), tr("Move to center"), this);
+    m_moveToCenterAction->setShortcut(tr("C"));
+    connect(m_moveToCenterAction, &QAction::triggered, this,
+        &MainWindow::MoveToCenterTriggered);
+
+    m_scaleToOriginAction = new QAction(QIcon(":/images/scale_to_origin.png"), tr("Scale to origin"), this);
+    m_scaleToOriginAction->setShortcut(tr("O"));
+    connect(m_scaleToOriginAction, &QAction::triggered, this, &MainWindow::ScaleToOriginTriggered);
+
     m_showTerminalAction = new QAction(QIcon(":/images/show_terminal.png"), tr("Show Terminal"), this);
     m_showTerminalAction->setCheckable(true);
     m_showTerminalAction->setChecked(false);
@@ -419,21 +449,21 @@ void MainWindow::CreateActions()
     m_asgPropertyAction->setEnabled(false);
     connect(m_asgPropertyAction, &QAction::triggered, this, &MainWindow::ASGPropertyTriggered);
 
-    m_buildMatrixAction = new QAction(QIcon(":/images/build_matrix.png"), tr("Build Matrix"), this);
-    m_buildMatrixAction->setEnabled(false);
-    connect(m_buildMatrixAction, &QAction::triggered, this, &MainWindow::BuildIncidenceMatrix);
+    m_logPlaceAction = new QAction(QIcon(":/images/log_place.png"), tr("Logical Placement"), this);
+    m_logPlaceAction->setEnabled(false);
+    connect(m_logPlaceAction, &QAction::triggered, this, &MainWindow::LogicalPlacement);
     
-    m_levellingAction = new QAction(QIcon(":/images/levelling.png"), tr("Levelling"), this);
-    m_levellingAction->setEnabled(false);
-    connect(m_levellingAction, &QAction::triggered, this, &MainWindow::Levelling);
+    m_logRouteAction = new QAction(QIcon(":/images/log_route.png"), tr("Logical Routing"), this);
+    m_logRouteAction->setEnabled(false);
+    connect(m_logRouteAction, &QAction::triggered, this, &MainWindow::LogicalRouting);
 
-    m_bubblingAction = new QAction(QIcon(":/images/bubbling.png"), tr("Bubbling"), this);
-    m_bubblingAction->setEnabled(false);
-    connect(m_bubblingAction, &QAction::triggered, this, &MainWindow::Bubbling);
+    m_geoPlaceAction = new QAction(QIcon(":/images/geo_place.png"), tr("Geometrical Placement"), this);
+    m_geoPlaceAction->setEnabled(false);
+    connect(m_geoPlaceAction, &QAction::triggered, this, &MainWindow::GeometricalPlacement);
 
-    m_generateDeviceAction = new QAction(QIcon(":/images/generate_device.png"), tr("Generate Device"), this);
-    m_generateDeviceAction->setEnabled(false);
-    connect(m_generateDeviceAction, &QAction::triggered, this, &MainWindow::GenerateSchematic);
+    m_geoRouteAction = new QAction(QIcon(":/images/geo_route.png"), tr("Geometrical Routing"), this);
+    m_geoRouteAction->setEnabled(false);
+    connect(m_geoRouteAction, &QAction::triggered, this, &MainWindow::GeometricalRouting);
 }
 
 void MainWindow::CreateMenus()
@@ -458,14 +488,16 @@ void MainWindow::CreateMenus()
     m_viewMenu->addAction(m_showBranchAction);
     m_viewMenu->addAction(m_showGridAction);
     m_viewMenu->addAction(m_zoomAction);
+    m_viewMenu->addAction(m_moveToCenterAction);
+    m_viewMenu->addAction(m_scaleToOriginAction);
 
     m_asgMenu = menuBar()->addMenu(tr("&ASG"));
     m_asgMenu->addAction(m_parseNetlistAction);
     m_asgMenu->addAction(m_asgPropertyAction);
-    m_asgMenu->addAction(m_buildMatrixAction);
-    m_asgMenu->addAction(m_levellingAction);
-    m_asgMenu->addAction(m_bubblingAction);
-    m_asgMenu->addAction(m_generateDeviceAction);
+    m_asgMenu->addAction(m_logPlaceAction);
+    m_asgMenu->addAction(m_logRouteAction);
+    m_asgMenu->addAction(m_geoPlaceAction);
+    m_asgMenu->addAction(m_geoRouteAction);
 
     m_aboutMenu = menuBar()->addMenu(tr("&Help"));
     m_aboutMenu->addAction(m_aboutAction);
@@ -487,6 +519,8 @@ void MainWindow::CreateToolBars()
     m_editToolBar->addAction(m_showBranchAction);
     m_editToolBar->addAction(m_showGridAction);
     m_editToolBar->addAction(m_zoomAction);
+    m_editToolBar->addAction(m_moveToCenterAction);
+    m_editToolBar->addAction(m_scaleToOriginAction);
 
     m_fontCombo = new QFontComboBox();
     connect(m_fontCombo, &QFontComboBox::currentFontChanged,
@@ -511,7 +545,7 @@ void MainWindow::CreateToolBars()
             this, &MainWindow::TextButtonTriggered);
 
     m_textToolBar = addToolBar(tr("Font"));
-    m_textToolBar->addWidget(m_fontCombo);
+    // m_textToolBar->addWidget(m_fontCombo);
     m_textToolBar->addWidget(m_fontSizeCombo);
     m_textToolBar->addAction(m_boldAction);
     m_textToolBar->addAction(m_italicAction);
@@ -536,27 +570,18 @@ void MainWindow::CreateToolBars()
     connect(m_pointerBtnGroup, SIGNAL(buttonClicked(int)),
             this, SLOT(PointerBtnGroupClicked(int)));
 
-    // m_sceneScaleCombo = new QComboBox;
-    // QStringList scales;
-    // scales << tr("25%") << tr("50%") << tr("75%") << tr("100%") << tr("125%") << tr("150%") << tr("175%");
-    // m_sceneScaleCombo->addItems(scales);
-    // m_sceneScaleCombo->setCurrentIndex(3);
-    // connect(m_sceneScaleCombo, &QComboBox::currentTextChanged,
-    //         this, &MainWindow::SceneScaleChanged);
-
     m_pointerToolBar = addToolBar(tr("Pointer type"));
     m_pointerToolBar->addWidget(baseModePointerButton);
     m_pointerToolBar->addAction(m_scrollPointerAction);
     m_pointerToolBar->addWidget(insertTextPointerButton);
-    // m_pointerToolBar->addWidget(m_sceneScaleCombo);
 
     m_asgToolBar = addToolBar(tr("ASG"));
     m_asgToolBar->addAction(m_parseNetlistAction);
     m_asgToolBar->addAction(m_asgPropertyAction);
-    m_asgToolBar->addAction(m_buildMatrixAction);
-    m_asgToolBar->addAction(m_levellingAction);
-    m_asgToolBar->addAction(m_bubblingAction);
-    m_asgToolBar->addAction(m_generateDeviceAction);
+    m_asgToolBar->addAction(m_logPlaceAction);
+    m_asgToolBar->addAction(m_logRouteAction);
+    m_asgToolBar->addAction(m_geoPlaceAction);
+    m_asgToolBar->addAction(m_geoRouteAction);
 }
 
 QWidget *MainWindow::CreateCellWidget(const QString &text, DeviceType type)
@@ -676,10 +701,10 @@ void MainWindow::NetlistChangedSlot()
 {
     m_parseNetlistAction->setEnabled(true);
     m_asgPropertyAction->setEnabled(true);
-    m_buildMatrixAction->setEnabled(true);
-    m_levellingAction->setEnabled(true);
-    m_bubblingAction->setEnabled(true);
-    m_generateDeviceAction->setEnabled(true);
+    m_logPlaceAction->setEnabled(true);
+    m_logRouteAction->setEnabled(true);
+    m_geoPlaceAction->setEnabled(true);
+    m_geoRouteAction->setEnabled(true);
 
     m_asgPropertySelected = false;
 }
@@ -870,7 +895,7 @@ void MainWindow::ASGPropertyTriggered()
     m_asg = new ASG(m_ckt);
 }
 
-void MainWindow::BuildIncidenceMatrix()
+void MainWindow::LogicalPlacement()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
@@ -893,38 +918,18 @@ void MainWindow::BuildIncidenceMatrix()
     }
 }
 
-void MainWindow::Levelling()
+void MainWindow::LogicalRouting()
 {
-#ifdef TRACE
-    qInfo() << LINE_INFO << endl;
-#endif
-
-#if 0
-    if (NOT m_asg->BuildMatrixFinished()) {
-        ShowCriticalMsg(tr("Please Build Incidence Matrix firstly!"));
-        return;
-    }
-    m_asg->Levelling();
-#endif
-
     int error = m_asg->LogicalRouting();
     if (error) {
         ShowCriticalMsg(tr("[ERROR ASG] Logical Routing failed."));
     }
 }
 
-void MainWindow::Bubbling()
+void MainWindow::GeometricalPlacement()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
-#endif
-
-#if 0
-    if (NOT m_asg->LevellingFinished()) {
-        ShowCriticalMsg(tr("Please Levelling firstly!"));
-        return;
-    }
-    m_asg->Bubbling();
 #endif
 
     int error = m_asg->GeometricalPlacement(m_scene);
@@ -935,21 +940,10 @@ void MainWindow::Bubbling()
     m_view->centerOn(m_scene->Center());
 }
 
-/* before or after bubbling */
-void MainWindow::GenerateSchematic()
+void MainWindow::GeometricalRouting()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
 
-#if 0
-    if (NOT m_asg->LevellingFinished()) {
-        ShowCriticalMsg(tr("Please Levelling firstly!"));
-        return;
-    }
-
-    m_scene->RenderSchematic(m_asg->FinalDevices(), m_asg->WireDesps());
-    qreal height = m_scene->height();
-    m_view->centerOn(0, height / 2);
-#endif
 }

@@ -12,9 +12,30 @@ int SchematicScene::RenderSchematicDevices(const SDeviceList &devices,
     qDebug() << LINE_INFO << "colCount(" << QString::number(colCount) << "), "
              << "rowCount(" << rowCount << ")";
 
+    /* 1. Change device scale according to col and row count */
     ChangeDeviceScale(colCount, rowCount);
+
+    /* 2. Change device orientation (BUG) */ 
     ChangeDeviceOrientation(devices);
-    PlaceAllDevices(devices);
+
+    /* 3. In order to place all devices at scene center position,
+     *    calculate start col and row.
+     */
+
+    int startRow = CalStartRow(rowCount);
+    int startCol = CalStartCol(colCount);
+
+    /* 4. Set device geometrical position and add to scene */
+    int geoCol = 0, geoRow = 0;
+    SchematicDevice *device = nullptr;
+    foreach (device, devices) {
+        geoRow = device->LogicalRow() + startRow;
+        geoCol = device->LogicalCol() * 2 + startCol;
+        device->SetGeometricalPos(/*col*/geoCol, /*row*/geoRow);
+        SetDeviceAt(geoCol, geoRow, device);
+    }
+
+    /* 5. Render extra widgets, such as gnd */
     RenderFixedGnds(devices); // not device
 
     return OKAY;
@@ -35,7 +56,7 @@ void SchematicScene::ChangeDeviceScale(int colCount, int rowCount)
 
 qreal SchematicScene::CalDeviceScale(int colCount, int rowCount)
 {
-    Q_ASSERT(colCount >0 && rowCount > 0);
+    Q_ASSERT(colCount > 0 && rowCount > 0);
     qreal currWidth = width() - m_margin * 2;   // col
     qreal currHeight = height() - m_margin * 2; // row
 
@@ -46,6 +67,26 @@ qreal SchematicScene::CalDeviceScale(int colCount, int rowCount)
 
     qreal scale = (widthScale < heightScale)? widthScale : heightScale;
     return scale;
+}
+
+int SchematicScene::CalStartRow(int rowCount) const
+{
+    int h = height();
+    int totalRowCount = (h - 2 * m_margin) / m_gridH;
+    if (totalRowCount <= rowCount)
+        return 0;
+
+    return (totalRowCount - rowCount) / 2;
+}
+
+int SchematicScene::CalStartCol(int colCount) const
+{
+    int w = width();
+    int totalColCount = (w - 2 * m_margin) / m_gridW;
+    if (totalColCount <= colCount)
+        return 0;
+
+    return (totalColCount - colCount) / 2;
 }
 
 void SchematicScene::UpdateDeviceScale(qreal newScale)
@@ -86,19 +127,6 @@ void SchematicScene::ChangeDeviceOrientation(const SDeviceList &devices)
     }
 }
 
-/* R, L, C, V, I */
-/* We have to reserve spce for channels */
-void SchematicScene::PlaceAllDevices(const SDeviceList &devices)
-{
-    int geoCol = 0, geoRow = 0;
-    SchematicDevice *device = nullptr;
-    foreach (device, devices) {
-        geoRow = device->LogicalRow();
-        geoCol = device->LogicalCol() * 2;
-        SetDeviceAt(geoCol, geoRow, device);
-    }
-}
-
 /* row, col is the geometrical's pos, not logical col and row */
 /* consider scene margin */
 void SchematicScene::SetDeviceAt(int col, int row, SchematicDevice *device)
@@ -106,7 +134,7 @@ void SchematicScene::SetDeviceAt(int col, int row, SchematicDevice *device)
     qreal xPos = col * m_gridW + m_margin;
     qreal yPos = row * m_gridH + m_margin;
     device->setPos(xPos, yPos);
-    device->SetGeometricalPos(/*col*/col, /*row*/row);
+    // device->SetGeometricalPos(/*col*/col, /*row*/row);
     device->SetShowTerminal(m_showTerminal);
     device->SetScale(m_itemScale);
     addItem(device);

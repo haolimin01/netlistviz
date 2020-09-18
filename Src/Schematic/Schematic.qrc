@@ -15,15 +15,16 @@
     <file>images/saveas_schematic.png</file>
     <file>images/scroll.png</file>
     <file>images/show_terminal.png</file>
-    <file>images/build_matrix.png</file>
-    <file>images/levelling.png</file>
-    <file>images/bubbling.png</file>
     <file>images/grid.png</file>
-    <file>images/generate_device.png</file>
     <file>images/asg_property.png</file>
     <file>images/parse_netlist.png</file>
     <file>images/show_branch.png</file>
     <file>images/zoom.png</file>
+    <file>images/move_center.png</file>
+    <file>images/scale_to_origin.png</file>
+    <file>images/log_place.png</file>
+    <file>images/log_route.png</file>
+    <file>images/geo_place.png</file>
+    <file>images/geo_route.png</file>
 </qresource>
 </RCC>
-
