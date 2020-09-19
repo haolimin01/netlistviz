@@ -44,6 +44,7 @@ public:
     /* --------------- For ASG --------------- */
     // total column count (devices + channels), total row count (devices + spaces)
     int  RenderSchematicDevices(const SDeviceList &devices, int colCount, int rowCount);
+    int  RenderSchematicWires();
     /* --------------------------------------- */
 
     void    SetShowTerminal(bool show);
@@ -69,6 +70,7 @@ protected:
 private:
     void InitVariables();
     bool IsItemChange(int type) const;
+    void SenseDeviceTerminal(const QPointF &pos) const;
 
     /* --------------- For ASG --------------- */
     void  ChangeDeviceScale(int colCount, int rowCount);
@@ -78,7 +80,6 @@ private:
     void  UpdateDeviceScale(qreal newScale);
     void  ChangeDeviceOrientation(const SDeviceList &devices);
     void  RenderFixedGnds(const SDeviceList &devices);
-    // void RenderFlexibleGnds(const SDeviceList &devices);
     void  SetDeviceAt(int col, int row, SchematicDevice *device);
     /*---------------------------------------- */
 

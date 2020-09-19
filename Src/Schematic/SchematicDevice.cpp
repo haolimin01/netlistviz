@@ -581,6 +581,19 @@ bool SchematicDevice::CoupledCap() const
     return is;
 }
 
+bool SchematicDevice::TerminalsContain(const QPointF &scenePos) const
+{
+    QPointF relPos = mapFromScene(scenePos);
+    STerminalTable::const_iterator cit;
+    cit = m_terminals.constBegin();
+    for (; cit != m_terminals.constEnd(); ++ cit) {
+        if (cit.value()->Rect().contains(relPos))
+            return true;
+    }
+
+    return false;
+}
+
 /* Print and Plot */
 void SchematicDevice::Print() const
 {

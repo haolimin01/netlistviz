@@ -154,6 +154,21 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
 void SchematicScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
+    QPointF scenePos = mouseEvent->scenePos();
+
+    switch (m_mode) {
+        case BaseMode:
+            SenseDeviceTerminal(scenePos);
+            break;
+        case InsertWireMode:
+            break;
+        case InsertDeviceMode:
+            break;
+        case InsertTextMode:
+            break;
+        default:;
+    }
+
     QGraphicsScene::mouseMoveEvent(mouseEvent);
 }
 
@@ -217,4 +232,24 @@ QPointF SchematicScene::Center() const
         return QPointF(0, 0);
     else
         return QPointF(xPosSum / deviceCount, yPosSum / deviceCount);
+}
+
+void SchematicScene::SenseDeviceTerminal(const QPointF &scenePos) const
+{
+    QGraphicsItem *item;
+    SchematicDevice *device;
+
+    item = itemAt(scenePos, QTransform());
+    if (item) {
+        if (item->type() == SchematicDevice::Type) {
+            device = qgraphicsitem_cast<SchematicDevice *>(item);
+            if (NOT device)  return;
+            if (device->TerminalsContain(scenePos)) {
+                views().first()->setCursor(Qt::CrossCursor);
+                return;
+            }
+        }
+    }
+
+    views().first()->setCursor(Qt::ArrowCursor);
 }

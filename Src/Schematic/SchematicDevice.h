@@ -48,6 +48,7 @@ public:
     void         SetReverse(bool reverse);
     bool         GroundCap() const;
     bool         CoupledCap() const;
+    bool         TerminalsContain(const QPointF &scenePos) const;
 
     SchematicTerminal* GetTerminal(TerminalType type) const;
 
