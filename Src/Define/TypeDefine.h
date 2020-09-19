@@ -38,9 +38,11 @@ typedef QVector<Wire*>                  WireList;
 /* Schematic Containers */
 class SchematicDevice;
 class SchematicTerminal;
+class SchematicWire;
 typedef QMap<QString, SchematicDevice*>        SDeviceTable;
 typedef QVector<SchematicDevice*>              SDeviceList;
 typedef QMap<TerminalType, SchematicTerminal*> STerminalTable;
 typedef QVector<SchematicTerminal*>            STerminalList;
+typedef QVector<SchematicWire*>                SWireList;
 
 #endif // NETLISTVIZ_DEFINE_TYPEDEFINE_H

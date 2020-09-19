@@ -17,6 +17,7 @@ Device::Device(DeviceType type, QString name)
     m_bubbleValue = -1;
     m_reverse = false;
     m_row = -1;
+    m_sDevice = nullptr;
 }
 
 Device::~Device()

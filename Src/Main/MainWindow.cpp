@@ -946,4 +946,8 @@ void MainWindow::GeometricalRouting()
     qInfo() << LINE_INFO << endl;
 #endif
 
+    int error = m_asg->GeometricalRouting();
+    if (error) {
+        ShowCriticalMsg(tr("[ERROR ASG] Geometrical Routing failed."));
+    }
 }

@@ -13,11 +13,12 @@ Terminal::Terminal(Node *node)
     m_id = -1;
     m_device = nullptr;
     m_type = General;
+    m_sTerminal = nullptr;
 }
 
 Terminal::~Terminal()
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << "deleting terminal" << endl;
 #endif
     m_node = nullptr;

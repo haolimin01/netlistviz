@@ -68,6 +68,11 @@ public:
     void SetMaybeAtFirstLevel(bool at) { m_maybeAtFirstLevel = at; }
     bool MaybeAtFirstLevel() const     { return m_maybeAtFirstLevel; }
 
+    /* For creating SchematicWire */
+    void             SetSchematicDevice(SchematicDevice *sDevice)
+                        { m_sDevice = sDevice; }
+    SchematicDevice* GetSchematicDevice() const { return m_sDevice; } 
+
     virtual void Print() const;
 
 private:
@@ -90,6 +95,8 @@ private:
     DeviceList                        m_successors;
     int                               m_bubbleValue;
     int                               m_row;   // row
+
+    SchematicDevice                  *m_sDevice; // For creating SchematicWire
 
     friend class SchematicDevice;
 };

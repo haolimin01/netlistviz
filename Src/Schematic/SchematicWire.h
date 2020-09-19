@@ -39,7 +39,7 @@ public:
     enum { Type = UserType + 6 };
 
 public:
-    /* For ASG */
+    /* For ASG entrance */
     SchematicWire(Wire *wire, QGraphicsItem *parent = nullptr, QGraphicsScene *scene = nullptr);
     /* For InsertSchematicWire in Scene */
     SchematicWire(SchematicDevice *, SchematicDevice *, SchematicTerminal *, SchematicTerminal *,
@@ -54,6 +54,10 @@ public:
     int       type() const override { return Type; }
     QRectF    boundingRect() const override;
     void      SetWirePathPoints(const QVector<QPointF> &points);
+    void      SetThisChannelTrackCount(int count) { m_thisChannelTrackCount = count; }
+    int       ThisChannelTrackCount() const { return m_thisChannelTrackCount; }
+
+    void      Print() const;
 
 protected:
     void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *widget = nullptr) override;
@@ -69,6 +73,11 @@ private:
     SchematicTerminal *m_startTerminal;
     SchematicTerminal *m_endTerminal;
 
+    /* For ASG */
+    int                m_logCol; // logical column
+    int                m_track;  // track number
+    int                m_geoCol;  // geometrical column
+    int                m_thisChannelTrackCount; // track count in this channel (DO NOT contain track=-1)
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICWIRE_H

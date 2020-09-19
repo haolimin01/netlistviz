@@ -14,6 +14,7 @@
 #include "Schematic/SchematicDevice.h"
 #include "Schematic/SchematicTerminal.h"
 #include "Schematic/SchematicScene.h"
+#include "SchematicWire.h"
 
 
 ASG::ASG(CircuitGraph *ckt)
@@ -53,6 +54,9 @@ ASG::~ASG()
     foreach (Channel *channel, m_channels)
         delete channel;
     m_channels.clear();
+
+    m_sdeviceList.clear();
+    m_swireList.clear();
 }
 
 void ASG::SetCircuitgraph(CircuitGraph *ckt)
@@ -143,6 +147,12 @@ int ASG::GeometricalRouting()
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
+
+    int error = CreateSchematicWires();
+    if (error)
+        return ERROR;
+
+    DestroyLogicalData();
 
     return OKAY;
 }
@@ -514,10 +524,12 @@ int ASG::CreateSchematicDevices()
         foreach (terminal, device->GetTerminalList()) {
             sterminal = new SchematicTerminal(terminal);
             sdevice->AddTerminal(sterminal->GetTerminalType(), sterminal);
+            terminal->SetSchematicTerminal(sterminal);
         }
         /* Initialize schematicDevice (Draw device shape, set annotation and tterminals pos) */
         sdevice->Initialize();
         m_sdeviceList.push_back(sdevice);
+        device->SetSchematicDevice(sdevice);
     }
 
 #ifdef DEBUG
@@ -545,6 +557,60 @@ int ASG::RenderSchematicDevices(SchematicScene *scene)
 
     int error = scene->RenderSchematicDevices(m_sdeviceList, colCount, rowCount);
     return error;
+}
+
+int ASG::CreateSchematicWires()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    m_swireList.clear();
+
+    Channel *channel = nullptr;
+    Wire *wire = nullptr;
+    SchematicWire *swire = nullptr;
+
+    foreach (channel, m_channels) {
+        foreach (wire, channel->Wires()) {
+            swire = new SchematicWire(wire, nullptr);
+            swire->SetThisChannelTrackCount(channel->TrackCount());
+            m_swireList.push_back(swire);
+        }
+    }
+
+#ifdef DEBUG
+    foreach (SchematicWire *w, m_swireList) {
+        w->Print();
+    }
+#endif    
+
+    return OKAY;
+}
+
+void ASG::DestroyLogicalData()
+{
+    /* devices and terminals */
+    if (m_ckt) {
+        delete m_ckt;
+        m_ckt = nullptr;
+    }
+
+    /* channels and wires */
+    foreach (Channel *ch, m_channels)
+        delete ch;
+    m_channels.clear();
+
+    /* levels */
+    foreach (Level *level, m_levels)
+        delete level;
+    m_levels.clear();
+
+    /* Matrix and it's elements */
+    if (m_matrix) {
+        delete m_matrix;
+        m_matrix = nullptr;
+    }
 }
 
 /* Print and Plot */

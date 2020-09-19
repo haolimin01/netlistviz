@@ -33,16 +33,22 @@ public:
     Device*      GetDevice() const { return m_device; }
     void         SetTerminalType(TerminalType type) { m_type = type; }
     TerminalType GetTerminalType() const { return m_type; }
+    
+    /* For creating SchematicWire */
+    void               SetSchematicTerminal(SchematicTerminal *sTerminal)
+                        { m_sTerminal = sTerminal; }
+    SchematicTerminal* GetSchematicTerminal() const { return m_sTerminal; }
 
     void Print() const;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Terminal);
 
-    Node         *m_node;
-    int           m_id;
-    Device       *m_device;
-    TerminalType  m_type;
+    Node              *m_node;
+    int                m_id;
+    Device            *m_device;
+    TerminalType       m_type;
+    SchematicTerminal *m_sTerminal; // for creating SchematicWire
 
     friend class SchematicTerminal;
 };

@@ -27,7 +27,8 @@ void CircuitGraph::Clear()
     m_deviceList.clear();
     m_firstLevelDeviceList.clear();
 
-    DestroyAllNodes();
+    // node will be hold by SchematicTerminal
+    // DestroyAllNodes();
     m_nodeTable.clear();
 }
 

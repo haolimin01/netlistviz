@@ -19,6 +19,7 @@ class Wire;
 class Channel;
 class SchematicDevice;
 class SchematicScene;
+class SchematicWire;
 
 
 class ASG
@@ -81,6 +82,7 @@ private:
     TablePlotter      *m_levelsPlotter;
 
     SDeviceList        m_sdeviceList;
+    SWireList          m_swireList;
 };
 
 #endif // NETLISTVIZ_ASG_ASG_H

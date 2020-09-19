@@ -16,6 +16,8 @@ class Device;
 class Terminal;
 class Channel;
 class SchematicWire;
+class SchematicDevice;
+class SchematicTerminal;
 
 class Wire
 {
@@ -28,6 +30,11 @@ public:
     void SetChannelId(int id) { m_channelId = id; }
     int  ChannelId() const    { return m_channelId; }
     bool TrackGiven() const   { return m_trackGiven; }
+
+    SchematicDevice*    FromSDevice() const;
+    SchematicDevice*    ToSDevice() const;
+    SchematicTerminal*  FromSTerminal() const;
+    SchematicTerminal*  ToSTerminal() const;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Wire);
