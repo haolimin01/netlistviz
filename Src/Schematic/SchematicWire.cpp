@@ -49,6 +49,10 @@ void SchematicWire::Initialize()
     m_color = Qt::black;
     m_geoCol = 0;
     m_thisChannelTrackCount = 0;
+
+    setFlag(QGraphicsItem::ItemIsMovable, true);
+    setFlag(QGraphicsItem::ItemIsSelectable, true);
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 }
 
 QRectF SchematicWire::boundingRect() const

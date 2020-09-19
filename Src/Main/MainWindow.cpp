@@ -10,6 +10,7 @@
 #include "Schematic/SchematicView.h"
 #include "Schematic/SchematicTextItem.h"
 #include "Schematic/SchematicWire.h"
+#include "Schematic/SchematicTerminal.h"
 #include "Define/Define.h"
 #include "Schematic/NetlistDialog.h"
 #include "Parser/MyParser.h"
@@ -132,20 +133,13 @@ void MainWindow::closeEvent(QCloseEvent *closeEvent)
 
 void MainWindow::DeleteItem()
 {
-#if 0
     QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
     foreach (QGraphicsItem *item, qAsConst(selectedItems)) {
-        SchematicDevice *device = nullptr;
-        TerminalType terminal;
         if (item->type() == SchematicWire::Type) {
             m_scene->removeItem(item);
             SchematicWire *wire = qgraphicsitem_cast<SchematicWire *>(item);
-            device = wire->StartDevice();
-            terminal = wire->StartTerminal();
-            device->RemoveWire(wire, terminal);
-            device = wire->EndDevice();
-            terminal = wire->EndTerminal();
-            device->RemoveWire(wire, terminal);
+            wire->StartTerminal()->RemoveWire(wire);
+            wire->EndTerminal()->RemoveWire(wire);
             delete item;
         } else if (item->type() == SchematicTextItem::Type) {
             m_scene->removeItem(item);
@@ -154,15 +148,15 @@ void MainWindow::DeleteItem()
     }
 
     selectedItems = m_scene->selectedItems();
+    SchematicDevice *device = nullptr;
     foreach (QGraphicsItem *item, qAsConst(selectedItems)) {
         if (item->type() == SchematicDevice::Type) {
-            SchematicDevice *device = qgraphicsitem_cast<SchematicDevice *>(item);
+            device = qgraphicsitem_cast<SchematicDevice *>(item);
             device->RemoveWires(true);
             m_scene->removeItem(item);
             delete item;
         }
     }
-#endif
 }
 
 /* BUG */

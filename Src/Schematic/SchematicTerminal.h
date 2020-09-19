@@ -17,6 +17,8 @@
 class Terminal;
 class Node;
 class SchematicDevice;
+class SchematicWire;
+class QGraphicsScene;
 
 class SchematicTerminal
 {
@@ -35,6 +37,9 @@ public:
     QRectF       Rect() const { return m_rect; }
     bool         ConnectToGnd() const;
     QPointF      ScenePos() const;
+    void         AddWire(SchematicWire *wire);
+    void         RemoveWires(QGraphicsScene *scene, bool deletion = true);
+    void         RemoveWire(SchematicWire *wire);
 
     /* Print */
     QString      PrintString() const;
@@ -49,6 +54,7 @@ private:
     SchematicDevice   *m_device;
 
     QRectF             m_rect;
+    SWireList          m_wires;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATIC_TERMINAL_H

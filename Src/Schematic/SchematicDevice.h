@@ -49,6 +49,7 @@ public:
     bool         GroundCap() const;
     bool         CoupledCap() const;
     bool         TerminalsContain(const QPointF &scenePos) const;
+    void         RemoveWires(bool deletion = true);
 
     SchematicTerminal* GetTerminal(TerminalType type) const;
     STerminalTable     GetTerminalTable() const { return m_terminals; }

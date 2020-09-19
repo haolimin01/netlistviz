@@ -131,8 +131,33 @@ void SchematicScene::EditorLostFocus(SchematicTextItem *item)
 
 void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
-    if (mouseEvent->button() != Qt::LeftButton)
+    if (mouseEvent->button() == Qt::RightButton) {
+        switch (m_mode) {
+            case BaseMode:
+                break;
+            case InsertWireMode:
+                m_mode = BaseMode;
+                m_startDevice = nullptr;
+                m_startTerminal = nullptr;
+                m_startPoint = QPointF(0, 0);
+                m_currWirePathPoints.clear();
+                removeItem(m_line);
+                if (m_line) {
+                    delete m_line;
+                    m_line = nullptr;
+                }
+                break;
+            case InsertTextMode:
+                break;
+            case InsertDeviceMode:
+                break;
+            default:;
+        }
         return;
+    }
+
+    // if (mouseEvent->button() != Qt::LeftButton)
+    //    return;
     
     switch (m_mode) {
         case BaseMode:
@@ -223,6 +248,10 @@ SchematicWire* SchematicScene::InsertSchematicWire(SchematicDevice *sd, Schemati
     SchematicWire *newWire = new SchematicWire(sd, ed, st, et);
     newWire->SetWirePathPoints(wirePoints);
     addItem(newWire);
+
+    st->AddWire(newWire);
+    et->AddWire(newWire);
+
     return newWire;
 }
 

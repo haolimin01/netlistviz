@@ -60,6 +60,9 @@ SchematicDevice::~SchematicDevice()
     if (m_imag) delete m_imag;
     if (m_annotText) delete m_annotText;
     /* delete its terminals here */
+    foreach (SchematicTerminal *ter, m_terminals.values())
+        delete ter;
+    m_terminals.clear();
 }
 
 void SchematicDevice::Initialize()
@@ -592,6 +595,12 @@ bool SchematicDevice::TerminalsContain(const QPointF &scenePos) const
     }
 
     return false;
+}
+
+void SchematicDevice::RemoveWires(bool deletion)
+{
+    foreach (SchematicTerminal *ter, m_terminals.values())
+        ter->RemoveWires(scene(), deletion);
 }
 
 /* Print and Plot */
