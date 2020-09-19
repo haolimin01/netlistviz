@@ -23,15 +23,15 @@ class Wire;
 class SchematicDevice;
 class SchematicTerminal;
 
-struct WireDescriptor
-{
-    SchematicDevice   *startDevice;
-    SchematicDevice   *endDevice;
-    SchematicTerminal *startTerminal;
-    SchematicTerminal *endTersminal;
-    QVector<QPointF>   pathPoints;
-    QPointF            scenePos;       // wire position in the scene
-};
+// struct WireDescriptor
+// {
+//     SchematicDevice   *startDevice;
+//     SchematicDevice   *endDevice;
+//     SchematicTerminal *startTerminal;
+//     SchematicTerminal *endTersminal;
+//     QVector<QPointF>   pathPoints;
+//     QPointF            scenePos;       // wire position in the scene
+// };
 
 class SchematicWire : public QGraphicsItem
 {
@@ -72,6 +72,7 @@ private:
     SchematicDevice   *m_endDevice;
     SchematicTerminal *m_startTerminal;
     SchematicTerminal *m_endTerminal;
+    QVector<QPointF>   m_wirePathPoints;
 
     /* For ASG */
     int                m_logCol; // logical column

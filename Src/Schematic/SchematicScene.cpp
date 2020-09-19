@@ -1,11 +1,12 @@
 #include "SchematicScene.h"
-
 #include <QGraphicsSceneMouseEvent>
 #include <QTextCursor>
 #include <QApplication>
 #include <QMap>
 #include <QDebug>
 #include <QGraphicsView>
+#include "SchematicTerminal.h"
+#include "SchematicWire.h"
 
 
 SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
@@ -24,13 +25,17 @@ SchematicScene::~SchematicScene()
 void SchematicScene::InitVariables()
 {
     m_mode = BaseMode;
-    m_text = nullptr;
-    m_device = nullptr;
     m_textColor = Qt::black;
     m_deviceType = RESISTOR;
     m_deviceColor = Qt::black;
     m_showTerminal = false;
     m_showBackground = true;
+
+    m_startDevice = nullptr;
+    m_startTerminal = nullptr;
+    m_endDevice = nullptr;
+    m_endTerminal = nullptr;
+    m_line = nullptr;
 
     m_itemScale = 1;
     m_gridW = DFT_Grid_W;
@@ -131,7 +136,7 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
     
     switch (m_mode) {
         case BaseMode:
-            // ProcessMousePress(mouseEvent->scenePos());
+            ProcessMousePress(mouseEvent->scenePos());
             break;
 
         case InsertDeviceMode:
@@ -143,7 +148,7 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
             break;
         
         case InsertWireMode:
-            // FinishDrawingWireAt(mouseEvent->scenePos());
+            FinishDrawingWireAt(mouseEvent->scenePos());
             break;
 
         default:;
@@ -161,6 +166,8 @@ void SchematicScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
             SenseDeviceTerminal(scenePos);
             break;
         case InsertWireMode:
+            SenseDeviceTerminal(scenePos);
+            DrawWireTowardDeviceTerminal(scenePos);
             break;
         case InsertDeviceMode:
             break;
@@ -193,19 +200,30 @@ SchematicDevice* SchematicScene::InsertSchematicDevice(DeviceType type,
 
 SchematicTextItem* SchematicScene::InsertSchematicTextItem(const QPointF &pos)
 {
-    m_text = new SchematicTextItem();
-    m_text->setFont(m_font);
-    m_text->setTextInteractionFlags(Qt::TextEditorInteraction);
-    m_text->setScale(m_itemScale);
-    m_text->setZValue(0);
-    connect(m_text, &SchematicTextItem::LostFocus,
-            this, &SchematicScene::EditorLostFocus);
-    addItem(m_text);
-    m_text->setDefaultTextColor(m_textColor);
-    m_text->setPos(pos);
-    emit TextInserted(m_text);
 
-    return m_text;
+    SchematicTextItem *text = new SchematicTextItem();
+    text->setFont(m_font);
+    text->setTextInteractionFlags(Qt::TextEditorInteraction);
+    text->setScale(m_itemScale);
+    text->setZValue(0);
+    connect(text, &SchematicTextItem::LostFocus,
+            this, &SchematicScene::EditorLostFocus);
+    addItem(text);
+    text->setDefaultTextColor(m_textColor);
+    text->setPos(pos);
+    emit TextInserted(text);
+
+    return text;
+}
+
+SchematicWire* SchematicScene::InsertSchematicWire(SchematicDevice *sd, SchematicDevice *ed,
+    SchematicTerminal *st, SchematicTerminal *et, const QVector<QPointF> &wirePoints)
+{
+    if (NOT sd || NOT ed || NOT st || NOT et) return nullptr;
+    SchematicWire *newWire = new SchematicWire(sd, ed, st, et);
+    newWire->SetWirePathPoints(wirePoints);
+    addItem(newWire);
+    return newWire;
 }
 
 bool SchematicScene::IsItemChange(int type) const
@@ -252,4 +270,99 @@ void SchematicScene::SenseDeviceTerminal(const QPointF &scenePos) const
     }
 
     views().first()->setCursor(Qt::ArrowCursor);
+}
+
+/*
+    When the mouse is pressed in base mode, this function differentiates whether
+    it is clicked on
+    1) A device terminal, then start drawing a wire towards its destination
+    2) A device (not a terminal), then the device is selected.
+*/
+void SchematicScene::ProcessMousePress(const QPointF &scenePos)
+{
+    QGraphicsItem *item = nullptr;
+    SchematicDevice *device = nullptr;
+    QPainterPath path;
+
+    item = itemAt(scenePos, QTransform());
+    if (NOT item)  return;
+
+    if (item->type() == SchematicDevice::Type) {
+        device = qgraphicsitem_cast<SchematicDevice *>(item);
+        if (NOT device) return;
+
+        const STerminalTable &terTable = device->GetTerminalTable();
+        STerminalTable::const_iterator cit = terTable.constBegin();
+        for (; cit != terTable.constEnd(); ++ cit) {
+            if (cit.value()->Rect().contains(device->mapFromScene(scenePos))) {
+                m_startDevice = device;
+                m_startTerminal = cit.value();
+                m_startPoint = cit.value()->ScenePos();
+
+                /* Change mode to InsertWireMode */
+                m_mode = InsertWireMode;
+                if (m_line) delete m_line;
+
+                m_line = new QGraphicsLineItem(QLineF(m_startPoint, m_startPoint));
+                m_line->setPen(QPen(Qt::cyan, 1));
+                addItem(m_line);
+                m_line->setZValue(-1000);
+
+                m_currWirePathPoints.clear();
+                m_currWirePathPoints.append(m_startPoint);
+                break;
+            }
+        }
+    }
+}
+
+void SchematicScene::DrawWireTowardDeviceTerminal(const QPointF &scenePos)
+{
+    if (NOT m_line)
+        return;
+
+   QLineF newLine(m_startPoint, scenePos);
+   m_line->setLine(newLine);
+}
+
+void SchematicScene::FinishDrawingWireAt(const QPointF &scenePos)
+{
+    QGraphicsItem *item = nullptr;
+    SchematicDevice *device = nullptr;
+
+    item = itemAt(scenePos, QTransform());
+    if (NOT item)  return;
+
+    if (item->type() == SchematicDevice::Type) {
+        device = qgraphicsitem_cast<SchematicDevice *>(item);
+        const STerminalTable &terTable = device->GetTerminalTable();
+        STerminalTable::const_iterator cit = terTable.constBegin();
+        for (; cit != terTable.constEnd(); ++ cit) {
+            if (cit.value()->Rect().contains(device->mapFromScene(scenePos))) {
+                m_endDevice = device;
+                m_endTerminal = cit.value();
+                if ((m_startDevice == m_endDevice) && (m_startTerminal == m_endTerminal)) {
+                    m_currWirePathPoints.clear();
+                    m_mode = BaseMode;
+                    views().first()->setCursor(Qt::ArrowCursor);
+                    return;                    
+                }
+                QPointF endPoint = cit.value()->ScenePos();
+                m_currWirePathPoints.append(endPoint);
+                m_mode = BaseMode;
+
+                // InsertSchematicWire
+                InsertSchematicWire(m_startDevice, m_endDevice, m_startTerminal, m_endTerminal, m_currWirePathPoints);
+
+                if (m_line) {
+                    delete m_line;
+                    m_line = nullptr;
+                }
+
+                m_currWirePathPoints.clear();
+                views().first()->setCursor(Qt::ArrowCursor);
+                return;
+            }
+        } 
+    }
 }

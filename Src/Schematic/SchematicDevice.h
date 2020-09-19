@@ -51,6 +51,7 @@ public:
     bool         TerminalsContain(const QPointF &scenePos) const;
 
     SchematicTerminal* GetTerminal(TerminalType type) const;
+    STerminalTable     GetTerminalTable() const { return m_terminals; }
 
     /* Print and Plot */
     void         Print() const;

@@ -68,9 +68,12 @@ protected:
     void drawBackground(QPainter *painter, const QRectF &rect) override;
 
 private:
-    void InitVariables();
-    bool IsItemChange(int type) const;
-    void SenseDeviceTerminal(const QPointF &pos) const;
+    void  InitVariables();
+    bool  IsItemChange(int type) const;
+    void  SenseDeviceTerminal(const QPointF &scenePos) const;
+    void  ProcessMousePress(const QPointF &scenePos);
+    void  DrawWireTowardDeviceTerminal(const QPointF &scenePos);
+    void  FinishDrawingWireAt(const QPointF &scenePos);
 
     /* --------------- For ASG --------------- */
     void  ChangeDeviceScale(int colCount, int rowCount);
@@ -85,14 +88,23 @@ private:
 
     SchematicDevice*   InsertSchematicDevice(DeviceType, const QPointF &);
     SchematicTextItem* InsertSchematicTextItem(const QPointF &);
+    SchematicWire*     InsertSchematicWire(SchematicDevice *, SchematicDevice *,
+                        SchematicTerminal *, SchematicTerminal *, const QVector<QPointF> &);
 
 
     QMenu                      *m_itemMenu;
     Mode                        m_mode;
     QFont                       m_font;
-    SchematicTextItem          *m_text;
-    SchematicDevice            *m_device;
     DeviceType                  m_deviceType;
+
+    /* For SchematicWire */
+    SchematicDevice            *m_startDevice;
+    SchematicTerminal          *m_startTerminal;
+    SchematicDevice            *m_endDevice;
+    SchematicTerminal          *m_endTerminal;
+    QPointF                     m_startPoint;
+    QVector<QPointF>            m_currWirePathPoints;
+    QGraphicsLineItem          *m_line;
 
     QColor                      m_textColor;
     QColor                      m_deviceColor;

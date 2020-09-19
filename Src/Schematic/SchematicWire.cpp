@@ -3,6 +3,8 @@
 #include "SchematicTerminal.h"
 #include "SchematicDevice.h"
 #include <QDebug>
+#include <QStyleOptionGraphicsItem>
+#include <QPainter>
 
 SchematicWire::SchematicWire(Wire *wire, QGraphicsItem *parent, QGraphicsScene *scene)
     : QGraphicsItem(parent)
@@ -51,12 +53,47 @@ void SchematicWire::Initialize()
 
 QRectF SchematicWire::boundingRect() const
 {
+    qreal minX, minY, maxX, maxY;
+    if (m_wirePathPoints.isEmpty())
+        return QRectF(0, 0, 0, 0);
+    
+    minX = maxX = m_wirePathPoints.at(0).x();
+    minY = maxY = m_wirePathPoints.at(0).y();
 
+    foreach (QPointF point, m_wirePathPoints) {
+        minX = qMin(minX, point.x());
+        maxX = qMax(maxX, point.x());
+        minY = qMin(minY, point.y());
+        maxY = qMax(maxY, point.y());
+    }
+
+    return QRectF(minX, minY, maxX - minX, maxY - minY);
 }
 
 void SchematicWire::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
+    int lineWidth = 2;
 
+    if (option->state & QStyle::State_Selected)
+        painter->setPen(QPen(m_color, lineWidth, Qt::DashLine, Qt::RoundCap, Qt::RoundJoin));
+    else
+        painter->setPen(QPen(m_color, lineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    
+    painter->setRenderHint(QPainter::Antialiasing);
+
+    QPointF startPoint, endPoint;
+    for (int i = 0; i < m_wirePathPoints.size() - 1; ++ i) {
+        startPoint = m_wirePathPoints.at(i);
+        endPoint = m_wirePathPoints.at(i + 1);
+        painter->drawLine(startPoint, endPoint);
+    }
+}
+
+void SchematicWire::SetWirePathPoints(const QVector<QPointF> &wirePoints)
+{
+    m_wirePathPoints.clear();
+    /* points contains start and end points, size = 2 */
+    m_wirePathPoints = wirePoints;
 }
 
 void SchematicWire::Print() const
