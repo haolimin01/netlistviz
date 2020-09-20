@@ -54,13 +54,15 @@ private:
     /* --------------------------------------- */
 
     /* ----------- Logical Routing ----------- */
-    int  Createchannels();       // to m_channels
+    int  CreateChannels();       // to m_channels
     int  AssignTrackNumber();    // assign track number to vertical line segment
     /* --------------------------------------- */
 
     /* -------- Geometrical Placement -------- */
     int  DecideDeviceWhetherToReverse();
+    int  DecideDeviceWhetherToReverseIgnoreCap(); // ignore ground cap
     int  CreateSchematicDevices(); // create schematicdevices and schematicterminals
+    int  LinkDeviceForGroundCap();
     int  RenderSchematicDevices(SchematicScene *scene); // render devices to scene
     /* --------------------------------------- */
 
@@ -87,6 +89,7 @@ private:
     SWireList          m_swireList;
 
     bool               m_logDataDestroyed;
+    bool               m_ignoreCap;
 };
 
 #endif // NETLISTVIZ_ASG_ASG_H

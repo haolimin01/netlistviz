@@ -26,6 +26,14 @@ SchematicDevice::SchematicDevice(Device *dev, QMenu *contextMenu,
     m_name = dev->m_name;
     m_logRow = dev->m_row;
     m_reverse = dev->m_reverse;
+    m_gCapConnectDevice = nullptr;
+    m_gCapConnectTerminal = nullptr;
+
+    /* If device is ground cap */
+    if (dev->GroundCap()) {
+        m_gCapConnectDevice = dev->GroundCapConnectSDevice();
+        m_gCapConnectTerminal = dev->GroundCapConnectSTerminal();
+    }
 
     setTransform(transform);
     m_terminals.clear();
@@ -52,6 +60,9 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     /* Insert SchematicDevice entrance */
     /* create terminals by self */
     CreateTerminalsBySelf();
+
+    m_gCapConnectDevice = nullptr;
+    m_gCapConnectTerminal = nullptr;
 
     Initialize();
 }
@@ -318,8 +329,10 @@ QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &
     return QGraphicsItem::itemChange(change, value);
 }
 
- void SchematicDevice::SetOrientation(Orientation orien)
- {
+
+/* BUG */
+void SchematicDevice::SetOrientation(Orientation orien)
+{
     if (orien == m_devOrien)  return;
     qreal angle = 0;
     if (orien == Horizontal) {
@@ -352,7 +365,7 @@ QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &
     m_annotRelPos.ry() += dy;
 
     m_annotText->setPos(mapToScene(m_annotRelPos));
- }
+}
 
 void SchematicDevice::DrawResistor()
 {
@@ -624,6 +637,20 @@ void SchematicDevice::UpdateWirePosition()
                 wire->UpdatePosition(cit.value());
         }
     }
+}
+
+SchematicTerminal* SchematicDevice::GroundCapConnectTerminal() const
+{
+    Q_ASSERT(m_gCapConnectTerminal);
+    return m_gCapConnectTerminal;
+}
+
+/* BUG */
+QPointF SchematicDevice::ScenePosByTerminalScenePos(SchematicTerminal *ter,
+                            const QPointF &terScenePos) const
+{
+    // return terScenePos - (ter->Rect().center()) * scale();
+    return terScenePos;
 }
 
 /* Print and Plot */

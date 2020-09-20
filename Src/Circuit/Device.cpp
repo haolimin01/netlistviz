@@ -10,14 +10,17 @@ Device::Device(DeviceType type, QString name)
 {
     m_name = name;
     m_deviceType = type;
-    m_id = -1;
+    m_id = 0;
     m_maybeAtFirstLevel = false;
     m_levelId = -1;
     m_reverse = false;
-    m_bubbleValue = -1;
+    m_bubbleValue = 0;
     m_reverse = false;
-    m_row = -1;
+    m_row = 0;
     m_sDevice = nullptr;
+    m_groundCap = false;
+    m_gCapConnectDevice = nullptr;
+    m_gCapConnectTerminal = nullptr;
 }
 
 Device::~Device()
@@ -66,10 +69,38 @@ Terminal* Device::GetTerminal(Node *node) const
     return nullptr;
 }
 
+void Device::SetGroundCapConnectDevice(Device *dev)
+{
+    Q_ASSERT(dev);
+    m_gCapConnectDevice = dev;
+    
+    TerminalTable::const_iterator thisCit;
+    TerminalTable::const_iterator otherCit;
+    thisCit = m_terminals.constBegin();
+    otherCit = dev->m_terminals.constBegin();
+
+    bool found = false;
+
+    for (; thisCit != m_terminals.constEnd(); ++ thisCit) {
+        if (thisCit.value()->NodeId() == 0) continue;
+        for (; otherCit != dev->m_terminals.constEnd(); ++ otherCit) {
+            if (otherCit.value()->NodeId() == 0) continue;
+            if (thisCit.value()->NodeId() == otherCit.value()->NodeId()) {
+                m_gCapConnectTerminal = otherCit.value();
+                found = true;
+                break;
+            }
+        }
+        if (found) break;
+    }
+
+    Q_ASSERT(m_gCapConnectTerminal);
+}
+
 bool Device::CoupledCap() const
 {
     bool coupled = false;
-    if ((m_deviceType == CAPACITOR) && (NOT m_groundedCap))
+    if ((m_deviceType == CAPACITOR) && (NOT m_groundCap))
         coupled = true;
     return coupled;
 }
@@ -133,20 +164,25 @@ void Device::AddSuccessor(Device *dev)
     m_successors.push_back(dev);
 }
 
-void Device::CalBubbleValueByPredecessors()
+void Device::CalBubbleValueByPredecessors(bool ignoreGroundCap)
 {
     if (m_predecessors.size() < 1) {
-        m_bubbleValue = -1;
+        m_bubbleValue = 0;
         return;
     }
 
     int sum = 0;
+    int count = 0;
     foreach (Device *dev, m_predecessors) {
         // sum += (100 * dev->Row());
+        if (ignoreGroundCap && dev->GroundCap()) continue;
         sum += dev->Row();
+        count++;
     }
-
-    m_bubbleValue = sum / m_predecessors.size();
+    if (count == 0)
+        m_bubbleValue = 0;
+    else
+        m_bubbleValue = sum / count;
 }
 
 void Device::SetRow(int row)
@@ -155,20 +191,26 @@ void Device::SetRow(int row)
     m_row = row;
 }
 
-void Device::CalBubbleValueBySuccessors()
+void Device::CalBubbleValueBySuccessors(bool ignoreGroundCap)
 {
     if (m_successors.size() < 1) {
-        m_bubbleValue = -1;
+        m_bubbleValue = 0;
         return;
     }
 
     int sum = 0;
+    int count = 0;
     foreach (Device *dev, m_successors) {
         // sum += (100 * dev->Row());
+        if (ignoreGroundCap && dev->GroundCap()) continue;
         sum += dev->Row();
+        count++;
     }
 
-    m_bubbleValue = sum / m_successors.size();
+    if (count == 0)
+        m_bubbleValue = 0;
+    else
+        m_bubbleValue = sum / count;
 }
 
 WireList Device::WiresFromPredecessors() const
@@ -211,12 +253,14 @@ TerminalList Device::GetTerminalList() const
 }
 
 /* just consider R, L, C, V, I */
-void Device::DecideReverseByPredecessors()
+void Device::DecideReverseByPredecessors(bool ignoreGroundCap)
 {
     int connectionsAtPos = 0;
     int connectionsAtNeg = 0;
     Device *device = nullptr;
     foreach (device, m_predecessors) {
+        if (ignoreGroundCap && device->GroundCap()) continue;
+
         if (device->m_reverse) { // to predecessor's positive terminal
             Terminal *posTer = device->GetTerminal(Positive);
             if (HasConnectionIgnoreGnd(posTer, Positive))
@@ -238,12 +282,14 @@ void Device::DecideReverseByPredecessors()
         m_reverse = false;
 }
 
-void Device::DecideReverseBySuccessors()
+void Device::DecideReverseBySuccessors(bool ignoreGroundCap)
 {
     int connectionsAtPos = 0;
     int connectionsAtNeg = 0;
     Device *device = nullptr;
     foreach (device, m_successors) {
+        if (ignoreGroundCap && device->GroundCap()) continue;
+
         if (device->m_reverse) { // to successor's negative terminal
             Terminal *negTer = device->GetTerminal(Negative);
             if (HasConnectionIgnoreGnd(negTer, Positive))
@@ -275,6 +321,18 @@ bool Device::HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType)
     }
 
     return has;
+}
+
+SchematicDevice* Device::GroundCapConnectSDevice() const
+{
+    Q_ASSERT(m_gCapConnectDevice);
+    return m_gCapConnectDevice->GetSchematicDevice();
+}
+
+SchematicTerminal* Device::GroundCapConnectSTerminal() const
+{
+    Q_ASSERT(m_gCapConnectTerminal);
+    return m_gCapConnectTerminal->GetSchematicTerminal();
 }
 
 void Device::Print() const

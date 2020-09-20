@@ -31,6 +31,7 @@ public:
     int         DeviceCount() const { return m_deviceList.size(); }
     DeviceList  GetDeviceList() const { return m_deviceList; }
     Device*     GetDevice(const QString &name) const;
+    DeviceList  GroundCapList() const { return m_groundCapList; }
     void        SetFirstLevelDeviceList(const DeviceList &devList);
     DeviceList  FirstLevelDeviceList() const { return m_firstLevelDeviceList; }
     int         FirstLevelDeviceListSize() const { return m_firstLevelDeviceList.size(); }
@@ -56,6 +57,7 @@ private:
 
     /* For ASG */
     DeviceList    m_deviceList;
+    DeviceList    m_groundCapList;
     DeviceList    m_firstLevelDeviceList;
 };
 

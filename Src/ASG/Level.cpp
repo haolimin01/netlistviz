@@ -56,6 +56,17 @@ int Level::DeviceCountWithoutCap() const
     return m_deviceCountWithoutCap;
 }
 
+int Level::DeviceCountWithoutGroundCap() const
+{
+    int count = 0;
+    foreach (Device *dev, m_deviceList) {
+        if (NOT dev->GroundCap())
+            count++;
+    }
+
+    return count;
+}
+
 int Level::AllDeviceCount() const
 {
     return m_capCount + m_deviceCountWithoutCap;
@@ -86,7 +97,7 @@ DeviceList Level::Devices(DeviceType type) const
     return result;
 }
 
-void Level::AssignRowNumberByBubbleValue()
+void Level::AssignRowNumberByBubbleValue(bool ignoreGroundCap)
 {
     /* sort device by bubble value */
     qSort(m_deviceList.begin(), m_deviceList.end(),
@@ -102,6 +113,8 @@ void Level::AssignRowNumberByBubbleValue()
     int maxRow = -1, row = -1;
     int bubbleValue = -1;
     foreach (Device *dev, m_deviceList) {
+        if (ignoreGroundCap && dev->GroundCap()) continue;
+
         bubbleValue = dev->BubbleValue();
         if (bubbleValue > maxRow) {
             row = bubbleValue;

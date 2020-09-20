@@ -30,6 +30,7 @@ void CircuitGraph::Clear()
     // node will be hold by SchematicTerminal
     // DestroyAllNodes();
     m_nodeTable.clear();
+    m_groundCapList.clear();
 }
 
 /* Destroy all nodes here */
@@ -85,10 +86,12 @@ int CircuitGraph::InsertC(QString name, QString posName, QString negName, double
     m_deviceNumber++;
 
     /* tag cap category */
-    if (posTer->NodeIsGnd() || negTer->NodeIsGnd())
-        c->SetAsGroundedCap(true);
-    else
-        c->SetAsGroundedCap(false);
+    if (posTer->NodeIsGnd() || negTer->NodeIsGnd()) {
+        c->SetAsGroundCap(true);
+        m_groundCapList.push_back(c);
+    } else {
+        c->SetAsGroundCap(false);
+    }
 
     m_deviceTable.insert(name, c);
     m_deviceList.push_back(c);

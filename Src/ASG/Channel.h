@@ -22,7 +22,7 @@ public:
 
     void      AddWire(Wire *wire);
     void      AddWires(const WireList &wires);
-    void      AssignTrackNumber();
+    void      AssignTrackNumber(bool ignoreGroundCap = false);
     WireList  Wires() const { return m_wires; }
     int       TrackCount() const { return m_trackCount; }
 

@@ -44,11 +44,11 @@ public:
 private:
     DISALLOW_COPY_AND_ASSIGN(Terminal);
 
-    Node              *m_node;
-    int                m_id;
-    Device            *m_device;
-    TerminalType       m_type;
-    SchematicTerminal *m_sTerminal; // for creating SchematicWire
+    Node               *m_node;
+    int                 m_id;
+    Device             *m_device;
+    TerminalType        m_type;
+    SchematicTerminal  *m_sTerminal; // for creating SchematicWire
 
     friend class SchematicTerminal;
 };

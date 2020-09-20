@@ -39,8 +39,10 @@ public:
     int          Id() const                { return m_id; }
     QString      Name() const              { return m_name; }
     DeviceType   GetDeviceType() const     { return m_deviceType; }
-    void         SetAsGroundedCap(bool is) { m_groundedCap = is; }
-    bool         GroundedCap() const       { return m_groundedCap; }
+    void         SetGroundCapConnectDevice(Device *dev);
+    Device*      GroundCapConnectDevice() const { return m_gCapConnectDevice; }
+    void         SetAsGroundCap(bool is)   { m_groundCap = is; }
+    bool         GroundCap() const         { return m_groundCap; }
     bool         CoupledCap() const; 
     Terminal*    GetTerminal(TerminalType type) const;
     Terminal*    GetTerminal(Node *node) const;
@@ -52,28 +54,28 @@ public:
     void         SetBubbleValue(int value) { m_bubbleValue = value; }
     void         SetReverse(int reverse)   { m_reverse = reverse; }
     bool         Reverse() const           { return m_reverse; }       
-    void         DecideReverseByPredecessors(); // whether to be reverse
-    void         DecideReverseBySuccessors();   // whether to be reverse
+    void         DecideReverseByPredecessors(bool ignoreGroundCap=false); 
+    void         DecideReverseBySuccessors(bool ignoreGroundCap=false);
     void         SetRow(int row);
     int          Row() const               { return m_row; }
     void         AddPredecessor(Device *dev);
     void         AddSuccessor(Device *dev);
     DeviceList   Predecessors() const      { return m_predecessors; }
     DeviceList   Successors() const        { return m_successors; }
-    void         CalBubbleValueByPredecessors();
-    void         CalBubbleValueBySuccessors();
+    void         CalBubbleValueByPredecessors(bool ignoreGroundCap = false);
+    void         CalBubbleValueBySuccessors(bool ignoreGroundCap = false);
     WireList     WiresFromPredecessors() const;
     TerminalList GetTerminalList() const;
     void         ClearPredecessors() { m_predecessors.clear(); }
     void         ClearSuccessors()   { m_successors.clear(); }
-
-    void SetMaybeAtFirstLevel(bool at) { m_maybeAtFirstLevel = at; }
-    bool MaybeAtFirstLevel() const     { return m_maybeAtFirstLevel; }
+    void         SetMaybeAtFirstLevel(bool at) { m_maybeAtFirstLevel = at; }
+    bool         MaybeAtFirstLevel() const     { return m_maybeAtFirstLevel; }
 
     /* For creating SchematicWire */
-    void             SetSchematicDevice(SchematicDevice *sDevice)
-                        { m_sDevice = sDevice; }
-    SchematicDevice* GetSchematicDevice() const { return m_sDevice; } 
+    void                SetSchematicDevice(SchematicDevice *sDevice) { m_sDevice=sDevice;}
+    SchematicDevice*    GetSchematicDevice() const { return m_sDevice; } 
+    SchematicDevice*    GroundCapConnectSDevice() const;
+    SchematicTerminal*  GroundCapConnectSTerminal() const;
 
     void Print() const;
     void PrintBubbleValue() const;
@@ -86,7 +88,7 @@ private:
     QString                           m_name;
     double                            m_value;
     DeviceType                        m_deviceType;
-    bool                              m_groundedCap;
+    bool                              m_groundCap;
     int                               m_id;
     /* If connects to ground, it maybe at first level (isrc, vsrc now) */
     bool                              m_maybeAtFirstLevel;
@@ -99,6 +101,8 @@ private:
     int                               m_bubbleValue;
     int                               m_row;   // row
 
+    Device                           *m_gCapConnectDevice;   // ground cap connect to device
+    Terminal                         *m_gCapConnectTerminal; // ground cap connect to terminal 
     SchematicDevice                  *m_sDevice; // For creating SchematicWire
 
     friend class SchematicDevice;

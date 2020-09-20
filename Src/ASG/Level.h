@@ -28,8 +28,9 @@ public:
 
     int  CapCount() const;
     int  DeviceCountWithoutCap() const;
+    int  DeviceCountWithoutGroundCap() const;
     int  AllDeviceCount() const;
-    void AssignRowNumberByBubbleValue();
+    void AssignRowNumberByBubbleValue(bool ignoreGroundCap = false);
 
     DeviceList AllDevices() const;
     DeviceList AllDevicesWithoutCap() const;

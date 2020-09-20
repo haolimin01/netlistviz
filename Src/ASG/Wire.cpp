@@ -46,3 +46,17 @@ SchematicTerminal* Wire::ToSTerminal() const
     Q_ASSERT(ter);
     return ter;
 }
+
+bool Wire::HasGroundCap() const
+{
+    bool has = false;
+
+    if (m_fromDevice->GroundCap())
+        has = true;
+    if (NOT has) {
+        if (m_toDevice->GroundCap())
+            has = true;
+    }
+
+    return has;
+}

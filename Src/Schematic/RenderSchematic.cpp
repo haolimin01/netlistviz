@@ -4,7 +4,7 @@
 #include "SchematicWire.h"
 
 int SchematicScene::RenderSchematicDevices(const SDeviceList &devices,
-                    int colCount, int rowCount)
+                    int colCount, int rowCount, bool ignoreGroundCap)
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
@@ -31,16 +31,23 @@ int SchematicScene::RenderSchematicDevices(const SDeviceList &devices,
     int startCol = CalStartCol(colCount);
 
     /* 4. Set device geometrical position and add to scene */
+    SDeviceList gCaps;
     int geoCol = 0, geoRow = 0;
     SchematicDevice *device = nullptr;
     foreach (device, devices) {
+        if (ignoreGroundCap && device->GroundCap()) {
+            gCaps.push_back(device);
+            continue;
+        }
         geoRow = device->LogicalRow() + startRow;
         geoCol = device->LogicalCol() * 2 + startCol;
         device->SetGeometricalPos(/*col*/geoCol, /*row*/geoRow);
         SetDeviceAt(geoCol, geoRow, device);
     }
 
-    /* 5. Render extra widgets, such as gnd */
+
+    /* 5. Render extra widgets, such as gnd, groundCap */
+    if (ignoreGroundCap) RenderGroundCaps(gCaps);
     RenderFixedGnds(devices); // not device
 
     return OKAY;
@@ -157,6 +164,14 @@ void SchematicScene::SetDeviceAt(int col, int row, SchematicDevice *device)
     addItem(device);
 }
 
+void SchematicScene::SetDeviceAt(const QPointF &pos, SchematicDevice *device)
+{
+    device->setPos(pos);
+    device->SetShowTerminal(m_showTerminal);
+    device->SetScale(m_itemScale);
+    addItem(device);
+}
+
 void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
 {
     SchematicDevice *gnd = nullptr;
@@ -203,6 +218,40 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                 }
                 break;
             default:;
+        }
+    }
+}
+
+void SchematicScene::RenderGroundCaps(const SDeviceList &gcaps)
+{
+    SchematicDevice *cap = nullptr;
+    SchematicTerminal *capTer = nullptr, *connectTer = nullptr;
+    QPointF capPos, capTerPos, connectTerPos;
+
+    foreach (cap, gcaps) {
+
+        capTer = cap->GetTerminal(Positive);
+        if (NOT capTer->ConnectToGnd()) {
+            connectTer = cap->GroundCapConnectTerminal();
+            connectTerPos = connectTer->ScenePos();
+            capTerPos.rx() = connectTerPos.x();
+            capTerPos.ry() = connectTerPos.y() + 2 * DFT_DIS * m_itemScale;
+            // capPos = cap->ScenePosByTerminalScenePos(capTer, capTerPos);
+            capPos = capTerPos;
+            cap->SetOrientation(Vertical);
+            SetDeviceAt(capPos, cap);
+        }
+
+        capTer = cap->GetTerminal(Negative);
+        if (NOT capTer->ConnectToGnd()) {
+            connectTer = cap->GroundCapConnectTerminal();
+            connectTerPos = connectTer->ScenePos();
+            capTerPos.rx() = connectTerPos.x();
+            capTerPos.ry() = connectTerPos.y() + 2 * DFT_DIS * m_itemScale;
+            // capPos = cap->ScenePosByTerminalScenePos(capTer, capTerPos);
+            capPos = capTerPos;
+            cap->SetOrientation(Vertical);
+            SetDeviceAt(capPos, cap);
         }
     }
 }

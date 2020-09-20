@@ -51,9 +51,11 @@ public:
     bool         TerminalsContain(const QPointF &scenePos) const;
     void         RemoveWires(bool deletion = true);
     void         UpdateWirePosition();
+    QPointF      ScenePosByTerminalScenePos(SchematicTerminal *ter, const QPointF &terScenePos) const;
 
     SchematicTerminal* GetTerminal(TerminalType type) const;
     STerminalTable     GetTerminalTable() const { return m_terminals; }
+    SchematicTerminal* GroundCapConnectTerminal() const;
 
     /* Print and Plot */
     void         Print() const;
@@ -106,6 +108,10 @@ private:
     /* Geometrical Position */
     int                m_geoCol; // geometrical column
     int                m_geoRow; // geometrical row
+
+    /* if device is ground cap */
+    SchematicDevice   *m_gCapConnectDevice;
+    SchematicTerminal *m_gCapConnectTerminal;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H
