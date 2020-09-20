@@ -64,6 +64,8 @@ public:
     void         CalBubbleValueBySuccessors();
     WireList     WiresFromPredecessors() const;
     TerminalList GetTerminalList() const;
+    void         ClearPredecessors() { m_predecessors.clear(); }
+    void         ClearSuccessors()   { m_successors.clear(); }
 
     void SetMaybeAtFirstLevel(bool at) { m_maybeAtFirstLevel = at; }
     bool MaybeAtFirstLevel() const     { return m_maybeAtFirstLevel; }

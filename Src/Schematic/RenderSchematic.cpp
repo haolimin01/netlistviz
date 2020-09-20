@@ -10,8 +10,12 @@ int SchematicScene::RenderSchematicDevices(const SDeviceList &devices,
     qInfo() << LINE_INFO << endl;
 #endif
 
+#ifdef DEBUG
     qDebug() << LINE_INFO << "colCount(" << QString::number(colCount) << "), "
              << "rowCount(" << rowCount << ")";
+#endif
+
+    clear();
 
     /* 1. Change device scale according to col and row count */
     ChangeDeviceScale(colCount, rowCount);
@@ -208,6 +212,14 @@ int SchematicScene::RenderSchematicWires(const SWireList &wires)
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
+
+    QGraphicsItem *item = nullptr;
+    foreach (item, items()) {
+        if (item->type() == SchematicWire::Type) {
+            removeItem(item);
+            delete item;
+        }
+    }
 
     /* DO NOT consider track now */
     /* 1. assign geometrical col. */

@@ -828,8 +828,10 @@ void MainWindow::ParseNetlist()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    if (m_ckt) delete m_ckt;
-    /* delete all devices, nodes, terminals */
+    /* After Geometrical Routing, the CircuitGraph had destroyed */
+    // if (m_ckt) delete m_ckt;
+
+    /* delete all SchematicDevices, SchematicTerminals, SchematicWires */
     m_scene->clear();
 
     MyParser parser;
@@ -894,6 +896,11 @@ void MainWindow::LogicalPlacement()
     qInfo() << LINE_INFO << endl;
 #endif
 
+    if (m_asg->DataDestroyed()) {
+        ShowCriticalMsg(tr("[ERROR] Data has been destroyed, parse netlist again"));
+        return;
+    }
+
     if (m_ckt->FirstLevelDeviceListSize() < 1) {
         ShowCriticalMsg(tr("Please select first level device(s)"));
         m_asgPropertySelected = false;
@@ -913,6 +920,11 @@ void MainWindow::LogicalPlacement()
 
 void MainWindow::LogicalRouting()
 {
+    if (m_asg->DataDestroyed()) {
+        ShowCriticalMsg(tr("[ERROR] Data has been destroyed, parse netlist again"));
+        return;
+    }
+
     int error = m_asg->LogicalRouting();
     if (error) {
         ShowCriticalMsg(tr("[ERROR ASG] Logical Routing failed."));
@@ -924,6 +936,11 @@ void MainWindow::GeometricalPlacement()
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
+
+    if (m_asg->DataDestroyed()) {
+        ShowCriticalMsg(tr("[ERROR] Data has been destroyed, parse netlist again"));
+        return;
+    }
 
     int error = m_asg->GeometricalPlacement(m_scene);
     if (error) {
@@ -938,6 +955,11 @@ void MainWindow::GeometricalRouting()
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
+
+    if (m_asg->DataDestroyed()) {
+        ShowCriticalMsg(tr("[ERROR] Data has been destroyed, parse netlist again"));
+        return;
+    }
 
     int error = m_asg->GeometricalRouting(m_scene);
     if (error) {

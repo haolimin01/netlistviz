@@ -23,6 +23,7 @@ ASG::ASG(CircuitGraph *ckt)
     m_ckt = ckt;
     m_matrix = nullptr;
     m_levelsPlotter = nullptr;
+    m_logDataDestroyed = false;
 
     m_visited = new int[m_ckt->DeviceCount()];  
     memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCount());
@@ -34,6 +35,7 @@ ASG::ASG()
     m_matrix = nullptr;
     m_visited = nullptr;
     m_levelsPlotter = nullptr;
+    m_logDataDestroyed = false;
 }
 
 ASG::~ASG()
@@ -72,6 +74,8 @@ void ASG::SetCircuitgraph(CircuitGraph *ckt)
     if (m_visited) delete []m_visited;
     m_visited = new int[m_ckt->DeviceCount()];
     memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCount());
+
+    m_logDataDestroyed = false;
 }
 
 int ASG::LogicalPlacement()
@@ -328,6 +332,11 @@ int ASG::BubbleSortConsiderCap()
     if (m_levels.size() <= 1)
         return OKAY;
 
+    foreach (Device *dev, m_ckt->GetDeviceList()) {
+        dev->ClearPredecessors();
+        dev->ClearSuccessors();
+    }
+
     /* First, create device connections */
     Level *frontLevel = m_levels.front();
     Level *rearLevel = nullptr;
@@ -520,6 +529,8 @@ int ASG::DecideDeviceWhetherToReverse()
 
 int ASG::CreateSchematicDevices()
 {
+    m_sdeviceList.clear();
+
     SchematicDevice *sdevice = nullptr;
     SchematicTerminal *sterminal = nullptr;
     Device *device = nullptr;
@@ -618,6 +629,8 @@ void ASG::DestroyLogicalData()
         delete m_matrix;
         m_matrix = nullptr;
     }
+
+    m_logDataDestroyed = true;
 }
 
 int ASG::RenderSchematicWires(SchematicScene *scene)

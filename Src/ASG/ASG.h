@@ -35,6 +35,10 @@ public:
     int  GeometricalPlacement(SchematicScene *scene);
     int  GeometricalRouting(SchematicScene *scene);
 
+    /* Destroy Logical Part Data */
+    void DestroyLogicalData();
+    bool DataDestroyed() const { return m_logDataDestroyed; }
+
 private:
     DISALLOW_COPY_AND_ASSIGN(ASG);
 
@@ -65,8 +69,6 @@ private:
     int  RenderSchematicWires(SchematicScene *scene);   // render wires to scene
     /* --------------------------------------- */
 
-    /* Destroy Logical Part Data */
-    void DestroyLogicalData();
 
     /* Print and Plot */
     void PlotLevels(const QString &title);
@@ -83,6 +85,8 @@ private:
 
     SDeviceList        m_sdeviceList;
     SWireList          m_swireList;
+
+    bool               m_logDataDestroyed;
 };
 
 #endif // NETLISTVIZ_ASG_ASG_H
