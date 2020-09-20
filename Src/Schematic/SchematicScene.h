@@ -44,7 +44,7 @@ public:
     /* --------------- For ASG --------------- */
     // total column count (devices + channels), total row count (devices + spaces)
     int  RenderSchematicDevices(const SDeviceList &devices, int colCount, int rowCount);
-    int  RenderSchematicWires();
+    int  RenderSchematicWires(const SWireList &wires);
     /* --------------------------------------- */
 
     void    SetShowTerminal(bool show);
@@ -81,6 +81,7 @@ private:
     int   CalStartRow(int rowCount) const;
     int   CalStartCol(int colCount) const;
     void  UpdateDeviceScale(qreal newScale);
+    void  UpdateWireScale(qreal newScale);
     void  ChangeDeviceOrientation(const SDeviceList &devices);
     void  RenderFixedGnds(const SDeviceList &devices);
     void  SetDeviceAt(int col, int row, SchematicDevice *device);
@@ -105,6 +106,7 @@ private:
     QPointF                     m_startPoint;
     QVector<QPointF>            m_currWirePathPoints;
     QGraphicsLineItem          *m_line;
+    SWireList                   m_extraWires; // for connecting gnd ...
 
     QColor                      m_textColor;
     QColor                      m_deviceColor;

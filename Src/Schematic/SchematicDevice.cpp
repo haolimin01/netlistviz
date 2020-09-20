@@ -5,6 +5,7 @@
 #include <QGraphicsScene>
 #include "Circuit/Device.h"
 #include "SchematicTerminal.h"
+#include "SchematicWire.h"
 
 
 static const int TerminalSize = 8;
@@ -299,6 +300,10 @@ QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &
 #endif
     if (NOT scene())
         return QGraphicsItem::itemChange(change, value);
+    
+    if (change == ItemPositionHasChanged) {
+        UpdateWirePosition();
+    }
 
     /* deal with annotation text */
     if (change == ItemSceneChange) {
@@ -599,8 +604,26 @@ bool SchematicDevice::TerminalsContain(const QPointF &scenePos) const
 
 void SchematicDevice::RemoveWires(bool deletion)
 {
-    foreach (SchematicTerminal *ter, m_terminals.values())
-        ter->RemoveWires(scene(), deletion);
+    foreach (SchematicTerminal *ter, m_terminals.values()) {
+        foreach (SchematicWire *wire, ter->Wires()) {
+            scene()->removeItem(wire);
+            wire->StartTerminal()->RemoveWire(wire);
+            wire->EndTerminal()->RemoveWire(wire);
+            if (deletion) delete wire;
+        }
+    }
+}
+
+void SchematicDevice::UpdateWirePosition()
+{
+    STerminalTable::const_iterator cit;
+    cit = m_terminals.constBegin();
+    for (; cit != m_terminals.constEnd(); ++ cit) {
+        foreach (SchematicWire *wire, cit.value()->Wires()) {
+            if (NOT wire->isSelected())
+                wire->UpdatePosition(cit.value());
+        }
+    }
 }
 
 /* Print and Plot */

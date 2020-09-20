@@ -33,7 +33,7 @@ public:
     int  LogicalPlacement();
     int  LogicalRouting();
     int  GeometricalPlacement(SchematicScene *scene);
-    int  GeometricalRouting();
+    int  GeometricalRouting(SchematicScene *scene);
 
 private:
     DISALLOW_COPY_AND_ASSIGN(ASG);
@@ -62,7 +62,7 @@ private:
 
     /* --------- Geometrical Routing --------- */
     int  CreateSchematicWires();   // create schematicwires
-    int  RenderSchematicWires();   // render wires to scene
+    int  RenderSchematicWires(SchematicScene *scene);   // render wires to scene
     /* --------------------------------------- */
 
     /* Destroy Logical Part Data */

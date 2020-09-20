@@ -1,6 +1,7 @@
 #include "SchematicScene.h"
 #include <QDebug>
 #include "SchematicTerminal.h"
+#include "SchematicWire.h"
 
 int SchematicScene::RenderSchematicDevices(const SDeviceList &devices,
                     int colCount, int rowCount)
@@ -101,6 +102,18 @@ void SchematicScene::UpdateDeviceScale(qreal newScale)
     }
 }
 
+void SchematicScene::UpdateWireScale(qreal newScale)
+{
+    SchematicWire *wire = nullptr;
+    foreach (QGraphicsItem *item, items()) {
+        if (item->type() == SchematicWire::Type) {
+            wire = qgraphicsitem_cast<SchematicWire*> (item);
+            wire->SetScale(newScale);
+            wire->update();
+        }
+    }
+}
+
 void SchematicScene::ChangeDeviceOrientation(const SDeviceList &devices)
 {
     SchematicTerminal *negTer = nullptr;
@@ -145,6 +158,10 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
     SchematicDevice *gnd = nullptr;
     SchematicTerminal *terminal = nullptr;
     QPointF devTerPos, gndPos;
+    SchematicWire *wire = nullptr;
+    SchematicTerminal *gndTer = nullptr;
+    
+    m_extraWires.clear();
 
     foreach (SchematicDevice *device, devices) {
         switch (device->GetDeviceType()) {
@@ -160,6 +177,11 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                     gndPos.ry() = devTerPos.y() + DFT_DIS * m_itemScale;
                     gnd = InsertSchematicDevice(GND, gndPos);
                     gnd->SetOrientation(Vertical);
+
+                    gndTer = gnd->GetTerminal(General);
+                    wire = new SchematicWire(device, gnd,
+                            terminal, gndTer);
+                    m_extraWires.push_back(wire);
                 }
 
                 terminal = device->GetTerminal(Negative);
@@ -169,9 +191,66 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                     gndPos.ry() = devTerPos.y() + DFT_DIS * m_itemScale;
                     gnd = InsertSchematicDevice(GND, gndPos);
                     gnd->SetOrientation(Vertical);
+
+                    gndTer = gnd->GetTerminal(General);
+                    wire = new SchematicWire(device, gnd,
+                            terminal, gndTer);
+                    m_extraWires.push_back(wire);
                 }
                 break;
             default:;
         }
     }
+}
+
+int SchematicScene::RenderSchematicWires(const SWireList &wires)
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    /* DO NOT consider track now */
+    /* 1. assign geometrical col. */
+    SchematicWire *wire = nullptr;
+    foreach (wire, wires) {
+        int geoCol = wire->LogicalCol() * 2 + 1;
+        wire->SetGeometricalCol(geoCol);
+    }
+
+    /* 2. add to scene */
+    QVector<QPointF> wirePoints;
+    SchematicTerminal *terminal = nullptr;
+    foreach (wire, wires) {
+        terminal = wire->StartTerminal();
+        wirePoints.push_back(terminal->ScenePos());
+        terminal->AddWire(wire);
+
+        terminal = wire->EndTerminal();
+        wirePoints.push_back(terminal->ScenePos());
+        terminal->AddWire(wire);
+
+        wire->SetWirePathPoints(wirePoints);
+        wire->SetScale(m_itemScale);
+        addItem(wire);
+        wirePoints.clear();
+    }
+
+
+    /* 3. add wires to gnd */
+    foreach (wire, m_extraWires) {
+        terminal = wire->StartTerminal();
+        wirePoints.push_back(terminal->ScenePos());
+        terminal->AddWire(wire);
+
+        terminal = wire->EndTerminal();
+        wirePoints.push_back(terminal->ScenePos());
+        terminal->AddWire(wire);
+
+        wire->SetWirePathPoints(wirePoints);
+        wire->SetScale(m_itemScale);
+        addItem(wire);
+        wirePoints.clear();
+    }
+
+    return OKAY;
 }

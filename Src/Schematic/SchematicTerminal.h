@@ -18,7 +18,6 @@ class Terminal;
 class Node;
 class SchematicDevice;
 class SchematicWire;
-class QGraphicsScene;
 
 class SchematicTerminal
 {
@@ -38,8 +37,8 @@ public:
     bool         ConnectToGnd() const;
     QPointF      ScenePos() const;
     void         AddWire(SchematicWire *wire);
-    void         RemoveWires(QGraphicsScene *scene, bool deletion = true);
     void         RemoveWire(SchematicWire *wire);
+    SWireList    Wires() const { return m_wires; }
 
     /* Print */
     QString      PrintString() const;

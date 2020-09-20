@@ -91,20 +91,27 @@ void Level::AssignRowNumberByBubbleValue()
     /* sort device by bubble value */
     qSort(m_deviceList.begin(), m_deviceList.end(),
         [](Device *a, Device *b){ return a->BubbleValue() < b->BubbleValue(); });
+
+#ifdef DEBUGx
+    qInfo() << "Level" << m_id;
+    foreach (Device *dev, m_deviceList)
+        dev->PrintBubbleValue();
+#endif
     
-    /*We consider bubble value as device row now */
-    int maxBubbleValue = m_deviceList.back()->BubbleValue();
-    QVector<int> vec(maxBubbleValue + 1, 0);
-    int bubbleValue = 0, row = 0;
+    /* We consider bubble value as device row now */
+    int maxRow = -1, row = -1;
+    int bubbleValue = -1;
     foreach (Device *dev, m_deviceList) {
         bubbleValue = dev->BubbleValue();
-        while (vec.at(bubbleValue)) {
-            bubbleValue += 1;
-            Q_ASSERT(bubbleValue <= maxBubbleValue);
+        if (bubbleValue > maxRow) {
+            row = bubbleValue;
+            maxRow = row;
+        } else {
+            row = maxRow + 1;
+            maxRow++;
         }
-        row = bubbleValue;
+    
         dev->SetRow(row);
-        vec[bubbleValue] = 1;
     }
 }
 

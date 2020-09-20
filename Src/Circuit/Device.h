@@ -73,7 +73,8 @@ public:
                         { m_sDevice = sDevice; }
     SchematicDevice* GetSchematicDevice() const { return m_sDevice; } 
 
-    virtual void Print() const;
+    void Print() const;
+    void PrintBubbleValue() const;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Device);

@@ -156,8 +156,8 @@ void SchematicScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
         return;
     }
 
-    // if (mouseEvent->button() != Qt::LeftButton)
-    //    return;
+    if (mouseEvent->button() != Qt::LeftButton)
+       return;
     
     switch (m_mode) {
         case BaseMode:
@@ -247,6 +247,7 @@ SchematicWire* SchematicScene::InsertSchematicWire(SchematicDevice *sd, Schemati
     if (NOT sd || NOT ed || NOT st || NOT et) return nullptr;
     SchematicWire *newWire = new SchematicWire(sd, ed, st, et);
     newWire->SetWirePathPoints(wirePoints);
+    newWire->SetScale(m_itemScale);
     addItem(newWire);
 
     st->AddWire(newWire);

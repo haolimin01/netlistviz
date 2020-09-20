@@ -1,6 +1,5 @@
 #include "SchematicTerminal.h"
 #include "Circuit/Terminal.h"
-#include <QGraphicsScene>
 #include "Circuit/Node.h"
 #include "SchematicDevice.h"
 #include "SchematicWire.h"
@@ -27,8 +26,8 @@ SchematicTerminal::SchematicTerminal(TerminalType type, SchematicDevice *device)
 SchematicTerminal::~SchematicTerminal()
 {
     /* delete node here */
-    if (m_node)
-        delete m_node;
+    // if (m_node)
+    //     delete m_node;
 }
 
 void SchematicTerminal::SetDevice(SchematicDevice *device)
@@ -61,16 +60,6 @@ QPointF SchematicTerminal::ScenePos() const
 void SchematicTerminal::AddWire(SchematicWire *wire)
 {
     m_wires.push_back(wire);
-}
-
-void SchematicTerminal::RemoveWires(QGraphicsScene *scene, bool deletion)
-{
-    foreach (SchematicWire *wire, m_wires) {
-        scene->removeItem(wire);
-        wire->StartTerminal()->RemoveWire(wire);
-        wire->EndTerminal()->RemoveWire(wire);
-        if (deletion) delete wire;
-    }
 }
 
 void SchematicTerminal::RemoveWire(SchematicWire *wire)

@@ -142,7 +142,7 @@ int ASG::GeometricalPlacement(SchematicScene *scene)
     return OKAY;
 }
 
-int ASG::GeometricalRouting()
+int ASG::GeometricalRouting(SchematicScene *scene)
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
@@ -153,6 +153,10 @@ int ASG::GeometricalRouting()
         return ERROR;
 
     DestroyLogicalData();
+
+    error = RenderSchematicWires(scene);
+    if (error)
+        return ERROR;
 
     return OKAY;
 }
@@ -470,20 +474,22 @@ int ASG::AssignTrackNumber()
 int ASG::DecideDeviceWhetherToReverse()
 {
     /* First, set maxDeviceCount Level as no reverse */
-    int maxDeviceCountInLevel = -1;
-    int indexOfMaxDeviceCount = -1;
-    Level *levelOfMaxDeviceCount = nullptr;
+    int indexOfMaxDeviceCount = 0;
+    Level *levelOfMaxDeviceCount = m_levels.front();
+    int maxDeviceCountInLevel = levelOfMaxDeviceCount->AllDeviceCount();
+
     Level *level = nullptr;
-    for (int i = 0; i < m_levels.size(); ++ i) {
+
+    for (int i = 1; i < m_levels.size(); ++ i) {
         level = m_levels.at(i);
-        if (level->AllDeviceCount() > maxDeviceCountInLevel) {
+        if (level->AllDeviceCount() >= maxDeviceCountInLevel) {
             maxDeviceCountInLevel = level->AllDeviceCount();
             indexOfMaxDeviceCount = i;
             levelOfMaxDeviceCount = level;
         }
     }
 
-    foreach (Device *dev, level->AllDevices()) {
+    foreach (Device *dev, levelOfMaxDeviceCount->AllDevices()) {
         dev->SetReverse(false);
     }
 
@@ -545,14 +551,15 @@ int ASG::RenderSchematicDevices(SchematicScene *scene)
     Q_ASSERT(scene);
 
     int levelCount = m_levels.size();
-    int maxDeviceCountInLevel = -1;
-    foreach (Level *level, m_levels) {
-        if (level->AllDeviceCount() > maxDeviceCountInLevel) {
-            maxDeviceCountInLevel = level->AllDeviceCount();
-        }
+    int maxRow = -1;
+
+    foreach (Device *dev, m_ckt->GetDeviceList()) {
+        if (dev->Row() > maxRow)
+            maxRow = dev->Row();
     }
 
-    int rowCount = maxDeviceCountInLevel * Row_Device_Factor; 
+    Q_ASSERT(maxRow >= 0);
+    int rowCount = maxRow * Row_Device_Factor + 1; 
     int colCount = levelCount * 2; // levels + channels
 
     int error = scene->RenderSchematicDevices(m_sdeviceList, colCount, rowCount);
@@ -611,6 +618,11 @@ void ASG::DestroyLogicalData()
         delete m_matrix;
         m_matrix = nullptr;
     }
+}
+
+int ASG::RenderSchematicWires(SchematicScene *scene)
+{
+    return scene->RenderSchematicWires(m_swireList);
 }
 
 /* Print and Plot */

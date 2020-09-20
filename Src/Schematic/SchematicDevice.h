@@ -50,6 +50,7 @@ public:
     bool         CoupledCap() const;
     bool         TerminalsContain(const QPointF &scenePos) const;
     void         RemoveWires(bool deletion = true);
+    void         UpdateWirePosition();
 
     SchematicTerminal* GetTerminal(TerminalType type) const;
     STerminalTable     GetTerminalTable() const { return m_terminals; }

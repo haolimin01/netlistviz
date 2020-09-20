@@ -49,6 +49,7 @@ void SchematicWire::Initialize()
     m_color = Qt::black;
     m_geoCol = 0;
     m_thisChannelTrackCount = 0;
+    m_lineWidth = DFT_Wire_W;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -76,12 +77,14 @@ QRectF SchematicWire::boundingRect() const
 
 void SchematicWire::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
-    int lineWidth = 2;
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
 
     if (option->state & QStyle::State_Selected)
-        painter->setPen(QPen(m_color, lineWidth, Qt::DashLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(m_color, m_lineWidth, Qt::DashLine, Qt::RoundCap, Qt::RoundJoin));
     else
-        painter->setPen(QPen(m_color, lineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(m_color, m_lineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     
     painter->setRenderHint(QPainter::Antialiasing);
 
@@ -93,11 +96,42 @@ void SchematicWire::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     }
 }
 
+QVariant SchematicWire::itemChange(GraphicsItemChange change, const QVariant &value)
+{
+    if (NOT m_startDevice->isSelected())
+        m_startDevice->UpdateWirePosition();
+    if (NOT m_endDevice->isSelected())
+        m_endDevice->UpdateWirePosition();
+
+    return QGraphicsItem::itemChange(change, value);
+}
+
 void SchematicWire::SetWirePathPoints(const QVector<QPointF> &wirePoints)
 {
     m_wirePathPoints.clear();
     /* points contains start and end points, size = 2 */
     m_wirePathPoints = wirePoints;
+}
+
+void SchematicWire::UpdatePosition(SchematicTerminal *terminal)
+{
+    QPointF newScenePos = terminal->ScenePos();
+    prepareGeometryChange();
+
+    bool isStartPoint = true;
+    if (terminal == m_endTerminal)
+        isStartPoint = false;
+    
+    QPointF startPoint = newScenePos, endPoint = m_wirePathPoints.back();
+    if (NOT isStartPoint) {
+        startPoint = m_wirePathPoints.front();
+        endPoint = newScenePos;
+    }
+
+    if (isStartPoint)
+        m_wirePathPoints.replace(0, startPoint);
+    else
+        m_wirePathPoints.replace(m_wirePathPoints.size() - 1, endPoint);
 }
 
 void SchematicWire::Print() const

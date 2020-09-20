@@ -294,3 +294,12 @@ void Device::Print() const
     std::cout << "******************************\n";
 }
 
+void Device::PrintBubbleValue() const
+{
+    printf("------------------------------\n");
+    QString tmp = "";
+    tmp += (m_name + " ");
+    tmp += ("bubbleValue(" + QString::number(m_bubbleValue) + ")");
+    qInfo() << tmp;
+    printf("------------------------------\n");
+}

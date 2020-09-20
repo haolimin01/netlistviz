@@ -47,7 +47,6 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow()
 {
     m_scene->clear();
-    // if (m_data)  m_data->Clear();
     if (m_asg)  delete m_asg;
     if (m_netlistDialog)  delete m_netlistDialog;
     if (m_asgDialog)  delete m_asgDialog;
@@ -940,7 +939,7 @@ void MainWindow::GeometricalRouting()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    int error = m_asg->GeometricalRouting();
+    int error = m_asg->GeometricalRouting(m_scene);
     if (error) {
         ShowCriticalMsg(tr("[ERROR ASG] Geometrical Routing failed."));
     }

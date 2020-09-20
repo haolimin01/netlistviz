@@ -44,4 +44,7 @@ const static int Scene_Available = 1250;
 const static int Scene_W = Scene_Margin + 2 * Scene_Available;
 const static int Scene_H = Scene_Margin + 2 * Scene_Available;
 
+/* For SchematicWire */
+const static int DFT_Wire_W = 2;
+
 #endif //NETLISTVIZ_DEFINE_DEFINE_H

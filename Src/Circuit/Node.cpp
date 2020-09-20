@@ -13,7 +13,7 @@ Node::Node(QString name)
 
 Node::~Node()
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << "deleting node " << m_name << endl;
 #endif
     m_deviceList.clear();

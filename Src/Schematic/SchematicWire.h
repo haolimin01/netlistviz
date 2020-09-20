@@ -56,11 +56,16 @@ public:
     void      SetWirePathPoints(const QVector<QPointF> &points);
     void      SetThisChannelTrackCount(int count) { m_thisChannelTrackCount = count; }
     int       ThisChannelTrackCount() const { return m_thisChannelTrackCount; }
+    void      UpdatePosition(SchematicTerminal *terminal); // terminal is unique
+    void      SetScale(qreal scale) { m_lineWidth *= scale; }
+    int       LogicalCol() const { return m_logCol; }
+    void      SetGeometricalCol(int col) { m_geoCol = col; }
 
     void      Print() const;
 
 protected:
-    void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *widget = nullptr) override;
+    void     paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *widget = nullptr) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value) override; 
 
 private:
     DISALLOW_COPY_AND_ASSIGN(SchematicWire);
@@ -73,6 +78,7 @@ private:
     SchematicTerminal *m_startTerminal;
     SchematicTerminal *m_endTerminal;
     QVector<QPointF>   m_wirePathPoints;
+    qreal              m_lineWidth;
 
     /* For ASG */
     int                m_logCol; // logical column
