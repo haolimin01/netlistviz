@@ -43,7 +43,8 @@ public:
 
     /* --------------- For ASG --------------- */
     // total column count (devices + channels), total row count (devices + spaces)
-    int  RenderSchematicDevices(const SDeviceList &devices, int colCount, int rowCount, bool ignoreGroundCap);
+    // int  RenderSchematicDevices(const SDeviceList &devices, int colCount, int rowCount, bool ignoreGroundCap);
+    int  RenderSchematicDevices(const SDeviceList &devices, int colCount, int rowCount, IgnoreCap ignore);
     int  RenderSchematicWires(const SWireList &wires);
     /* --------------------------------------- */
 
@@ -85,6 +86,7 @@ private:
     void  ChangeDeviceOrientation(const SDeviceList &devices);
     void  RenderFixedGnds(const SDeviceList &devices);
     void  RenderGroundCaps(const SDeviceList &gcaps);
+    void  RenderCoupledCaps(const SDeviceList &ccaps);
     void  SetDeviceAt(int col, int row, SchematicDevice *device);   // col, row (grid)
     void  SetDeviceAt(const QPointF &pos, SchematicDevice *device); // coordinate (scanePos)
     /*---------------------------------------- */
@@ -120,6 +122,9 @@ private:
     qreal                       m_gridW;
     qreal                       m_gridH;
     qreal                       m_margin;
+
+    SDeviceList                 m_gCapDeviceList;
+    SDeviceList                 m_cCapDeviceList;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H

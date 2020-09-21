@@ -22,13 +22,15 @@ public:
 
     void      AddWire(Wire *wire);
     void      AddWires(const WireList &wires);
-    void      AssignTrackNumber(bool ignoreGroundCap = false);
+    void      AssignTrackNumber(IgnoreCap ignore);
     WireList  Wires() const { return m_wires; }
     int       TrackCount() const { return m_trackCount; }
 
     void Print() const;
 
 private:
+    DISALLOW_COPY_AND_ASSIGN(Channel);
+
     WireList   m_wires;
     int        m_trackCount;
     int        m_id;

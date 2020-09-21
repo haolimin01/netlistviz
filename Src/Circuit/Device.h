@@ -39,8 +39,7 @@ public:
     int          Id() const                { return m_id; }
     QString      Name() const              { return m_name; }
     DeviceType   GetDeviceType() const     { return m_deviceType; }
-    void         SetGroundCapConnectDevice(Device *dev);
-    Device*      GroundCapConnectDevice() const { return m_gCapConnectDevice; }
+    void         AddConnectDevice(Device *dev);
     void         SetAsGroundCap(bool is)   { m_groundCap = is; }
     bool         GroundCap() const         { return m_groundCap; }
     bool         CoupledCap() const; 
@@ -54,16 +53,16 @@ public:
     void         SetBubbleValue(int value) { m_bubbleValue = value; }
     void         SetReverse(int reverse)   { m_reverse = reverse; }
     bool         Reverse() const           { return m_reverse; }       
-    void         DecideReverseByPredecessors(bool ignoreGroundCap=false); 
-    void         DecideReverseBySuccessors(bool ignoreGroundCap=false);
+    void         DecideReverseByPredecessors(IgnoreCap ignore);
+    void         DecideReverseBySuccessors(IgnoreCap ignore);
     void         SetRow(int row);
     int          Row() const               { return m_row; }
     void         AddPredecessor(Device *dev);
     void         AddSuccessor(Device *dev);
     DeviceList   Predecessors() const      { return m_predecessors; }
     DeviceList   Successors() const        { return m_successors; }
-    void         CalBubbleValueByPredecessors(bool ignoreGroundCap = false);
-    void         CalBubbleValueBySuccessors(bool ignoreGroundCap = false);
+    void         CalBubbleValueByPredecessors(IgnoreCap ignore);
+    void         CalBubbleValueBySuccessors(IgnoreCap ignore);
     WireList     WiresFromPredecessors() const;
     TerminalList GetTerminalList() const;
     void         ClearPredecessors() { m_predecessors.clear(); }
@@ -74,8 +73,9 @@ public:
     /* For creating SchematicWire */
     void                SetSchematicDevice(SchematicDevice *sDevice) { m_sDevice=sDevice;}
     SchematicDevice*    GetSchematicDevice() const { return m_sDevice; } 
-    SchematicDevice*    GroundCapConnectSDevice() const;
-    SchematicTerminal*  GroundCapConnectSTerminal() const;
+
+    DeviceList          CapConnectDeviceList() const { return m_capConnectDeviceList; }
+    STerminalTable      CapConnectSTerminalTable() const;
 
     void Print() const;
     void PrintBubbleValue() const;
@@ -101,8 +101,8 @@ private:
     int                               m_bubbleValue;
     int                               m_row;   // row
 
-    Device                           *m_gCapConnectDevice;   // ground cap connect to device
-    Terminal                         *m_gCapConnectTerminal; // ground cap connect to terminal 
+    DeviceList                        m_capConnectDeviceList;    // for cap
+    TerminalTable                     m_capConnectTerminalTable; // for cap
     SchematicDevice                  *m_sDevice; // For creating SchematicWire
 
     friend class SchematicDevice;

@@ -6,14 +6,16 @@ Level::Level(int id)
 {
     m_id = id;
     m_deviceCountWithoutCap = 0;
-    m_capCount = 0;
+    m_gCapCount = 0;
+    m_cCapCount = 0;
 }
 
 Level::Level()
 {
     m_id = -1;
     m_deviceCountWithoutCap = 0;
-    m_capCount = 0;
+    m_gCapCount = 0;
+    m_cCapCount = 0;
 }
 
 Level::~Level()
@@ -23,8 +25,10 @@ Level::~Level()
 
 void Level::AddDevice(Device *device)
 {
-    if (device->GetDeviceType() == CAPACITOR)
-        m_capCount++;
+    if (device->GroundCap())
+        m_gCapCount++;
+    else if (device->CoupledCap())
+        m_cCapCount++;
     else
         m_deviceCountWithoutCap++;
     
@@ -46,30 +50,19 @@ void Level::SetId(int id)
     }
 }
 
-int Level::CapCount() const
+int Level::DeviceCountWithoutGCap() const
 {
-    return m_capCount;
+    return m_deviceCountWithoutCap + m_cCapCount;
 }
 
-int Level::DeviceCountWithoutCap() const
+int Level::DeviceCountWithoutGCCap() const
 {
     return m_deviceCountWithoutCap;
 }
 
-int Level::DeviceCountWithoutGroundCap() const
-{
-    int count = 0;
-    foreach (Device *dev, m_deviceList) {
-        if (NOT dev->GroundCap())
-            count++;
-    }
-
-    return count;
-}
-
 int Level::AllDeviceCount() const
 {
-    return m_capCount + m_deviceCountWithoutCap;
+    return m_deviceCountWithoutCap + m_gCapCount + m_cCapCount;
 }
 
 DeviceList Level::AllDevices() const
@@ -77,27 +70,7 @@ DeviceList Level::AllDevices() const
     return m_deviceList;
 }
 
-DeviceList Level::AllDevicesWithoutCap() const
-{
-    DeviceList result;
-    foreach (Device *dev, m_deviceList) {
-        if (dev->GetDeviceType() != CAPACITOR)
-            result.push_back(dev);
-    }
-    return result;
-}
-
-DeviceList Level::Devices(DeviceType type) const
-{
-    DeviceList result;
-    foreach (Device *dev, m_deviceList) {
-        if (dev->GetDeviceType() == type)
-            result.push_back(dev);
-    }
-    return result;
-}
-
-void Level::AssignRowNumberByBubbleValue(bool ignoreGroundCap)
+void Level::AssignRowNumberByBubbleValue(IgnoreCap ignore)
 {
     /* sort device by bubble value */
     qSort(m_deviceList.begin(), m_deviceList.end(),
@@ -113,7 +86,9 @@ void Level::AssignRowNumberByBubbleValue(bool ignoreGroundCap)
     int maxRow = -1, row = -1;
     int bubbleValue = -1;
     foreach (Device *dev, m_deviceList) {
-        if (ignoreGroundCap && dev->GroundCap()) continue;
+
+        if (ignore == IgnoreGCap && dev->GroundCap()) continue;
+        if ((ignore == IgnoreGCCap) && (dev->GroundCap() || dev->CoupledCap())) continue;
 
         bubbleValue = dev->BubbleValue();
         if (bubbleValue > maxRow) {

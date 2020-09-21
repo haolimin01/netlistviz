@@ -7,6 +7,16 @@
  * @date     : 2020.08.13
  * @desp     : ASG property dialog.
  * @modified : Hao Limin, 2020.09.12
+ * @modified : Hao Limin, 2020.09.21
+ */
+
+/*
+ * @terms:
+ * FirstLevel             : FL
+ * IgnoreCap              : IC
+ * IgnoreGroundCap        : IGC
+ * IgnoreCoupledCap       : ICC 
+ * IgnoreGroundCoupledCap : IGCC
  */
 
 #include <QDialog>
@@ -20,6 +30,7 @@ class QCheckBox;
 QT_END_NAMESPACE;
 
 class CircuitGraph;
+class ASG;
 
 
 class ASGDialog : public QDialog
@@ -31,23 +42,35 @@ public:
     ~ASGDialog();
 
     void SetCircuitGraph(CircuitGraph *ckt);
+    void SetASG(ASG *asg);
 
 private slots:
     void Accept();
-    void FirstLevelSelectAllCheckBoxClicked(bool checked);
-    void FirstLevelSelectDeviceButtonGroupClicked(int id);
+    void FLSelectAllCheckBoxClicked(bool checked);
+    void FLSelectDeviceButtonGroupClicked(int id);
 
 private:
     void CreatePropertyWidgets();
-    void CreateFirstLevelWidget();
+    void CreateFLWidget();
+    void CreateICWidget();
 
-    QVBoxLayout   *m_mainLayout;
-    QLabel        *m_firstLevelSelectLabel;
-    QButtonGroup  *m_firstLevelSelectButtonGroup;
-    CircuitGraph  *m_ckt;
-    QCheckBox     *m_firstLevelSelectAllCheckBox;
+    /* called in Accept */
+    void ProcessFLSelectDeviceButtonGroup();
+    void ProcessICButtonGroup();
+
+    /* For FirstLevelDeviceSelection */
+    QVBoxLayout      *m_mainLayout;
+    QButtonGroup     *m_flSelectButtonGroup;
+    QCheckBox        *m_flSelectAllCheckBox;
+
+    /* For GroundCap and CoupledCap */
+    QButtonGroup     *m_icButtonGroup;
 
     QDialogButtonBox *m_buttonBox;
+
+    /* Cicuit Graph */
+    CircuitGraph     *m_ckt;
+    ASG              *m_asg;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_ASG_DIALOG_H

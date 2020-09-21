@@ -26,15 +26,12 @@ public:
     void AddDevice(Device *device);
     void AddDevices(const DeviceList &devList);
 
-    int  CapCount() const;
-    int  DeviceCountWithoutCap() const;
-    int  DeviceCountWithoutGroundCap() const;
+    int  DeviceCountWithoutGCap() const;
+    int  DeviceCountWithoutGCCap() const;
     int  AllDeviceCount() const;
-    void AssignRowNumberByBubbleValue(bool ignoreGroundCap = false);
+    void AssignRowNumberByBubbleValue(IgnoreCap ignore);
 
     DeviceList AllDevices() const;
-    DeviceList AllDevicesWithoutCap() const;
-    DeviceList Devices(DeviceType type) const;
 
     void PrintAllDevices() const;
     void PrintAllConnections() const;
@@ -46,7 +43,8 @@ private:
     DeviceList m_deviceList;
 
     int        m_deviceCountWithoutCap;
-    int        m_capCount;
+    int        m_gCapCount;
+    int        m_cCapCount;
 };
 
 #endif // NETLISTVIZ_ASG_LEVEL_H

@@ -22,6 +22,9 @@ enum DeviceType { RESISTOR = 0, CAPACITOR, INDUCTOR, ISRC, VSRC, GND, Other };
 /* Orientation */
 enum Orientation { Horizontal, Vertical };
 
+/* ASG Dialog */
+enum IgnoreCap { IgnoreGCap = 0, IgnoreCCap, IgnoreGCCap, IgnoreNoCap };
+
 /* Circuit Containers */
 class Device;
 class Node;

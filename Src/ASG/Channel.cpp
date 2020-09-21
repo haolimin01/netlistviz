@@ -36,7 +36,8 @@ void Channel::AddWires(const WireList &wires)
  * below under baseline : the row is greater, track is smaller
  * horizontal line      : track is -1
  */
-void Channel::AssignTrackNumber(bool ignoreGroundCap)
+
+void Channel::AssignTrackNumber(IgnoreCap ignore)
 {
     if (m_wires.size() < 1)
         return;
@@ -50,7 +51,11 @@ void Channel::AssignTrackNumber(bool ignoreGroundCap)
     int fromDeviceCount = 0;
 
     foreach (wire, m_wires) {
-        if (ignoreGroundCap && wire->HasGroundCap()) {
+        if (ignore == IgnoreGCap && wire->HasGCap()) {
+            wire->SetTrack(-1);
+            continue;
+        }
+        if ((ignore == IgnoreGCCap) && (wire->HasGCap() || wire->HasCCap())) {
             wire->SetTrack(-1);
             continue;
         }
@@ -76,10 +81,6 @@ void Channel::AssignTrackNumber(bool ignoreGroundCap)
     /* Second, assign number to lines, which are above on baseline */
     foreach (wire, m_wires) {
         if (wire->TrackGiven()) continue;
-        if (ignoreGroundCap && wire->HasGroundCap()) {
-            wire->SetTrack(-1);
-            continue;
-        }
         toDevice = wire->m_toDevice;
         if (toDevice->Row() <= baseline) {
             wire->SetTrack(number);
@@ -93,10 +94,6 @@ void Channel::AssignTrackNumber(bool ignoreGroundCap)
     for (int i = m_wires.size() - 1; i >= 0; -- i) {
         wire = m_wires.at(i);
         if (wire->TrackGiven()) continue;
-        if (ignoreGroundCap && wire->HasGroundCap()) {
-            wire->SetTrack(-1);
-            continue;
-        }
         toDevice = wire->m_toDevice;
         if (toDevice->Row() > baseline) {
             wire->SetTrack(number);

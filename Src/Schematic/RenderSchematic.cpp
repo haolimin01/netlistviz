@@ -3,6 +3,7 @@
 #include "SchematicTerminal.h"
 #include "SchematicWire.h"
 
+#if 0
 int SchematicScene::RenderSchematicDevices(const SDeviceList &devices,
                     int colCount, int rowCount, bool ignoreGroundCap)
 {
@@ -48,6 +49,64 @@ int SchematicScene::RenderSchematicDevices(const SDeviceList &devices,
 
     /* 5. Render extra widgets, such as gnd, groundCap */
     if (ignoreGroundCap) RenderGroundCaps(gCaps);
+    RenderFixedGnds(devices); // not device
+
+    return OKAY;
+}
+#endif
+
+int SchematicScene::RenderSchematicDevices(const SDeviceList &devices, int colCount,
+                                           int rowCount, IgnoreCap ignore)
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+#ifdef DEBUG
+    qDebug() << LINE_INFO << "colCount(" << QString::number(colCount) << "), "
+             << "rowCount(" << rowCount << ")";
+#endif
+
+    clear();
+    m_gCapDeviceList.clear();
+    m_cCapDeviceList.clear();
+
+    /* 1. Change device scale according to col and row count */
+    ChangeDeviceScale(colCount, rowCount);
+
+    /* 2. Change device orientation (BUG) */ 
+    ChangeDeviceOrientation(devices);
+
+    /* 3. In order to place all devices at scene center position,
+     *    calculate start col and row.
+     */
+    int startRow = CalStartRow(rowCount);
+    int startCol = CalStartCol(colCount);
+
+    /* 4. Set device geometrical position and add to scene */
+    SDeviceList gCaps;
+    int geoCol = 0, geoRow = 0;
+    SchematicDevice *device = nullptr;
+    foreach (device, devices) {
+        if (device->GroundCap()) {
+            m_gCapDeviceList.push_back(device);
+            if ((ignore == IgnoreGCap) || (ignore == IgnoreGCCap)) continue;
+        }
+        if (device->CoupledCap()) {
+            m_cCapDeviceList.push_back(device);
+            if (ignore == IgnoreGCCap) continue;
+        }
+
+        geoRow = device->LogicalRow() + startRow;
+        geoCol = device->LogicalCol() * 2 + startCol;
+        device->SetGeometricalPos(/*col*/geoCol, /*row*/geoRow);
+        SetDeviceAt(geoCol, geoRow, device);
+    }
+
+    /* 5. Render extra widgets, such as gnd, groundCap, coupledCap */
+    if (ignore == IgnoreGCCap) RenderCoupledCaps(m_cCapDeviceList);
+    if (ignore == IgnoreGCap || ignore == IgnoreGCCap)
+        RenderGroundCaps(m_gCapDeviceList);
     RenderFixedGnds(devices); // not device
 
     return OKAY;
@@ -253,6 +312,21 @@ void SchematicScene::RenderGroundCaps(const SDeviceList &gcaps)
             cap->SetOrientation(Vertical);
             SetDeviceAt(capPos, cap);
         }
+    }
+}
+
+void SchematicScene::RenderCoupledCaps(const SDeviceList &ccaps)
+{
+    SchematicDevice *cap = nullptr;
+    QPointF capPos, cntPosTerPos, cntNegTerPos;
+
+    foreach (cap, ccaps) {
+        cntPosTerPos = cap->CoupledCapConnectTerminal(Positive)->ScenePos();
+        cntNegTerPos = cap->CoupledCapConnectTerminal(Negative)->ScenePos();
+        capPos.rx() = (cntPosTerPos.x() + cntNegTerPos.x()) / 2;
+        capPos.ry() = (cntPosTerPos.y() + cntNegTerPos.y()) / 2;
+        cap->SetOrientation(Vertical);
+        SetDeviceAt(capPos, cap);
     }
 }
 
