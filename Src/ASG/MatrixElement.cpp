@@ -1,17 +1,14 @@
 #include "MatrixElement.h"
-#include "Schematic/SchematicDevice.h"
 
-MatrixElement::MatrixElement(int row, int col, SchematicDevice *fromDevice,
-    SchematicDevice *toDevice, TerminalType fromTer, TerminalType toTer)
+MatrixElement::MatrixElement(int row, int col, Device *fromDevice, Terminal *fromTerminal,
+    Device *toDevice, Terminal* toTerminal)
 {
     m_rowIndex = row;
     m_colIndex = col;
     m_fromDevice = fromDevice;
     m_toDevice = toDevice;
-    m_fromTerminal = fromTer;
-    m_toTerminal = toTer;
-
-    // m_visited = false;
+    m_fromTerminal = fromTerminal;
+    m_toTerminal = toTerminal;
 }
 
 MatrixElement::~MatrixElement()

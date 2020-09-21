@@ -1,6 +1,15 @@
 #ifndef NETLISTVIZ_ASG_TABLEPLOTTER_H
 #define NETLISTVIZ_ASG_TABLEPLOTTER_H
 
+/*
+ * @filename : TablePlotter.h
+ * @author   : Hao Limin 
+ * @date     : 2020.07.30
+ * @email    : haolimin01@aice.sjtu.edu.cn
+ * @desp     : Plot Table for Matrix
+ * @modified : Haolimin, 2020.09.12
+ */
+
 #include <QTableWidget>
 #include <QGraphicsScene>
 #include <QWheelEvent>

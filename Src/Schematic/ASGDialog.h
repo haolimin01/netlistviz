@@ -6,6 +6,7 @@
  * @author   : Hao Limin
  * @date     : 2020.08.13
  * @desp     : ASG property dialog.
+ * @modified : Hao Limin, 2020.09.12
  */
 
 #include <QDialog>
@@ -18,7 +19,7 @@ class QLabel;
 class QCheckBox;
 QT_END_NAMESPACE;
 
-class SchematicData;
+class CircuitGraph;
 
 
 class ASGDialog : public QDialog
@@ -29,7 +30,7 @@ public:
     explicit ASGDialog(QWidget *parent = 0);
     ~ASGDialog();
 
-    void SetSchematicData(SchematicData *data);
+    void SetCircuitGraph(CircuitGraph *ckt);
 
 private slots:
     void Accept();
@@ -43,7 +44,7 @@ private:
     QVBoxLayout   *m_mainLayout;
     QLabel        *m_firstLevelSelectLabel;
     QButtonGroup  *m_firstLevelSelectButtonGroup;
-    SchematicData *m_data;
+    CircuitGraph  *m_ckt;
     QCheckBox     *m_firstLevelSelectAllCheckBox;
 
     QDialogButtonBox *m_buttonBox;

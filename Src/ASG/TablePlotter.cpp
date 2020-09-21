@@ -5,8 +5,8 @@
 #include <QVBoxLayout>
 
 #define tr QObject::tr
-static const int Table_W = 50;
-static const int Table_H = 50;
+static const int Table_W = 30;
+static const int Table_H = 30;
 
 
 TablePlotter::TablePlotter(QWidget *parent) : QTableWidget(parent)
@@ -14,7 +14,7 @@ TablePlotter::TablePlotter(QWidget *parent) : QTableWidget(parent)
     m_rowCount = 0;
     m_colCount = 0;
 
-    setWindowTitle(tr("Incidence Matrix"));
+    setWindowTitle(tr("Table Plotter"));
     setEditTriggers(QAbstractItemView::NoEditTriggers);
     resize(2000, 1500);
 }
@@ -88,7 +88,7 @@ void TablePlotter::wheelEvent(QWheelEvent *event)
 
     if (m_rowCount <= 0 || m_colCount <= 0) return;
 
-    int dw = 2, dh = 2;
+    int dw = 1, dh = 1;
     int currWidth = columnWidth(0);
     int currHeight = rowHeight(0);
     int newWidth = currWidth, newHeight = currHeight;

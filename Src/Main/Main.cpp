@@ -6,9 +6,10 @@
  * @email    : haolimin01@sjtu.edu.cn
  */
 
-#include "Schematic/MainWindow.h"
+#include "MainWindow.h"
 
 #include <QApplication>
+#include <QDesktopWidget>
 
 
 int main(int argv, char *args[])
@@ -17,7 +18,11 @@ int main(int argv, char *args[])
 
     QApplication app(argv, args);
     MainWindow mainWindow;
-    mainWindow.setGeometry(100, 100, 1200, 900);
+
+    /* Get screen size */
+    QRect rect = QApplication::desktop()->availableGeometry(); 
+    mainWindow.setGeometry(0, 0, rect.width(), rect.height());
+
     mainWindow.show();
 
     return app.exec();

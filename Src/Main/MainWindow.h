@@ -2,14 +2,15 @@
 #define NETLISTVIZ_SCHEMATIC_MAINWINDOW_H
 
 #include <QMainWindow>
-#include "SchematicDevice.h"
+#include "Schematic/SchematicDevice.h"
 
 class SchematicScene;
 class SchematicDevice;
 class NetlistDialog;
-class SchematicData;
 class ASG;
 class ASGDialog;
+class CircuitGraph;
+class SchematicView;
 
 QT_BEGIN_NAMESPACE
 class QString;
@@ -25,7 +26,6 @@ class QGraphicsItem;
 class QFont;
 class QToolButton;
 class QAbstractButton;
-class QGraphicsView;
 class QRectF;
 QT_END_NAMESPACE
 
@@ -62,8 +62,14 @@ private slots:
     void CurrentFontChanged(const QFont &font);
     void FontSizeChanged(const QString &size);
 
-    /* SchematicScene scale changed */
-    void SceneScaleChanged(const QString &scale);
+    /* Enable zoom scene by wheel */
+    void ZoomActionToggled(bool enable);
+
+    /* set SchematicView scale to 1 */
+    void ScaleToOriginTriggered();
+
+    /* move to center */
+    void MoveToCenterTriggered();
 
     /* Text color changed */
     void TextColorChanged();
@@ -102,8 +108,8 @@ private slots:
     /* Scroll action toggled */
     void ScrollActionToggled(bool checked);
 
-    /* Show or Hide node on items */
-    void ShowItemNodeToggled(bool show);
+    /* Show or Hide terminal on items */
+    void ShowItemTerminalToggled(bool show);
 
     /* Show as branch on wires and devices */
     void ShowBranchToggled(bool show);
@@ -117,10 +123,11 @@ private slots:
 
     /* For ASG */
     void ASGPropertyTriggered();
-    void BuildIncidenceMatrix();
-    void Levelling();
-    void Bubbling();
-    void GenerateSchematic();
+    void LogicalPlacement();
+    void LogicalRouting();
+    void GeometricalPlacement();
+    void GeometricalRouting();
+
 
 signals:
     void NetlistChanged();
@@ -156,7 +163,7 @@ private:
 
     /* Using by CreateToolBox, Create SchematicDevice */
     QWidget *CreateCellWidget(const QString &text,
-                              SchematicDevice::DeviceType type);
+                              DeviceType type);
 
     /* Color */
     QMenu *CreateColorMenu(const char *slot, QColor defaultColor);
@@ -178,7 +185,7 @@ private:
     SchematicScene     *m_scene;
 
     /* The view */
-    QGraphicsView      *m_view;
+    SchematicView      *m_view;
 
     QAction            *m_exitAction;
     QAction            *m_deleteAction;
@@ -200,7 +207,6 @@ private:
     QToolBar           *m_pointerToolBar;
     QToolBar           *m_asgToolBar;
 
-    QComboBox          *m_sceneScaleCombo;
     QComboBox          *m_fontSizeCombo;
     QFontComboBox      *m_fontCombo;
 
@@ -220,9 +226,12 @@ private:
     QAction            *m_underlineAction;
     QAction            *m_italicAction;
     QAction            *m_textAction;
-    QAction            *m_showNodeAction;
+    QAction            *m_showTerminalAction;
     QAction            *m_showBranchAction;
     QAction            *m_showGridAction;
+    QAction            *m_zoomAction;
+    QAction            *m_moveToCenterAction;
+    QAction            *m_scaleToOriginAction;
     QAction            *m_scrollPointerAction;
     QAction            *m_openNetlistAction;
     QAction            *m_parseNetlistAction;
@@ -234,10 +243,10 @@ private:
 
     /* For ASG Actions */
     QAction            *m_asgPropertyAction;
-    QAction            *m_buildMatrixAction;
-    QAction            *m_levellingAction;
-    QAction            *m_bubblingAction;
-    QAction            *m_generateDeviceAction;
+    QAction            *m_logPlaceAction;
+    QAction            *m_logRouteAction;
+    QAction            *m_geoPlaceAction;
+    QAction            *m_geoRouteAction;
 
     /* Device Panel */
     QDockWidget        *m_devicePanelDockWidget;
@@ -248,7 +257,7 @@ private:
     QString             m_curSchematicFile;
 
     NetlistDialog      *m_netlistDialog;
-    SchematicData      *m_data;
+    CircuitGraph       *m_ckt;
     ASG                *m_asg;
     ASGDialog          *m_asgDialog;
     bool                m_asgPropertySelected;
@@ -256,6 +265,5 @@ private:
     /* for cursor image */
     SchematicDevice    *m_deviceBeingAdded;
 };
-//! [0]
 
 #endif // NETLISTVIZ_SCHEMATIC_MAINWINDOW_H

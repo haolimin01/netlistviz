@@ -4,116 +4,92 @@
 /*
  * @filename : ASG.h
  * @author   : Hao Limin
- * @date     : 2020.07.31
+ * @date     : 2020.09.12
  * @desp     : Automatic Schematic Generator.
  */
 
-#include <QMultiMap>
-#include <QPair>
 #include "Define/Define.h"
 #include "Define/TypeDefine.h"
-#include "Schematic/SchematicDevice.h"
 
-class  Matrix;
-class  SchematicData;
-class  TablePlotter;
-struct WireDescriptor;
-
-
-/* each level device list */
-class DevLevelDescriptor
-{
-public:
-    explicit DevLevelDescriptor(int level);
-    ~DevLevelDescriptor();
-
-    void AddDevice(SchematicDevice *device);
-    void AddDevices(const DeviceList &devList);
-    DeviceList AllDevices() const;
-    DeviceList AllDevicesWithoutCap() const;
-    DeviceList Devices(int priority) const;
-
-    int CapCount() const  { return m_capCnt; }
-    int DeviceCntWithoutCap() const  { return m_deviceCntWithoutCap; }
-    int AllDeviceCount() const  { return m_capCnt + m_deviceCntWithoutCap; }
-
-    void PrintAllDevices() const;
-
-private:
-    DISALLOW_COPY_AND_ASSIGN(DevLevelDescriptor);
-
-    int m_level;
-
-    /* priority : DeviceList */
-    QMap<int, DeviceList> m_levelDevices;
-
-    int m_deviceCntWithoutCap;
-    int m_capCnt;
-};
+class Matrix;
+class TablePlotter;
+class CircuitGraph;
+class Level;
+class Wire;
+class Channel;
+class SchematicDevice;
+class SchematicScene;
+class SchematicWire;
 
 
 class ASG
 {
 public:
-    typedef QPair<int, TerminalType>  DeviceTerminal;
-
-public:
-    explicit ASG(SchematicData *data);
+    explicit ASG(CircuitGraph *ckt);
     ASG();
     ~ASG();
 
-    void SetSchematicData(SchematicData *data);
-    void BuildIncidenceMatrix();
-    void Levelling();
-    void Bubbling();
+    void SetCircuitgraph(CircuitGraph *ckt);
+    int  LogicalPlacement();
+    int  LogicalRouting();
+    int  GeometricalPlacement(SchematicScene *scene);
+    int  GeometricalRouting(SchematicScene *scene);
 
-    bool BuildMatrixFinished() const { return m_buildMatrixFlag; }
-    bool LevellingFinished() const { return m_levellingFlag; }
-    bool BubblingFinished() const { return m_bubblingFlag; }
-
-    /* 2-d array */
-    QVector<DevLevelDescriptor*> FinalDevices() const { return m_devices; }
-    QVector<WireDescriptor*>     WireDesps() const { return m_wireDesps; }
+    /* Destroy Logical Part Data */
+    void DestroyLogicalData();
+    bool DataDestroyed() const { return m_logDataDestroyed; }
 
 private:
     DISALLOW_COPY_AND_ASSIGN(ASG);
 
-    /* return next level device list. */
-    DeviceList FillNextLevelDeviceList(const DeviceList) const;
+    /* ---------- Logical Placement ---------- */
+    int    BuildIncidenceMatrix(); // undirected graph
+    int    CalLogicalCol();        // calculate logical column by depth
+    int    CalLogicalRow();        // calculate logical row by bubble sort
+    int    InsertBasicDevice(Device *device);
+    Level* CreateNextLevel(Level *prevLevel) const;
+    int    BubbleSort();
+    int    BubbleSortConsiderCap();
+    int    BubbleSortIgnoreCap();
+    /* --------------------------------------- */
 
-    /* Directed graph */
-    void InsertRLC(SchematicDevice *device);
-    void InsertVI(SchematicDevice *device);
+    /* ----------- Logical Routing ----------- */
+    int  CreateChannels();       // to m_channels
+    int  AssignTrackNumber();    // assign track number to vertical line segment
+    /* --------------------------------------- */
 
-    /* R, L, C, V, I : Undirected graph */
-    void InsertBasicDevice(SchematicDevice *device);
+    /* -------- Geometrical Placement -------- */
+    int  DecideDeviceWhetherToReverse();
+    int  DecideDeviceWhetherToReverseIgnoreCap(); // ignore ground cap
+    int  CreateSchematicDevices(); // create schematicdevices and schematicterminals
+    int  LinkDeviceForGroundCap();
+    int  RenderSchematicDevices(SchematicScene *scene); // render devices to scene
+    /* --------------------------------------- */
 
-    void GenerateWireDesps();
-    bool ContainsWire(int id1, int id2, TerminalType type1, TerminalType type2);
-
-    void PrintAllDevices() const;
-    void PlotAllDevices();
-    void PrintDeviceTerminals() const;
-
-    Matrix        *m_matrix;      // incidence matrix
-    int            m_matrixSize;  // matrix size
-    SchematicData *m_ckt;         // circuit infomation
-
-    /* level : DevLevelDescriptor */
-    /* Do not contain GND */
-    QVector<DevLevelDescriptor*> m_devices;
-    /* for generate wires */
-    QVector<WireDescriptor*> m_wireDesps;
+    /* --------- Geometrical Routing --------- */
+    int  CreateSchematicWires();   // create schematicwires
+    int  RenderSchematicWires(SchematicScene *scene);   // render wires to scene
+    /* --------------------------------------- */
 
 
-    bool                   m_buildMatrixFlag;
-    bool                   m_levellingFlag;
-    bool                   m_bubblingFlag;
-    int                   *m_visited;
-    QMultiMap<DeviceTerminal, DeviceTerminal> m_devTers; // For removing the same wires
+    /* Print and Plot */
+    void PlotLevels(const QString &title);
 
-    TablePlotter          *m_levelPlotter;
-    TablePlotter          *m_bubblePlotter;
+
+    /* ASG members */
+    CircuitGraph      *m_ckt;
+    Matrix            *m_matrix;
+    int               *m_visited;
+
+    QVector<Level*>    m_levels;
+    QVector<Channel*>  m_channels;
+    TablePlotter      *m_levelsPlotter;
+
+    SDeviceList        m_sdeviceList;
+    SWireList          m_swireList;
+
+    bool               m_logDataDestroyed;
+    bool               m_ignoreCap;
 };
 
 #endif // NETLISTVIZ_ASG_ASG_H

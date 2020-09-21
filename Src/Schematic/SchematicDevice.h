@@ -2,149 +2,116 @@
 #define NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H
 
 #include <QGraphicsPathItem>
+#include "Define/TypeDefine.h"
+#include "Define/Define.h"
 
 QT_BEGIN_NAMESPACE
 class QGraphicsPixmapItem;
 class QGraphicsSceneMouseEvent;
 QT_END_NAMESPACE;
 
-class CktNode;
+class Device;
 class SchematicWire;
-
-enum TerminalType    { Positive, Negative, General };
-
-/* device priority */
-const int R_Priority = 0;
-const int L_Priority = 1;
-const int V_Priority = 2;
-const int I_Priority = 3;
-const int C_Priority = 4;
-const int GND_Priority = 5;
-// const int Dot_Priority = 6;
-
+class SchematicTerminal;
 
 class SchematicDevice : public QGraphicsPathItem
 {
 public:
-	enum { Type = UserType + 4 };
-	enum DeviceType { Resistor=0, Capacitor, Inductor,
-					 Vsrc/*3*/, Isrc, GND /*, Dot*/ };
-	enum Orientation { Horizontal, Vertical };
+    enum { Type = UserType + 4 };
 
 public:
-	SchematicDevice(DeviceType type, QMenu *contextMenu,
-				QTransform itemTransform = QTransform(), QGraphicsItem *parent = nullptr);
+    /* ASG entrance */
+    SchematicDevice(Device *dev, QMenu *contextMenu = nullptr,
+                QTransform transform = QTransform(), QGraphicsItem *parent = nullptr);
 
-	~SchematicDevice();
+    /* Insert SchematicDevice (in Scene) entrance*/
+    SchematicDevice(DeviceType type, QMenu *contextMenu,
+                QTransform transform = QTransform(), QGraphicsItem *parent = nullptr);
+    
+    ~SchematicDevice();
 
-	QPixmap      Image();
-	QRectF       boundingRect() const override;
-
-	CktNode*     Terminal(TerminalType type) const;
-	void         AddTerminal(TerminalType type, CktNode *node);
-	int          TerminalId(TerminalType type) const;
-	QPointF      TerminalPos(TerminalType type) const;
-	QPointF      TerminalScenePos(TerminalType type) const;
-	QPointF      NodeScenePos(TerminalType type) const;
-	void         UpdateNodeScenePos();
-	QPointF      ScenePosByTerminalScenePos(TerminalType type, const QPointF &scenePos);
-	
-	void         SetId(int id) { m_id = id; m_idGiven = true; }
-	int          Id()  const { return m_id; }
-	bool         IdGiven() const { return m_idGiven; }
-	TerminalType GetTerminalType(CktNode *node) const;
+    void         Initialize(); // draw device shape, set annotation and terminals shape
+    QPixmap      Image();
+    int          type() const override { return Type; }
+    QRectF       boundingRect() const override;
+    DeviceType   GetDeviceType() const { return m_deviceType; }
+    void         SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
+    void         AddTerminal(TerminalType type, SchematicTerminal *terminal);
+    QString      Name() const { return m_name; }
+    void         SetShowTerminal(bool show) { m_showTerminal = show; }
+    void         SetGeometricalPos(int col, int row);
+    int          LogicalCol() const { return m_logCol; }
+    int          LogicalRow() const { return m_logRow; }
 	void         SetOrientation(Orientation orien);
 	Orientation  GetOrientation() const { return m_devOrien; }
-	void         SetSceneXY(int x, int y);
-	int          SceneX() const  { return m_sceneX; }
-	int          SceneY() const  { return m_sceneY; }
-	bool         Placed() const  { return m_placed; }
-	void         SetPlaced(bool placed)  { m_placed = placed; }
-	int          Priority() const  { return m_priority; }
-	void         SetOnBranch(bool on)  { m_onBranch = on; }
-	bool         OnBranch() const  { return m_onBranch; }
-	void         SetShowOnBranchFlag(bool show)  { m_showOnBranchFlag = show; }
-	bool         TerminalsContainBranchWire();
-
-	DeviceType   GetDeviceType() const { return m_deviceType; }
-	int          type() const override { return Type; }
-	QColor       Color() const  { return m_color; }
-	void         SetName(QString name);
-	void         SetValue(double value) { m_value = value; }
-    QString      Name() const { return m_name; }
-	double       Value() const { return m_value; }
-	void         SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
-	void         SetShowNodeFlag(bool show = true)  { m_showNodeFlag = show; }
-	void         AddWire(SchematicWire *wire, TerminalType type);
-	void         RemoveWires(bool deletion = true);
-	void         RemoveWire(SchematicWire *wire, TerminalType type);
-	bool         TerminalsContain(const QPointF &scenePos) const;
-	bool         IsDevice() const  { return m_isDevice; }
-	void         SetMaybeAtFirstLevel(bool is) { m_maybeAtFirstLevel = is; }
-	bool         MaybeAtFirstLevel() const  { return m_maybeAtFirstLevel; }
+    void         SetScale(qreal newScale);
+    void         SetReverse(bool reverse);
     bool         GroundCap() const;
     bool         CoupledCap() const;
-	void         UpdateWirePosition();
+    bool         TerminalsContain(const QPointF &scenePos) const;
+    void         RemoveWires(bool deletion = true);
+    void         UpdateWirePosition();
+    QPointF      ScenePosByTerminalScenePos(SchematicTerminal *ter, const QPointF &terScenePos) const;
 
-	QMap<TerminalType, QRectF> TerminalRects() const  { return m_terRects; }
-	void Print() const;
+    SchematicTerminal* GetTerminal(TerminalType type) const;
+    STerminalTable     GetTerminalTable() const { return m_terminals; }
+    SchematicTerminal* GroundCapConnectTerminal() const;
+
+    /* Print and Plot */
+    void         Print() const;
 
 protected:
-	void         paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-			     	QWidget *widget = nullptr) override;
-	void         contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
-	QVariant     itemChange(GraphicsItemChange change, const QVariant &value) override;
-	QPainterPath shape() const override;
-	void         mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void         paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+                  QWidget *widget = nullptr) override;
+    void         contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+    QPainterPath shape() const override;
+    void         mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    QVariant     itemChange(GraphicsItemChange change, const QVariant &value) override;
 
 private:
-	void   InitVariables();
-	QRectF DashRect() const;
-	void   UpdateTerminalScenePos();
+    DISALLOW_COPY_AND_ASSIGN(SchematicDevice);
 
-	/* For annotation text */
-	void CreateAnnotation(const QString &text);
-	void SetCustomAnnotRelPos();
+    /* For Insert SchematicDevice entrance */
+    void         CreateTerminalsBySelf();
+    QRectF       DashRect() const;
+    void         SetTerminalRect(TerminalType type, const QRectF &rect);
 
-	void DrawResistor();
-	void DrawCapacitor();
-	void DrawInductor();
-	void DrawIsrc();
-	void DrawVsrc();
-	void DrawGND();
-	// void DrawDot(); // represent for node
+    /* For annotation text */
+    void         CreateAnnotation(const QString &text);
+    void         SetAnnotRelPos();
 
-	QMap<TerminalType, CktNode *> m_terminals;
-	QMap<TerminalType, QVector<SchematicWire*>> m_wiresAtTerminal;
+    void         DrawResistor();
+    void         DrawCapacitor();
+    void         DrawInductor();
+    void         DrawIsrc();
+    void         DrawVsrc();
+    void         DrawGnd();
 
-	DeviceType      m_deviceType;
-	QMenu          *m_contextMenu;
+    QMenu             *m_contextMenu;
+    QColor             m_color;        // device color
+    Orientation        m_devOrien;     // device orientation
+    QPixmap           *m_imag;
+    QGraphicsTextItem *m_annotText;    // annotation text
+    QPointF            m_annotRelPos;  // annoatiton text relative position
+    bool               m_isDevice;     // (gnd is not device)
+    STerminalTable     m_terminals;    // type : SchematicTerminal Ptr
+    bool               m_showTerminal; // draw terminal rect on scene
 
-	QColor			m_color;      // device color
-	Orientation     m_devOrien;   // device orientation
-	int             m_terNumber;  // terminal number
-	QPixmap        *m_imag;       // device image
-	bool            m_showNodeFlag;
-	int             m_id;         // device id, for creating incidence matrix.
-	bool            m_idGiven;
+    /* Copy from Circuit Device (Logical) */
+    int                m_id;
+    int                m_logCol;   // logical col
+    int                m_logRow;   // logical row
+    DeviceType         m_deviceType;
+    QString            m_name;
+    bool               m_reverse;
 
-	QMap<TerminalType, QRectF> m_terRects;
-	QGraphicsTextItem         *m_annotText; //Annotation Text
-	QPointF                    m_annotRelPos; // Annotation text relative position
+    /* Geometrical Position */
+    int                m_geoCol; // geometrical column
+    int                m_geoRow; // geometrical row
 
-	/* For CktParser */
-	QString         m_name;       // device value
-	double          m_value;      // device name
-
-	/* Grid position, for ASG */
-	int             m_sceneX;
-	int             m_sceneY;
-	bool            m_placed;
-	int             m_priority;
-	bool            m_onBranch;
-	bool            m_showOnBranchFlag;
-	bool            m_isDevice;
-	bool            m_maybeAtFirstLevel;
+    /* if device is ground cap */
+    SchematicDevice   *m_gCapConnectDevice;
+    SchematicTerminal *m_gCapConnectTerminal;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H

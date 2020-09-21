@@ -24,15 +24,14 @@ MyParser::~MyParser()
     }
 }
 
-int MyParser::ParseNetlist(const std::string &netlist, SchematicData *data)
+int MyParser::ParseNetlist(const std::string &netlist, CircuitGraph *ckt)
 {
-    assert(data);
+    assert(ckt);
 #ifdef TRACE
     std::cout << LINE_INFO << std::endl;
 #endif
-
     yyin = fopen(netlist.c_str(), "r");
-    if (!yyin) {
+    if (NOT yyin) {
         std::cout << "Open " << netlist << " failed.\n" << std::endl;
         fclose(yyin);
         return ERROR;
@@ -42,10 +41,8 @@ int MyParser::ParseNetlist(const std::string &netlist, SchematicData *data)
         delete m_cktParser;
     }
 
-    m_cktParser = new yy::CktParser(data);
+    m_cktParser = new yy::CktParser(ckt);
     m_cktParser->parse();
-
-    data->AssignDeviceNumber();
 
     fclose(yyin);
     yyin = NULL;

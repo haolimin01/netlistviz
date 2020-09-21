@@ -6,14 +6,16 @@
 #include <QDebug>
 #include <QRectF>
 #include <QList>
-#include "SchematicScene.h"
-#include "SchematicTextItem.h"
-#include "SchematicWire.h"
+#include "Schematic/SchematicScene.h"
+#include "Schematic/SchematicView.h"
+#include "Schematic/SchematicTextItem.h"
+#include "Schematic/SchematicWire.h"
+#include "Schematic/SchematicTerminal.h"
 #include "Define/Define.h"
-#include "NetlistDialog.h"
+#include "Schematic/NetlistDialog.h"
 #include "Parser/MyParser.h"
 #include "ASG/ASG.h"
-#include "ASGDialog.h"
+#include "Schematic/ASGDialog.h"
 
 const int DEV_ICON_SIZE = 30;
 
@@ -45,7 +47,6 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow()
 {
     m_scene->clear();
-    if (m_data)  m_data->Clear();
     if (m_asg)  delete m_asg;
     if (m_netlistDialog)  delete m_netlistDialog;
     if (m_asgDialog)  delete m_asgDialog;
@@ -57,8 +58,8 @@ void MainWindow::InitVariables()
     m_curNetlistFile = "";
     m_curSchematicPath = ".";
     m_curSchematicFile = "";
-    m_data = nullptr;
-    m_asg = new ASG();
+    m_ckt = nullptr;
+    m_asg = nullptr;
     m_deviceBeingAdded = nullptr;
 
     m_netlistDialog = new NetlistDialog();
@@ -70,7 +71,8 @@ void MainWindow::InitVariables()
 void MainWindow::CreateSchematicScene()
 {
     m_scene = new SchematicScene(m_editMenu, this);
-    m_scene->setSceneRect(QRectF(0, 0, 5000, 5000));
+
+    m_scene->setSceneRect(QRectF(0, 0, Scene_W, Scene_H));
     m_scene->setFocus(Qt::MouseFocusReason);
 
     connect(m_scene, &SchematicScene::TextInserted,
@@ -84,7 +86,7 @@ void MainWindow::CreateSchematicScene()
 void MainWindow::CreateCenterWidget()
 {
     QHBoxLayout *layout = new QHBoxLayout;
-    m_view = new QGraphicsView(m_scene);
+    m_view = new SchematicView(m_scene);
     m_view->setRenderHints(QPainter::Antialiasing
                         | QPainter::NonCosmeticDefaultPen
                         | QPainter::TextAntialiasing);
@@ -107,14 +109,14 @@ void MainWindow::DeviceBtnGroupClicked(int id)
         }
     }
     m_scene->SetMode(SchematicScene::InsertDeviceMode);
-    m_scene->SetDeviceType(SchematicDevice::DeviceType(id));
+    m_scene->SetDeviceType(DeviceType(id));
 
     if (m_deviceBeingAdded) {
         delete m_deviceBeingAdded;
         m_deviceBeingAdded = nullptr;
     }
 
-    m_deviceBeingAdded = new SchematicDevice(SchematicDevice::DeviceType(id), m_editMenu);
+    m_deviceBeingAdded = new SchematicDevice(DeviceType(id), m_editMenu);
     QPixmap image(m_deviceBeingAdded->Image());
     m_view->setCursor(QCursor(image.scaled(30, 30)));
 }
@@ -132,17 +134,11 @@ void MainWindow::DeleteItem()
 {
     QList<QGraphicsItem *> selectedItems = m_scene->selectedItems();
     foreach (QGraphicsItem *item, qAsConst(selectedItems)) {
-        SchematicDevice *device = nullptr;
-        TerminalType terminal;
         if (item->type() == SchematicWire::Type) {
             m_scene->removeItem(item);
             SchematicWire *wire = qgraphicsitem_cast<SchematicWire *>(item);
-            device = wire->StartDevice();
-            terminal = wire->StartTerminal();
-            device->RemoveWire(wire, terminal);
-            device = wire->EndDevice();
-            terminal = wire->EndTerminal();
-            device->RemoveWire(wire, terminal);
+            wire->StartTerminal()->RemoveWire(wire);
+            wire->EndTerminal()->RemoveWire(wire);
             delete item;
         } else if (item->type() == SchematicTextItem::Type) {
             m_scene->removeItem(item);
@@ -151,9 +147,10 @@ void MainWindow::DeleteItem()
     }
 
     selectedItems = m_scene->selectedItems();
+    SchematicDevice *device = nullptr;
     foreach (QGraphicsItem *item, qAsConst(selectedItems)) {
         if (item->type() == SchematicDevice::Type) {
-            SchematicDevice *device = qgraphicsitem_cast<SchematicDevice *>(item);
+            device = qgraphicsitem_cast<SchematicDevice *>(item);
             device->RemoveWires(true);
             m_scene->removeItem(item);
             delete item;
@@ -216,6 +213,7 @@ void MainWindow::DeviceInserted(SchematicDevice *device)
     m_scene->SetMode(SchematicScene::BaseMode);
 
     m_deviceBtnGroup->button((int)(device->GetDeviceType()))->setChecked(false);
+    m_view->setCursor(Qt::ArrowCursor);
 }
 
 void MainWindow::CurrentFontChanged(const QFont &)
@@ -228,16 +226,33 @@ void MainWindow::FontSizeChanged(const QString &)
     HandleFontChange();
 }
 
-/* BUG */
-void MainWindow::SceneScaleChanged(const QString &scale)
+void MainWindow::ZoomActionToggled(bool enable)
 {
-#if 1
-    double newScale = scale.left(scale.indexOf(tr("%"))).toDouble() / 100.0;
-    QMatrix oldMatrix = m_view->matrix();
-    m_view->resetMatrix();
-    m_view->translate(oldMatrix.dx(), oldMatrix.dy());
-    m_view->scale(newScale, newScale);
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
 #endif
+    m_view->EnableScaleByWheel(enable);
+}
+
+void MainWindow::ScaleToOriginTriggered()
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    m_view->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    m_view->setResizeAnchor(QGraphicsView::NoAnchor);
+    qreal currHScale = m_view->matrix().m11();
+    qreal currVScale = m_view->matrix().m22();
+    m_view->scale(1 / currHScale, 1 / currVScale);
+}
+
+void MainWindow::MoveToCenterTriggered()
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+    m_view->centerOn(m_scene->Center());
 }
 
 void MainWindow::TextColorChanged()
@@ -300,13 +315,13 @@ void MainWindow::CreateDeviceToolBox()
     QGridLayout *layout = new QGridLayout;
 
     /* Add device(s) */
-    layout->addWidget(CreateCellWidget(tr("Resistor"), SchematicDevice::Resistor), 0, 0);
-    layout->addWidget(CreateCellWidget(tr("Capacitor"), SchematicDevice::Capacitor), 0, 1);
-    layout->addWidget(CreateCellWidget(tr("Inductor"), SchematicDevice::Inductor), 1, 0);
-    layout->addWidget(CreateCellWidget(tr("ISource"), SchematicDevice::Isrc), 1, 1);
-    layout->addWidget(CreateCellWidget(tr("VSource"), SchematicDevice::Vsrc), 2, 0);
+    layout->addWidget(CreateCellWidget(tr("Resistor"), RESISTOR), 0, 0);
+    layout->addWidget(CreateCellWidget(tr("Capacitor"), CAPACITOR), 0, 1);
+    layout->addWidget(CreateCellWidget(tr("Inductor"), INDUCTOR), 1, 0);
+    layout->addWidget(CreateCellWidget(tr("ISource"), ISRC), 1, 1);
+    layout->addWidget(CreateCellWidget(tr("VSource"), VSRC), 2, 0);
     // layout->addWidget(CreateCellWidget(tr("Dot"), SchematicDevice::Dot), 2, 1);
-    layout->addWidget(CreateCellWidget(tr("GND"), SchematicDevice::GND), 2, 1);
+    layout->addWidget(CreateCellWidget(tr("GND"), GND), 2, 1);
 
     layout->setRowStretch(3, 10);
     layout->setColumnStretch(2, 10);
@@ -390,10 +405,24 @@ void MainWindow::CreateActions()
     m_scrollPointerAction->setChecked(false);
     connect(m_scrollPointerAction, &QAction::toggled, this, &MainWindow::ScrollActionToggled);
 
-    m_showNodeAction = new QAction(QIcon(":/images/show_node.png"), tr("Show Node"), this);
-    m_showNodeAction->setCheckable(true);
-    m_showNodeAction->setChecked(false);
-    connect(m_showNodeAction, &QAction::toggled, this, &MainWindow::ShowItemNodeToggled);
+    m_zoomAction = new QAction(QIcon(":/images/zoom.png"), tr("Zoom by Wheel"), this);
+    m_zoomAction->setCheckable(true);
+    m_zoomAction->setChecked(false);
+    connect(m_zoomAction, &QAction::toggled, this, &MainWindow::ZoomActionToggled);
+
+    m_moveToCenterAction = new QAction(QIcon(":/images/move_center.png"), tr("Move to center"), this);
+    m_moveToCenterAction->setShortcut(tr("C"));
+    connect(m_moveToCenterAction, &QAction::triggered, this,
+        &MainWindow::MoveToCenterTriggered);
+
+    m_scaleToOriginAction = new QAction(QIcon(":/images/scale_to_origin.png"), tr("Scale to origin"), this);
+    m_scaleToOriginAction->setShortcut(tr("O"));
+    connect(m_scaleToOriginAction, &QAction::triggered, this, &MainWindow::ScaleToOriginTriggered);
+
+    m_showTerminalAction = new QAction(QIcon(":/images/show_terminal.png"), tr("Show Terminal"), this);
+    m_showTerminalAction->setCheckable(true);
+    m_showTerminalAction->setChecked(false);
+    connect(m_showTerminalAction, &QAction::toggled, this, &MainWindow::ShowItemTerminalToggled);
 
     m_showBranchAction = new QAction(QIcon(":/images/show_branch.png"), tr("Show Branch"), this);
     m_showBranchAction->setCheckable(true);
@@ -413,21 +442,21 @@ void MainWindow::CreateActions()
     m_asgPropertyAction->setEnabled(false);
     connect(m_asgPropertyAction, &QAction::triggered, this, &MainWindow::ASGPropertyTriggered);
 
-    m_buildMatrixAction = new QAction(QIcon(":/images/build_matrix.png"), tr("Build Matrix"), this);
-    m_buildMatrixAction->setEnabled(false);
-    connect(m_buildMatrixAction, &QAction::triggered, this, &MainWindow::BuildIncidenceMatrix);
+    m_logPlaceAction = new QAction(QIcon(":/images/log_place.png"), tr("Logical Placement"), this);
+    m_logPlaceAction->setEnabled(false);
+    connect(m_logPlaceAction, &QAction::triggered, this, &MainWindow::LogicalPlacement);
     
-    m_levellingAction = new QAction(QIcon(":/images/levelling.png"), tr("Levelling"), this);
-    m_levellingAction->setEnabled(false);
-    connect(m_levellingAction, &QAction::triggered, this, &MainWindow::Levelling);
+    m_logRouteAction = new QAction(QIcon(":/images/log_route.png"), tr("Logical Routing"), this);
+    m_logRouteAction->setEnabled(false);
+    connect(m_logRouteAction, &QAction::triggered, this, &MainWindow::LogicalRouting);
 
-    m_bubblingAction = new QAction(QIcon(":/images/bubbling.png"), tr("Bubbling"), this);
-    m_bubblingAction->setEnabled(false);
-    connect(m_bubblingAction, &QAction::triggered, this, &MainWindow::Bubbling);
+    m_geoPlaceAction = new QAction(QIcon(":/images/geo_place.png"), tr("Geometrical Placement"), this);
+    m_geoPlaceAction->setEnabled(false);
+    connect(m_geoPlaceAction, &QAction::triggered, this, &MainWindow::GeometricalPlacement);
 
-    m_generateDeviceAction = new QAction(QIcon(":/images/generate_device.png"), tr("Generate Device"), this);
-    m_generateDeviceAction->setEnabled(false);
-    connect(m_generateDeviceAction, &QAction::triggered, this, &MainWindow::GenerateSchematic);
+    m_geoRouteAction = new QAction(QIcon(":/images/geo_route.png"), tr("Geometrical Routing"), this);
+    m_geoRouteAction->setEnabled(false);
+    connect(m_geoRouteAction, &QAction::triggered, this, &MainWindow::GeometricalRouting);
 }
 
 void MainWindow::CreateMenus()
@@ -448,17 +477,20 @@ void MainWindow::CreateMenus()
 
     m_viewMenu = menuBar()->addMenu(tr("&View"));
     m_viewMenu->addAction(m_devicePanelDockWidget->toggleViewAction());
-    m_viewMenu->addAction(m_showNodeAction);
+    m_viewMenu->addAction(m_showTerminalAction);
     m_viewMenu->addAction(m_showBranchAction);
     m_viewMenu->addAction(m_showGridAction);
+    m_viewMenu->addAction(m_zoomAction);
+    m_viewMenu->addAction(m_moveToCenterAction);
+    m_viewMenu->addAction(m_scaleToOriginAction);
 
     m_asgMenu = menuBar()->addMenu(tr("&ASG"));
     m_asgMenu->addAction(m_parseNetlistAction);
     m_asgMenu->addAction(m_asgPropertyAction);
-    m_asgMenu->addAction(m_buildMatrixAction);
-    m_asgMenu->addAction(m_levellingAction);
-    m_asgMenu->addAction(m_bubblingAction);
-    m_asgMenu->addAction(m_generateDeviceAction);
+    m_asgMenu->addAction(m_logPlaceAction);
+    m_asgMenu->addAction(m_logRouteAction);
+    m_asgMenu->addAction(m_geoPlaceAction);
+    m_asgMenu->addAction(m_geoRouteAction);
 
     m_aboutMenu = menuBar()->addMenu(tr("&Help"));
     m_aboutMenu->addAction(m_aboutAction);
@@ -468,17 +500,20 @@ void MainWindow::CreateToolBars()
 {
     m_fileToolBar = addToolBar(tr("File"));
     m_fileToolBar->addAction(m_openNetlistAction);
-    m_fileToolBar->addAction(m_openSchematicFileAction);
-    m_fileToolBar->addAction(m_saveSchematicFileAction);
-    m_fileToolBar->addAction(m_saveAsSchematicFileAction);
+    // m_fileToolBar->addAction(m_openSchematicFileAction);
+    // m_fileToolBar->addAction(m_saveSchematicFileAction);
+    // m_fileToolBar->addAction(m_saveAsSchematicFileAction);
 
     m_editToolBar = addToolBar(tr("Edit"));
     m_editToolBar->addAction(m_deleteAction);
     m_editToolBar->addAction(m_toFrontAction);
     m_editToolBar->addAction(m_sendBackAction);
-    m_editToolBar->addAction(m_showNodeAction);
+    m_editToolBar->addAction(m_showTerminalAction);
     m_editToolBar->addAction(m_showBranchAction);
     m_editToolBar->addAction(m_showGridAction);
+    m_editToolBar->addAction(m_zoomAction);
+    m_editToolBar->addAction(m_moveToCenterAction);
+    m_editToolBar->addAction(m_scaleToOriginAction);
 
     m_fontCombo = new QFontComboBox();
     connect(m_fontCombo, &QFontComboBox::currentFontChanged,
@@ -503,7 +538,7 @@ void MainWindow::CreateToolBars()
             this, &MainWindow::TextButtonTriggered);
 
     m_textToolBar = addToolBar(tr("Font"));
-    m_textToolBar->addWidget(m_fontCombo);
+    // m_textToolBar->addWidget(m_fontCombo);
     m_textToolBar->addWidget(m_fontSizeCombo);
     m_textToolBar->addAction(m_boldAction);
     m_textToolBar->addAction(m_italicAction);
@@ -528,30 +563,21 @@ void MainWindow::CreateToolBars()
     connect(m_pointerBtnGroup, SIGNAL(buttonClicked(int)),
             this, SLOT(PointerBtnGroupClicked(int)));
 
-    m_sceneScaleCombo = new QComboBox;
-    QStringList scales;
-    scales << tr("25%") << tr("50%") << tr("75%") << tr("100%") << tr("125%") << tr("150%") << tr("175%");
-    m_sceneScaleCombo->addItems(scales);
-    m_sceneScaleCombo->setCurrentIndex(3);
-    connect(m_sceneScaleCombo, &QComboBox::currentTextChanged,
-            this, &MainWindow::SceneScaleChanged);
-
     m_pointerToolBar = addToolBar(tr("Pointer type"));
     m_pointerToolBar->addWidget(baseModePointerButton);
     m_pointerToolBar->addAction(m_scrollPointerAction);
     m_pointerToolBar->addWidget(insertTextPointerButton);
-    m_pointerToolBar->addWidget(m_sceneScaleCombo);
 
     m_asgToolBar = addToolBar(tr("ASG"));
     m_asgToolBar->addAction(m_parseNetlistAction);
     m_asgToolBar->addAction(m_asgPropertyAction);
-    m_asgToolBar->addAction(m_buildMatrixAction);
-    m_asgToolBar->addAction(m_levellingAction);
-    m_asgToolBar->addAction(m_bubblingAction);
-    m_asgToolBar->addAction(m_generateDeviceAction);
+    m_asgToolBar->addAction(m_logPlaceAction);
+    m_asgToolBar->addAction(m_logRouteAction);
+    m_asgToolBar->addAction(m_geoPlaceAction);
+    m_asgToolBar->addAction(m_geoRouteAction);
 }
 
-QWidget *MainWindow::CreateCellWidget(const QString &text, SchematicDevice::DeviceType type)
+QWidget *MainWindow::CreateCellWidget(const QString &text, DeviceType type)
 {
 
     SchematicDevice device(type, nullptr);
@@ -620,9 +646,9 @@ QIcon MainWindow::CreateColorIcon(QColor color)
     return QIcon(pixmap);
 }
 
-void MainWindow::ShowItemNodeToggled(bool show)
+void MainWindow::ShowItemTerminalToggled(bool show)
 {
-    m_scene->SetShowNodeFlag(show);
+    m_scene->SetShowTerminal(show);
 }
 
 void MainWindow::ShowBranchToggled(bool show)
@@ -631,12 +657,12 @@ void MainWindow::ShowBranchToggled(bool show)
     qInfo() << LINE_INFO << endl;
 #endif
 
-    m_scene->SetShowBranchFlag(show);
+    // m_scene->SetShowBranchFlag(show);
 }
 
 void MainWindow::ShowGridToggled(bool show)
 {
-    m_scene->SetEnableBackground(show);
+    m_scene->SetShowBackground(show);
     m_scene->update();
 }
 
@@ -668,10 +694,10 @@ void MainWindow::NetlistChangedSlot()
 {
     m_parseNetlistAction->setEnabled(true);
     m_asgPropertyAction->setEnabled(true);
-    m_buildMatrixAction->setEnabled(true);
-    m_levellingAction->setEnabled(true);
-    m_bubblingAction->setEnabled(true);
-    m_generateDeviceAction->setEnabled(true);
+    m_logPlaceAction->setEnabled(true);
+    m_logRouteAction->setEnabled(true);
+    m_geoPlaceAction->setEnabled(true);
+    m_geoRouteAction->setEnabled(true);
 
     m_asgPropertySelected = false;
 }
@@ -802,23 +828,23 @@ void MainWindow::ParseNetlist()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    if (m_data) delete m_data;
-    /* delete all devices */
+    /* After Geometrical Routing, the CircuitGraph had destroyed */
+    // if (m_ckt) delete m_ckt;
+
+    /* delete all SchematicDevices, SchematicTerminals, SchematicWires */
     m_scene->clear();
 
     MyParser parser;
-    m_data = new SchematicData();
-    int error = parser.ParseNetlist(m_curNetlistFile.toStdString(), m_data);
+    m_ckt = new CircuitGraph();
+    int error = parser.ParseNetlist(m_curNetlistFile.toStdString(), m_ckt);
     if (error) {
-        delete m_data;
+        delete m_ckt;
         ShowCriticalMsg(tr("Parse Netlist failed."));
         return;
     }
 
-    m_asg->SetSchematicData(m_data);
-
 #ifdef DEBUG
-    m_data->PrintNodeAndDevice();
+    m_ckt->PrintCircuit();
 #endif
     ShowInfoMsg(tr("Parse Netlist successfully."));
 }
@@ -852,21 +878,30 @@ void MainWindow::ASGPropertyTriggered()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    Q_ASSERT(m_data);
+    Q_ASSERT(m_ckt);
     if (m_asgDialog) delete m_asgDialog;
     m_asgDialog = new ASGDialog();
 
-    m_asgDialog->SetSchematicData(m_data);
+    m_asgDialog->SetCircuitGraph(m_ckt);
     m_asgDialog->show();
     m_asgPropertySelected = true;
+
+    if (m_asg) delete m_asg;
+    m_asg = new ASG(m_ckt);
 }
 
-void MainWindow::BuildIncidenceMatrix()
+void MainWindow::LogicalPlacement()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-    if (m_data->FirstLevelDeviceListSize() < 1) {
+
+    if (m_asg->DataDestroyed()) {
+        ShowCriticalMsg(tr("[ERROR] Data has been destroyed, parse netlist again"));
+        return;
+    }
+
+    if (m_ckt->FirstLevelDeviceListSize() < 1) {
         ShowCriticalMsg(tr("Please select first level device(s)"));
         m_asgPropertySelected = false;
         return;
@@ -876,47 +911,58 @@ void MainWindow::BuildIncidenceMatrix()
         ShowCriticalMsg(tr("Please Select ASG Properties firstly!"));
         return;
     }
-    m_asg->BuildIncidenceMatrix();
+
+    int error = m_asg->LogicalPlacement();
+    if (error) {
+        ShowCriticalMsg(tr("[ERROR ASG] Logicl Placement failed."));
+    }
 }
 
-void MainWindow::Levelling()
+void MainWindow::LogicalRouting()
 {
-#ifdef TRACE
-    qInfo() << LINE_INFO << endl;
-#endif
-    if (NOT m_asg->BuildMatrixFinished()) {
-        ShowCriticalMsg(tr("Please Build Incidence Matrix firstly!"));
+    if (m_asg->DataDestroyed()) {
+        ShowCriticalMsg(tr("[ERROR] Data has been destroyed, parse netlist again"));
         return;
     }
-    m_asg->Levelling();
-}
 
-void MainWindow::Bubbling()
-{
-#ifdef TRACE
-    qInfo() << LINE_INFO << endl;
-#endif
-
-    if (NOT m_asg->LevellingFinished()) {
-        ShowCriticalMsg(tr("Please Levelling firstly!"));
-        return;
+    int error = m_asg->LogicalRouting();
+    if (error) {
+        ShowCriticalMsg(tr("[ERROR ASG] Logical Routing failed."));
     }
-    m_asg->Bubbling();
 }
 
-/* before or after bubbling */
-void MainWindow::GenerateSchematic()
+void MainWindow::GeometricalPlacement()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
 
-    if (NOT m_asg->LevellingFinished()) {
-        ShowCriticalMsg(tr("Please Levelling firstly!"));
+    if (m_asg->DataDestroyed()) {
+        ShowCriticalMsg(tr("[ERROR] Data has been destroyed, parse netlist again"));
         return;
     }
 
-    m_scene->RenderSchematic(m_asg->FinalDevices(), m_asg->WireDesps());
-    qreal height = m_scene->height();
-    m_view->centerOn(0, height / 2);
+    int error = m_asg->GeometricalPlacement(m_scene);
+    if (error) {
+        ShowCriticalMsg(tr("[ERROR ASG] Geometrical Placement failed."));
+    }
+
+    m_view->centerOn(m_scene->Center());
+}
+
+void MainWindow::GeometricalRouting()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    if (m_asg->DataDestroyed()) {
+        ShowCriticalMsg(tr("[ERROR] Data has been destroyed, parse netlist again"));
+        return;
+    }
+
+    int error = m_asg->GeometricalRouting(m_scene);
+    if (error) {
+        ShowCriticalMsg(tr("[ERROR ASG] Geometrical Routing failed."));
+    }
 }

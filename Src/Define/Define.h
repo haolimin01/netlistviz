@@ -34,12 +34,17 @@
 #define OKAY  0
 #define ERROR 1
 
-/* SchematicScene */
-const int StartX = 600;
-const int StartY = 600;
-const int Width  = 1200;
-const int Height = 900;
-const int CenterX = StartX + Width / 4;
-const int CenterY = StartY + Height / 4;
+/* For Scene */
+const static int Row_Device_Factor = 2;
+const static int DFT_Grid_W = 50;
+const static int DFT_Grid_H = 50;
+const static int DFT_DIS = 15;
+const static int Scene_Margin = 50;
+const static int Scene_Available = 1250;
+const static int Scene_W = Scene_Margin + 2 * Scene_Available;
+const static int Scene_H = Scene_Margin + 2 * Scene_Available;
+
+/* For SchematicWire */
+const static int DFT_Wire_W = 2;
 
 #endif //NETLISTVIZ_DEFINE_DEFINE_H

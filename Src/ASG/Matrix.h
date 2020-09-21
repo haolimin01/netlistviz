@@ -6,11 +6,13 @@
  * @author   : Hao Limin
  * @date     : 2020.07.30
  * @desp     : Incidence Matrix. Square. Sparse
+ * @modified : Hao Limin, 2020.09.12
  */
 
 #include "Define/Define.h"
-#include "Schematic/SchematicDevice.h"
 
+class Device;
+class Terminal;
 class MatrixElement;
 class TablePlotter;
 
@@ -18,7 +20,7 @@ struct HeadElement
 {
     MatrixElement   *head;
     int              seqElementNum;
-    SchematicDevice *device;
+    Device      *device;
 
     HeadElement() {
         head = nullptr;
@@ -40,17 +42,15 @@ public:
     int    Size() const { return m_size; }
     int    TotalElement() const { return m_totalElement; }
 
-    void   SetRowHeadDevice(int row, SchematicDevice *device);
-    void   SetColHeadDevice(int col, SchematicDevice *device);
+    void   SetRowHeadDevice(int row, Device *device);
+    void   SetColHeadDevice(int col, Device *device);
 
-    void   InsertElement(int row, int col, SchematicDevice *fromDevice,
-                SchematicDevice *toDevice, TerminalType fromTer, TerminalType toTer);
+    void   InsertElement(int row, int col, Device *fromDevice,
+                Terminal *fromTerminal, Device *toDevice, Terminal *toTerminal);
     
     HeadElement RowHead(int row) const;
     HeadElement ColHead(int col) const;
 
-    // void  SetAllVisited(bool visited = true);
-    
     void   Print() const;
     void   Plot();
 
