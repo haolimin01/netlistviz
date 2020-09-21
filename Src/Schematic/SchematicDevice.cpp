@@ -121,6 +121,7 @@ void SchematicDevice::Initialize()
 
     m_geoCol = 0;
     m_geoRow = 0;
+    m_gndConnectTerminal = nullptr;
 
     CreateAnnotation(m_name);
 
@@ -653,6 +654,12 @@ QPointF SchematicDevice::ScenePosByTerminalScenePos(SchematicTerminal *ter,
 {
     // return terScenePos - (ter->Rect().center()) * scale();
     return terScenePos;
+}
+
+void SchematicDevice::SetGndConnectTerminal(SchematicTerminal *ter)
+{
+    Q_ASSERT(ter);
+    m_gndConnectTerminal = ter;
 }
 
 /* Print and Plot */

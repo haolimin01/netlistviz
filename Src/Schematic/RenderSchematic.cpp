@@ -239,7 +239,8 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
     SchematicWire *wire = nullptr;
     SchematicTerminal *gndTer = nullptr;
     
-    m_extraWires.clear();
+    m_gndList.clear();
+    m_hasGndWireList.clear();
 
     foreach (SchematicDevice *device, devices) {
         switch (device->GetDeviceType()) {
@@ -254,12 +255,14 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                     gndPos.rx() = devTerPos.x();
                     gndPos.ry() = devTerPos.y() + DFT_DIS * m_itemScale;
                     gnd = InsertSchematicDevice(GND, gndPos);
+                    gnd->SetGndConnectTerminal(terminal);
                     gnd->SetOrientation(Vertical);
 
                     gndTer = gnd->GetTerminal(General);
                     wire = new SchematicWire(device, gnd,
                             terminal, gndTer);
-                    m_extraWires.push_back(wire);
+                    m_gndList.push_back(gnd);
+                    m_hasGndWireList.push_back(wire);
                 }
 
                 terminal = device->GetTerminal(Negative);
@@ -268,12 +271,14 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                     gndPos.rx() = devTerPos.x();
                     gndPos.ry() = devTerPos.y() + DFT_DIS * m_itemScale;
                     gnd = InsertSchematicDevice(GND, gndPos);
+                    gnd->SetGndConnectTerminal(terminal);
                     gnd->SetOrientation(Vertical);
 
                     gndTer = gnd->GetTerminal(General);
                     wire = new SchematicWire(device, gnd,
                             terminal, gndTer);
-                    m_extraWires.push_back(wire);
+                    m_gndList.push_back(gnd);
+                    m_hasGndWireList.push_back(wire);
                 }
                 break;
             default:;
@@ -336,6 +341,9 @@ int SchematicScene::RenderSchematicWires(const SWireList &wires)
     qInfo() << LINE_INFO << endl;
 #endif
 
+    m_hasGCapWireList.clear();
+    m_hasCCapWireList.clear();
+
     QGraphicsItem *item = nullptr;
     foreach (item, items()) {
         if (item->type() == SchematicWire::Type) {
@@ -350,11 +358,25 @@ int SchematicScene::RenderSchematicWires(const SWireList &wires)
     foreach (wire, wires) {
         int geoCol = wire->LogicalCol() * 2 + 1;
         wire->SetGeometricalCol(geoCol);
+        if (wire->HasGroundCap())  m_hasGCapWireList.push_back(wire);
+        if (wire->HasCoupledCap()) m_hasCCapWireList.push_back(wire);
     }
 
     /* 2. add to scene */
-    QVector<QPointF> wirePoints;
+    AddWiresToScene(wires);
+
+    /* 3. add wires to gnd */
+    AddWiresToScene(m_hasGndWireList);
+
+    return OKAY;
+}
+
+void SchematicScene::AddWiresToScene(const SWireList &wires)
+{
+    SchematicWire *wire = nullptr;
     SchematicTerminal *terminal = nullptr;
+    QVector<QPointF> wirePoints;
+
     foreach (wire, wires) {
         terminal = wire->StartTerminal();
         wirePoints.push_back(terminal->ScenePos());
@@ -369,23 +391,75 @@ int SchematicScene::RenderSchematicWires(const SWireList &wires)
         addItem(wire);
         wirePoints.clear();
     }
+}
 
+void SchematicScene::HideGroundCaps(bool hide)
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+    if (hide) {
 
-    /* 3. add wires to gnd */
-    foreach (wire, m_extraWires) {
-        terminal = wire->StartTerminal();
-        wirePoints.push_back(terminal->ScenePos());
-        terminal->AddWire(wire);
+        foreach (SchematicDevice *gcap, m_gCapDeviceList)
+            removeItem(gcap);
 
-        terminal = wire->EndTerminal();
-        wirePoints.push_back(terminal->ScenePos());
-        terminal->AddWire(wire);
+        foreach (SchematicWire *gwire, m_hasGCapWireList)
+            removeItem(gwire);
 
-        wire->SetWirePathPoints(wirePoints);
-        wire->SetScale(m_itemScale);
-        addItem(wire);
-        wirePoints.clear();
+    } else {
+
+        RenderGroundCaps(m_gCapDeviceList);
+        AddWiresToScene(m_hasGCapWireList);
+
     }
+}
 
-    return OKAY;
+void SchematicScene::HideCoupledCaps(bool hide)
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+    if (hide) {
+
+        foreach (SchematicDevice *ccap, m_cCapDeviceList)
+            removeItem(ccap);
+
+        foreach (SchematicWire *cwire, m_hasCCapWireList)
+            removeItem(cwire);
+
+    } else {
+
+        RenderCoupledCaps(m_cCapDeviceList);
+        AddWiresToScene(m_hasCCapWireList);
+
+    }
+}
+
+void SchematicScene::HideGnds(bool hide)
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    if (hide) {
+
+        foreach (SchematicDevice *gnd, m_gndList)
+            removeItem(gnd);
+
+        foreach (SchematicWire *wire, m_hasGndWireList)
+            removeItem(wire);
+
+    } else {
+        
+        QPointF terPos, gndPos;            
+        foreach (SchematicDevice *gnd, m_gndList) {
+            terPos = gnd->GndConnectTerminal()->ScenePos();
+            gndPos.rx() = terPos.x();
+            gndPos.ry() = terPos.y() + DFT_DIS * m_itemScale;
+            SetDeviceAt(gndPos, gnd);
+        }
+
+        AddWiresToScene(m_hasGndWireList);
+
+    }
 }

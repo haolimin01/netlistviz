@@ -134,6 +134,18 @@ void SchematicWire::UpdatePosition(SchematicTerminal *terminal)
         m_wirePathPoints.replace(m_wirePathPoints.size() - 1, endPoint);
 }
 
+bool SchematicWire::HasGroundCap() const
+{
+    bool has = ((m_startDevice->GroundCap()) || (m_endDevice->GroundCap()));
+    return has;
+}
+
+bool SchematicWire::HasCoupledCap() const
+{
+    bool has = ((m_startDevice->CoupledCap()) || (m_endDevice->CoupledCap()));
+    return has;
+}
+
 void SchematicWire::Print() const
 {
     printf("-------------------- Wire --------------------\n");

@@ -26,5 +26,8 @@
     <file>images/log_route.png</file>
     <file>images/geo_place.png</file>
     <file>images/geo_route.png</file>
+    <file>images/hide_ground_cap.png</file>
+    <file>images/hide_coupled_cap.png</file>
+    <file>images/hide_gnd.png</file>
 </qresource>
 </RCC>
