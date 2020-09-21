@@ -330,18 +330,16 @@ QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &
 }
 
 
-/* BUG */
 void SchematicDevice::SetOrientation(Orientation orien)
 {
     if (orien == m_devOrien)  return;
-    qreal angle = 0;
+    qreal angle = rotation();
+    qInfo() << m_name << " " << angle << endl;
     if (orien == Horizontal) {
-        angle = -90;
+        angle -= 90;
     } else {
-        angle = 90;
+        angle += 90;
     }
-    if (m_reverse)
-        angle += 180;
 
     setRotation(angle);
 
