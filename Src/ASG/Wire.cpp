@@ -47,7 +47,7 @@ SchematicTerminal* Wire::ToSTerminal() const
     return ter;
 }
 
-bool Wire::HasGroundCap() const
+bool Wire::HasGCap() const
 {
     bool has = false;
 
@@ -55,6 +55,20 @@ bool Wire::HasGroundCap() const
         has = true;
     if (NOT has) {
         if (m_toDevice->GroundCap())
+            has = true;
+    }
+
+    return has;
+}
+
+bool Wire::HasCCap() const
+{
+    bool has = false;
+
+    if (m_fromDevice->CoupledCap())
+        has = true;
+    if (NOT has) {
+        if (m_toDevice->CoupledCap())
             has = true;
     }
 

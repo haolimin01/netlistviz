@@ -882,12 +882,14 @@ void MainWindow::ASGPropertyTriggered()
     if (m_asgDialog) delete m_asgDialog;
     m_asgDialog = new ASGDialog();
 
-    m_asgDialog->SetCircuitGraph(m_ckt);
-    m_asgDialog->show();
-    m_asgPropertySelected = true;
-
     if (m_asg) delete m_asg;
     m_asg = new ASG(m_ckt);
+
+    m_asgDialog->SetCircuitGraph(m_ckt);
+    m_asgDialog->SetASG(m_asg);
+
+    m_asgDialog->show();
+    m_asgPropertySelected = true;
 }
 
 void MainWindow::LogicalPlacement()

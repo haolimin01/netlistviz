@@ -30,7 +30,8 @@ public:
     void SetChannelId(int id) { m_channelId = id; }
     int  ChannelId() const    { return m_channelId; }
     bool TrackGiven() const   { return m_trackGiven; }
-    bool HasGroundCap() const;
+    bool HasGCap() const;
+    bool HasCCap() const;
 
     SchematicDevice*    FromSDevice() const;
     SchematicDevice*    ToSDevice() const;

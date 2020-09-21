@@ -24,7 +24,7 @@ ASG::ASG(CircuitGraph *ckt)
     m_matrix = nullptr;
     m_levelsPlotter = nullptr;
     m_logDataDestroyed = false;
-    m_ignoreCap = false;
+    m_ignoreCap = IgnoreGCap;
 
     m_visited = new int[m_ckt->DeviceCount()];  
     memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCount());
@@ -37,7 +37,7 @@ ASG::ASG()
     m_visited = nullptr;
     m_levelsPlotter = nullptr;
     m_logDataDestroyed = false;
-    m_ignoreCap = false;
+    m_ignoreCap = IgnoreGCap;
 }
 
 ASG::~ASG()
@@ -134,16 +134,14 @@ int ASG::GeometricalPlacement(SchematicScene *scene)
     qInfo() << LINE_INFO << endl;
 #endif
     int error = 0;
-    if (m_ignoreCap)
-        error = DecideDeviceWhetherToReverseIgnoreCap();
-    else
-        error = DecideDeviceWhetherToReverse();
+    error = DecideDeviceWhetherToReverse();
 
     if (error)
         return ERROR;
 
-    if (m_ignoreCap)
-        error = LinkDeviceForGroundCap();
+    error = LinkDeviceForGCCap();
+    if (error)
+        return ERROR;
 
     error = CreateSchematicDevices();
     if (error)
@@ -331,11 +329,20 @@ int ASG::CalLogicalRow()
 
 int ASG::BubbleSort()
 {
-    // return BubbleSortConsiderCap();
-    return BubbleSortIgnoreCap();
+    switch (m_ignoreCap) {
+        case IgnoreNoCap:
+            return BubbleSortIgnoreNoCap();
+        case IgnoreGCap:
+            return BubbleSortIgnoreGCap();
+        case IgnoreGCCap:
+            return BubbleSortIgnoreGCCap();
+        default:
+            qInfo() << "UNknown ignore cap type " << m_ignoreCap << endl;
+            EXIT;
+    }
 }
 
-int ASG::BubbleSortConsiderCap()
+int ASG::BubbleSortIgnoreNoCap()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
@@ -389,14 +396,13 @@ int ASG::BubbleSortConsiderCap()
     qInfo() << "max device count(" << maxDeviceCountInLevel << "), index("
             << indexOfMaxDeviceCount << ")" << endl;
 #endif
-    
     Q_ASSERT(levelOfMaxDeviceCount);
 
     /* Third, assign row number to indexOfMaxDeviceCount */
     int row = 0;
     foreach (Device *dev, levelOfMaxDeviceCount->AllDevices()) {
         dev->SetRow(row);
-        dev->SetBubbleValue(row); // useless
+        dev->SetBubbleValue(row); // useless here
         row += Row_Device_Factor;
     }
 
@@ -404,16 +410,16 @@ int ASG::BubbleSortConsiderCap()
     for (int i = indexOfMaxDeviceCount - 1; i >= 0; -- i) {
         level = m_levels.at(i);
         foreach (Device *dev, level->AllDevices())
-            dev->CalBubbleValueBySuccessors();
-        level->AssignRowNumberByBubbleValue();
+            dev->CalBubbleValueBySuccessors(m_ignoreCap);
+        level->AssignRowNumberByBubbleValue(m_ignoreCap);
     }
 
     /* Fifth, assign row number to (indexOfMaxDeviceCount, lastLevel] */
     for (int i = indexOfMaxDeviceCount + 1; i < m_levels.size(); ++ i) {
         level = m_levels.at(i);
         foreach (Device *dev, level->AllDevices())
-            dev->CalBubbleValueByPredecessors();
-        level->AssignRowNumberByBubbleValue();
+            dev->CalBubbleValueByPredecessors(m_ignoreCap);
+        level->AssignRowNumberByBubbleValue(m_ignoreCap);
     }
 
 #ifdef DEBUG
@@ -433,7 +439,7 @@ int ASG::BubbleSortConsiderCap()
     return OKAY;
 }
 
-int ASG::BubbleSortIgnoreCap()
+int ASG::BubbleSortIgnoreGCap()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
@@ -472,14 +478,13 @@ int ASG::BubbleSortIgnoreCap()
     /* Second, find indexofMaxDeviceCount ignore groundCap */
     int indexOfMaxDeviceCount = 0;
     Level *levelOfMaxDeviceCount = m_levels.front();
-    int maxDeviceCountInLevel = levelOfMaxDeviceCount->
-                                DeviceCountWithoutGroundCap();
+    int maxDeviceCountInLevel = levelOfMaxDeviceCount->DeviceCountWithoutGCap();
 
     Level *level = nullptr;
     for (int i = 1; i < m_levels.size(); ++ i) {
         level = m_levels.at(i);
-        if (level->DeviceCountWithoutGroundCap() > maxDeviceCountInLevel) {
-            maxDeviceCountInLevel = level->DeviceCountWithoutGroundCap();
+        if (level->DeviceCountWithoutGCap() > maxDeviceCountInLevel) {
+            maxDeviceCountInLevel = level->DeviceCountWithoutGCap();
             indexOfMaxDeviceCount = i;
             levelOfMaxDeviceCount = level;
         }
@@ -489,8 +494,6 @@ int ASG::BubbleSortIgnoreCap()
     qInfo() << "max device count without ground cap(" << maxDeviceCountInLevel
             << "), index(" << indexOfMaxDeviceCount << ")" << endl;
 #endif
-
-    Q_ASSERT(levelOfMaxDeviceCount);
 
     /* Third, assign row number to indexOfMaxDeviceCount */
     int row = 0;
@@ -510,9 +513,9 @@ int ASG::BubbleSortIgnoreCap()
         level = m_levels.at(i);
         foreach (Device *dev, level->AllDevices()) {
             if (dev->GroundCap()) continue;
-            dev->CalBubbleValueBySuccessors(true); // ignore ground cap
+            dev->CalBubbleValueBySuccessors(m_ignoreCap); // ignore ground cap
         }
-        level->AssignRowNumberByBubbleValue(true); // ignore ground cap
+        level->AssignRowNumberByBubbleValue(m_ignoreCap); // ignore ground cap
     }
 
     /* Fifth, assign row number to (indexOfMaxDeviceCount, lastLevel] */
@@ -520,9 +523,9 @@ int ASG::BubbleSortIgnoreCap()
         level = m_levels.at(i);
         foreach (Device *dev, level->AllDevices()) {
             if (dev->GroundCap()) continue;
-            dev->CalBubbleValueByPredecessors(true); // ignore ground cap
+            dev->CalBubbleValueByPredecessors(m_ignoreCap); // ignore ground cap
         }
-        level->AssignRowNumberByBubbleValue(true);   // ignore ground cap
+        level->AssignRowNumberByBubbleValue(m_ignoreCap);   // ignore ground cap
     }
 
 #ifdef DEBUG
@@ -540,7 +543,115 @@ int ASG::BubbleSortIgnoreCap()
     printf("-----------------------------------\n");
 #endif
     
-    m_ignoreCap = true;
+    return OKAY;
+}
+
+int ASG::BubbleSortIgnoreGCCap()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    if (m_levels.size() <= 1)
+        return OKAY;
+
+    foreach (Device *dev, m_ckt->GetDeviceList()) {
+        dev->ClearPredecessors();
+        dev->ClearSuccessors();
+    }
+
+    /* First, create device connections */
+    Level *frontLevel = m_levels.front();
+    Level *rearLevel = nullptr;
+    Device *frontDev = nullptr, *rearDev = nullptr;
+
+    for (int i = 1; i < m_levels.size(); ++ i) {
+        rearLevel = m_levels.at(i);
+        foreach (frontDev, frontLevel->AllDevices()) {
+            foreach (rearDev, rearLevel->AllDevices()) {
+                if (frontDev->HasConnectionIgnoreGnd(rearDev)) {
+                    frontDev->AddSuccessor(rearDev);
+                    rearDev->AddPredecessor(frontDev);
+                }
+            }
+        }
+        frontLevel = rearLevel;
+    }
+#ifdef DEBUG
+    foreach (Level *level, m_levels)
+        level->PrintAllConnections();
+#endif
+
+    /* Second, find indexofMaxDeviceCount ignore coupled and groundCap */
+    int indexOfMaxDeviceCount = 0;
+    Level *levelOfMaxDeviceCount = m_levels.front();
+    int maxDeviceCountInLevel = levelOfMaxDeviceCount->DeviceCountWithoutGCCap();
+
+    Level *level = nullptr;
+    for (int i = 1; i < m_levels.size(); ++ i) {
+        level = m_levels.at(i);
+        if (level->DeviceCountWithoutGCCap() > maxDeviceCountInLevel) {
+            maxDeviceCountInLevel = level->DeviceCountWithoutGCCap();
+            indexOfMaxDeviceCount = i;
+            levelOfMaxDeviceCount = level;
+        }
+    }
+
+#ifdef DEBUG
+    qInfo() << "max device count without coupled and ground cap(" << maxDeviceCountInLevel
+            << "), index(" << indexOfMaxDeviceCount << ")" << endl;
+#endif
+
+    /* Third, assign row number to indexOfMaxDeviceCount */
+    int row = 0;
+    foreach (Device *dev, levelOfMaxDeviceCount->AllDevices()) {
+        if (dev->GroundCap() || dev->CoupledCap()) {
+            dev->SetRow(0);
+            dev->SetBubbleValue(0);
+            continue;
+        }
+        dev->SetRow(row);
+        dev->SetBubbleValue(row);
+        row += Row_Device_Factor;
+    }
+
+    /* Fourth, assign row number to [0, indexOfMaxDeviceCount) */
+    for (int i = indexOfMaxDeviceCount - 1; i >= 0; -- i) {
+        level = m_levels.at(i);
+        foreach (Device *dev, level->AllDevices()) {
+            if (dev->GroundCap()) continue;
+            if (dev->CoupledCap()) continue;
+            dev->CalBubbleValueBySuccessors(m_ignoreCap); // ignore coupled and ground cap
+        }
+        level->AssignRowNumberByBubbleValue(m_ignoreCap); // ignore coupled and ground cap
+    }
+
+    /* Fifth, assign row number to (indexOfMaxDeviceCount, lastLevel] */
+    for (int i = indexOfMaxDeviceCount + 1; i < m_levels.size(); ++ i) {
+        level = m_levels.at(i);
+        foreach (Device *dev, level->AllDevices()) {
+            if (dev->GroundCap()) continue;
+            if (dev->CoupledCap()) continue;
+            dev->CalBubbleValueByPredecessors(m_ignoreCap); // ignore coupled and ground cap
+        }
+        level->AssignRowNumberByBubbleValue(m_ignoreCap);   // ignore coupled and ground cap
+    }
+
+#ifdef DEBUG
+    printf("-----------------------------------\n");
+    QString tmp;
+    foreach (Device *dev, m_ckt->GetDeviceList()) {
+        tmp += (dev->Name() + " ");
+        tmp += ("level(" + QString::number(dev->LevelId()) + "), ");
+        tmp += ("row(" + QString::number(dev->Row()) + "), ");
+        tmp += ("bubbleValue(" + QString::number(dev->BubbleValue()) + "), ");
+        tmp += ("groundCap(" + QString::number(dev->GroundCap()) + ")");
+        qDebug() << tmp;
+        tmp = "";
+    }
+    printf("-----------------------------------\n");
+#endif
+    
     return OKAY;
 }
 
@@ -579,7 +690,6 @@ int ASG::CreateChannels()
         channelIndex++;
     }
 
-
     return OKAY;
 }
 
@@ -590,13 +700,27 @@ int ASG::AssignTrackNumber()
 #endif
 
     foreach (Channel *ch, m_channels) {
-        ch->AssignTrackNumber(m_ignoreCap); // igonre ground cap
+        ch->AssignTrackNumber(m_ignoreCap);
     }
 
     return OKAY;
 }
 
 int ASG::DecideDeviceWhetherToReverse()
+{
+    switch (m_ignoreCap) {
+        case IgnoreNoCap:
+            return DecideDeviceWhetherToReverseIgnoreNoCap();
+        case IgnoreGCap:
+            return DecideDeviceWhetherToReverseIgnoreGCap();
+        case IgnoreGCCap:
+            return DecideDeviceWhetherToReverseIgnoreGCCap();
+        default:
+            qInfo() << "UNknown ignore cap type " << m_ignoreCap << endl;
+    }
+}
+
+int ASG::DecideDeviceWhetherToReverseIgnoreNoCap()
 {
     /* First, set maxDeviceCount Level as no reverse */
     int indexOfMaxDeviceCount = 0;
@@ -622,14 +746,14 @@ int ASG::DecideDeviceWhetherToReverse()
     for (int i = indexOfMaxDeviceCount - 1; i >= 0; -- i) {
         level = m_levels.at(i);
         foreach (Device *dev, level->AllDevices())
-            dev->DecideReverseBySuccessors();
+            dev->DecideReverseBySuccessors(m_ignoreCap);
     }
 
     /* Third, deal with (indexOfMaxDeviceCount, last] */
     for (int i = indexOfMaxDeviceCount + 1; i < m_levels.size(); ++ i) {
         level = m_levels.at(i);
         foreach (Device *dev, level->AllDevices())
-            dev->DecideReverseByPredecessors();
+            dev->DecideReverseByPredecessors(m_ignoreCap);
     }
 
 #ifdef DEBUG
@@ -643,7 +767,7 @@ int ASG::DecideDeviceWhetherToReverse()
     return OKAY;
 }
 
-int ASG::DecideDeviceWhetherToReverseIgnoreCap()
+int ASG::DecideDeviceWhetherToReverseIgnoreGCap()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
@@ -652,14 +776,14 @@ int ASG::DecideDeviceWhetherToReverseIgnoreCap()
     /* ignore ground cap */
     int indexOfMaxDeviceCount = 0;
     Level *levelOfMaxDeviceCount = m_levels.front();
-    int maxDeviceCountInLevel = levelOfMaxDeviceCount->DeviceCountWithoutGroundCap();
+    int maxDeviceCountInLevel = levelOfMaxDeviceCount->DeviceCountWithoutGCap();
 
     Level *level = nullptr;
 
     for (int i = 1; i < m_levels.size(); ++ i) {
         level = m_levels.at(i);
-        if (level->DeviceCountWithoutGroundCap() >= maxDeviceCountInLevel) {
-            maxDeviceCountInLevel = level->DeviceCountWithoutGroundCap();
+        if (level->DeviceCountWithoutGCap() >= maxDeviceCountInLevel) {
+            maxDeviceCountInLevel = level->DeviceCountWithoutGCap();
             indexOfMaxDeviceCount = i;
             levelOfMaxDeviceCount = level;
         }
@@ -674,7 +798,7 @@ int ASG::DecideDeviceWhetherToReverseIgnoreCap()
         level = m_levels.at(i);
         foreach (Device *dev, level->AllDevices()) {
             if (dev->GroundCap()) continue;
-            dev->DecideReverseBySuccessors(true); // ignore ground cap
+            dev->DecideReverseBySuccessors(m_ignoreCap); // ignore ground cap
         }
     }
 
@@ -683,7 +807,64 @@ int ASG::DecideDeviceWhetherToReverseIgnoreCap()
         level = m_levels.at(i);
         foreach (Device *dev, level->AllDevices()) {
             if (dev->GroundCap()) continue;
-            dev->DecideReverseByPredecessors(true); // ignore ground cap
+            dev->DecideReverseByPredecessors(m_ignoreCap); // ignore ground cap
+        }
+    }
+
+#ifdef DEBUG
+    qDebug() << "--------------- Device Reverse ---------------";
+    foreach (Device *dev, m_ckt->GetDeviceList()) {
+        qDebug() << dev->Name() << " reverse(" << dev->Reverse() << ")";
+    }
+    qDebug() << "----------------------------------------------";
+#endif
+
+    return OKAY;
+}
+
+int ASG::DecideDeviceWhetherToReverseIgnoreGCCap()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    /* ignore coupled and ground cap */
+    int indexOfMaxDeviceCount = 0;
+    Level *levelOfMaxDeviceCount = m_levels.front();
+    int maxDeviceCountInLevel = levelOfMaxDeviceCount->DeviceCountWithoutGCCap();
+
+    Level *level = nullptr;
+
+    for (int i = 1; i < m_levels.size(); ++ i) {
+        level = m_levels.at(i);
+        if (level->DeviceCountWithoutGCCap() >= maxDeviceCountInLevel) {
+            maxDeviceCountInLevel = level->DeviceCountWithoutGCCap();
+            indexOfMaxDeviceCount = i;
+            levelOfMaxDeviceCount = level;
+        }
+    }
+
+    foreach (Device *dev, levelOfMaxDeviceCount->AllDevices()) {
+        dev->SetReverse(false);
+    }
+
+    /* Second, deal with [0, indexOfMaxDeviceCount) */
+    for (int i = indexOfMaxDeviceCount - 1; i >= 0; -- i) {
+        level = m_levels.at(i);
+        foreach (Device *dev, level->AllDevices()) {
+            if (dev->GroundCap()) continue;
+            if (dev->CoupledCap()) continue;
+            dev->DecideReverseBySuccessors(m_ignoreCap); // ignore coupled and ground cap
+        }
+    }
+
+    /* Third, deal with (indexOfMaxDeviceCount, lastLevel] */
+    for (int i = indexOfMaxDeviceCount + 1; i < m_levels.size(); ++ i) {
+        level = m_levels.at(i);
+        foreach (Device *dev, level->AllDevices()) {
+            if (dev->GroundCap()) continue;
+            if (dev->CoupledCap()) continue;
+            dev->DecideReverseByPredecessors(m_ignoreCap); // ignore coupled and ground cap
         }
     }
 
@@ -728,21 +909,20 @@ int ASG::CreateSchematicDevices()
     return OKAY;
 }
 
-int ASG::LinkDeviceForGroundCap()
+int ASG::LinkDeviceForGCCap()
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-    
     Node *node = nullptr;
     foreach (Device *dev, m_ckt->GetDeviceList()) {
-        if (NOT dev->GroundCap()) continue;
+        if ((NOT dev->GroundCap()) && (NOT dev->CoupledCap())) continue;
         foreach (Terminal *ter, dev->GetTerminalList()) {
             if (ter->NodeId() == 0) continue; // ground
             node = ter->GetNode();
             foreach (Device *cntDev, node->ConnectDeviceList()) {
                 if (cntDev != dev) {
-                    dev->SetGroundCapConnectDevice(cntDev);
+                    dev->AddConnectDevice(cntDev);
                     break;
                 }
             }
@@ -750,12 +930,20 @@ int ASG::LinkDeviceForGroundCap()
     }
 
 #ifdef DEBUG
+    QString tmp = "";
     foreach (Device *dev, m_ckt->GetDeviceList()) {
-        if (NOT dev->GroundCap()) continue;
-        Device *cntDev = dev->GroundCapConnectDevice();
-        Q_ASSERT(cntDev);
-        qDebug() << "groundCap(" << dev->Name() << "), "
-                 << "connectTo(" << cntDev->Name() << ")";
+        if ((NOT dev->GroundCap()) && (NOT dev->CoupledCap())) continue;
+        if (dev->GroundCap())
+            tmp += "GroundCap(";
+        else if (dev->CoupledCap())
+            tmp += "CoupledCap(";
+        tmp += (dev->Name() + ") ");
+        tmp += ("ConnectTo ");
+        foreach (Device *dev, dev->CapConnectDeviceList())
+            tmp += ("(" + dev->Name() + ") ");
+        
+        qInfo() << tmp;
+        tmp = "";
     }
 #endif
 

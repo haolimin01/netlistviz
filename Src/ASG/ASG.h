@@ -30,6 +30,7 @@ public:
     ~ASG();
 
     void SetCircuitgraph(CircuitGraph *ckt);
+    void SetIgnoreCapType(IgnoreCap type) { m_ignoreCap = type; }
     int  LogicalPlacement();
     int  LogicalRouting();
     int  GeometricalPlacement(SchematicScene *scene);
@@ -49,8 +50,9 @@ private:
     int    InsertBasicDevice(Device *device);
     Level* CreateNextLevel(Level *prevLevel) const;
     int    BubbleSort();
-    int    BubbleSortConsiderCap();
-    int    BubbleSortIgnoreCap();
+    int    BubbleSortIgnoreNoCap();
+    int    BubbleSortIgnoreGCap();
+    int    BubbleSortIgnoreGCCap();
     /* --------------------------------------- */
 
     /* ----------- Logical Routing ----------- */
@@ -60,9 +62,11 @@ private:
 
     /* -------- Geometrical Placement -------- */
     int  DecideDeviceWhetherToReverse();
-    int  DecideDeviceWhetherToReverseIgnoreCap(); // ignore ground cap
+    int  DecideDeviceWhetherToReverseIgnoreNoCap();
+    int  DecideDeviceWhetherToReverseIgnoreGCap();
+    int  DecideDeviceWhetherToReverseIgnoreGCCap();
+    int  LinkDeviceForGCCap();     // Ground and Coupled Cap
     int  CreateSchematicDevices(); // create schematicdevices and schematicterminals
-    int  LinkDeviceForGroundCap();
     int  RenderSchematicDevices(SchematicScene *scene); // render devices to scene
     /* --------------------------------------- */
 
@@ -89,7 +93,7 @@ private:
     SWireList          m_swireList;
 
     bool               m_logDataDestroyed;
-    bool               m_ignoreCap;
+    IgnoreCap          m_ignoreCap;
 };
 
 #endif // NETLISTVIZ_ASG_ASG_H

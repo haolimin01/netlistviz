@@ -26,17 +26,20 @@ SchematicDevice::SchematicDevice(Device *dev, QMenu *contextMenu,
     m_name = dev->m_name;
     m_logRow = dev->m_row;
     m_reverse = dev->m_reverse;
-    m_gCapConnectDevice = nullptr;
-    m_gCapConnectTerminal = nullptr;
-
-    /* If device is ground cap */
-    if (dev->GroundCap()) {
-        m_gCapConnectDevice = dev->GroundCapConnectSDevice();
-        m_gCapConnectTerminal = dev->GroundCapConnectSTerminal();
-    }
 
     setTransform(transform);
     m_terminals.clear();
+
+    if (dev->GroundCap()) {
+        m_capConnectTerminalTable = dev->CapConnectSTerminalTable();
+        Q_ASSERT(m_capConnectTerminalTable.size() == 1);
+    }
+
+    if (dev->CoupledCap()) {
+        m_capConnectTerminalTable = dev->CapConnectSTerminalTable();
+        qDebug() << m_name << " " << m_capConnectTerminalTable << endl;
+        Q_ASSERT(m_capConnectTerminalTable.size() == 2);
+    }
 
     /* ASG entrance */
     /* add terminals by AddTerminal() */
@@ -60,9 +63,6 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     /* Insert SchematicDevice entrance */
     /* create terminals by self */
     CreateTerminalsBySelf();
-
-    m_gCapConnectDevice = nullptr;
-    m_gCapConnectTerminal = nullptr;
 
     Initialize();
 }
@@ -639,8 +639,12 @@ void SchematicDevice::UpdateWirePosition()
 
 SchematicTerminal* SchematicDevice::GroundCapConnectTerminal() const
 {
-    Q_ASSERT(m_gCapConnectTerminal);
-    return m_gCapConnectTerminal;
+    return m_capConnectTerminalTable.first();
+}
+
+SchematicTerminal* SchematicDevice::CoupledCapConnectTerminal(TerminalType type) const
+{
+    return m_capConnectTerminalTable[type];
 }
 
 /* BUG */

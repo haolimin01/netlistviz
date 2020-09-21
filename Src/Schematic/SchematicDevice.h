@@ -56,6 +56,7 @@ public:
     SchematicTerminal* GetTerminal(TerminalType type) const;
     STerminalTable     GetTerminalTable() const { return m_terminals; }
     SchematicTerminal* GroundCapConnectTerminal() const;
+    SchematicTerminal* CoupledCapConnectTerminal(TerminalType type) const;
 
     /* Print and Plot */
     void         Print() const;
@@ -109,9 +110,8 @@ private:
     int                m_geoCol; // geometrical column
     int                m_geoRow; // geometrical row
 
-    /* if device is ground cap */
-    SchematicDevice   *m_gCapConnectDevice;
-    SchematicTerminal *m_gCapConnectTerminal;
+    /* if device is ground or coupled cap */
+    STerminalTable     m_capConnectTerminalTable;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H

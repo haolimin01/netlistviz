@@ -83,3 +83,7 @@ SchematicFile
 # Waste
 Src/Waste
 Src/waste
+
+# core
+core
+.fuse_hidden*
