@@ -457,6 +457,21 @@ void MainWindow::CreateActions()
     m_geoRouteAction = new QAction(QIcon(":/images/geo_route.png"), tr("Geometrical Routing"), this);
     m_geoRouteAction->setEnabled(false);
     connect(m_geoRouteAction, &QAction::triggered, this, &MainWindow::GeometricalRouting);
+
+    m_hideGCapAction = new QAction(QIcon(":/images/hide_ground_cap.png"), tr("Hide ground cap"), this);
+    m_hideGCapAction->setCheckable(true);
+    m_hideGCapAction->setChecked(false);
+    connect(m_hideGCapAction, &QAction::toggled, this, &MainWindow::HideGroundCapToggled);
+
+    m_hideCCapAction = new QAction(QIcon(":/images/hide_coupled_cap.png"), tr("Hide coupled cap"), this);
+    m_hideCCapAction->setCheckable(true);
+    m_hideCCapAction->setChecked(false);
+    connect(m_hideCCapAction, &QAction::toggled, this, &MainWindow::HideCoupledCapToggled);
+
+    m_hideGndAction = new QAction(QIcon(":/images/hide_gnd.png"), tr("Hide Gnd"), this);
+    m_hideGndAction->setCheckable(true);
+    m_hideGndAction->setChecked(false);
+    connect(m_hideGndAction, &QAction::toggled, this, &MainWindow::HideGndToggled);
 }
 
 void MainWindow::CreateMenus()
@@ -483,6 +498,9 @@ void MainWindow::CreateMenus()
     m_viewMenu->addAction(m_zoomAction);
     m_viewMenu->addAction(m_moveToCenterAction);
     m_viewMenu->addAction(m_scaleToOriginAction);
+    m_viewMenu->addAction(m_hideGCapAction);
+    m_viewMenu->addAction(m_hideCCapAction);
+    m_viewMenu->addAction(m_hideGndAction);
 
     m_asgMenu = menuBar()->addMenu(tr("&ASG"));
     m_asgMenu->addAction(m_parseNetlistAction);
@@ -514,6 +532,9 @@ void MainWindow::CreateToolBars()
     m_editToolBar->addAction(m_zoomAction);
     m_editToolBar->addAction(m_moveToCenterAction);
     m_editToolBar->addAction(m_scaleToOriginAction);
+    m_editToolBar->addAction(m_hideGCapAction);
+    m_editToolBar->addAction(m_hideCCapAction);
+    m_editToolBar->addAction(m_hideGndAction);
 
     m_fontCombo = new QFontComboBox();
     connect(m_fontCombo, &QFontComboBox::currentFontChanged,
@@ -967,4 +988,25 @@ void MainWindow::GeometricalRouting()
     if (error) {
         ShowCriticalMsg(tr("[ERROR ASG] Geometrical Routing failed."));
     }
+}
+
+void MainWindow::HideGroundCapToggled(bool hide)
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+    m_scene->HideGroundCaps(hide);
+}
+
+void MainWindow::HideCoupledCapToggled(bool hide)
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+    m_scene->HideCoupledCaps(hide);
+}
+
+void MainWindow::HideGndToggled(bool hide)
+{
+    m_scene->HideGnds(hide);
 }

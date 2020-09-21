@@ -68,6 +68,15 @@ private slots:
     /* set SchematicView scale to 1 */
     void ScaleToOriginTriggered();
 
+    /* hide ground cap */
+    void HideGroundCapToggled(bool hide);
+
+    /* hide coupled cap */
+    void HideCoupledCapToggled(bool hide);
+
+    /* hide gnd */
+    void HideGndToggled(bool hide);
+
     /* move to center */
     void MoveToCenterTriggered();
 
@@ -247,6 +256,9 @@ private:
     QAction            *m_logRouteAction;
     QAction            *m_geoPlaceAction;
     QAction            *m_geoRouteAction;
+    QAction            *m_hideGCapAction;
+    QAction            *m_hideCCapAction;
+    QAction            *m_hideGndAction;
 
     /* Device Panel */
     QDockWidget        *m_devicePanelDockWidget;

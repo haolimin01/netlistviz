@@ -49,6 +49,9 @@ public:
     /* --------------------------------------- */
 
     void    SetShowTerminal(bool show);
+    void    HideGroundCaps(bool hide);
+    void    HideCoupledCaps(bool hide);
+    void    HideGnds(bool hide);
     QPointF Center() const;
 
 
@@ -89,6 +92,7 @@ private:
     void  RenderCoupledCaps(const SDeviceList &ccaps);
     void  SetDeviceAt(int col, int row, SchematicDevice *device);   // col, row (grid)
     void  SetDeviceAt(const QPointF &pos, SchematicDevice *device); // coordinate (scanePos)
+    void  AddWiresToScene(const SWireList &wires);
     /*---------------------------------------- */
 
     SchematicDevice*   InsertSchematicDevice(DeviceType, const QPointF &);
@@ -110,7 +114,6 @@ private:
     QPointF                     m_startPoint;
     QVector<QPointF>            m_currWirePathPoints;
     QGraphicsLineItem          *m_line;
-    SWireList                   m_extraWires; // for connecting gnd ...
 
     QColor                      m_textColor;
     QColor                      m_deviceColor;
@@ -125,6 +128,10 @@ private:
 
     SDeviceList                 m_gCapDeviceList;
     SDeviceList                 m_cCapDeviceList;
+    SDeviceList                 m_gndList;
+    SWireList                   m_hasGCapWireList;
+    SWireList                   m_hasCCapWireList;
+    SWireList                   m_hasGndWireList;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H

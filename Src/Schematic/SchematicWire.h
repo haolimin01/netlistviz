@@ -57,9 +57,11 @@ public:
     void      SetThisChannelTrackCount(int count) { m_thisChannelTrackCount = count; }
     int       ThisChannelTrackCount() const { return m_thisChannelTrackCount; }
     void      UpdatePosition(SchematicTerminal *terminal); // terminal is unique
-    void      SetScale(qreal scale) { m_lineWidth *= scale; }
+    void      SetScale(qreal scale) { m_lineWidth = DFT_Wire_W * scale; }
     int       LogicalCol() const { return m_logCol; }
     void      SetGeometricalCol(int col) { m_geoCol = col; }
+    bool      HasGroundCap() const;
+    bool      HasCoupledCap() const;
 
     void      Print() const;
 
