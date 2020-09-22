@@ -6,8 +6,8 @@ Visualization for Netlist
 - [x] logical routing
 - [x] geometrical placement
 - [x] geometrical routing
-- [ ] Information on ASG property dialog
-- [ ] Coupled Tree case
+- [x] Information on ASG property dialog
+- [x] Coupled Tree case
 - [ ] Mesh RCL case
 - [ ] General circuit case
 - [ ] circuit recognition
