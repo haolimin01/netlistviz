@@ -971,6 +971,19 @@ void MainWindow::GeometricalPlacement()
     }
 
     m_view->centerOn(m_scene->Center());
+
+    /* update hideXXXAction, ugly implementation */
+    m_hideGCapAction->blockSignals(true);
+    m_hideGCapAction->setChecked(false);
+    m_hideGCapAction->blockSignals(false);
+
+    m_hideCCapAction->blockSignals(true);
+    m_hideCCapAction->setChecked(false);
+    m_hideCCapAction->blockSignals(false);
+
+    m_hideGndAction->blockSignals(true);
+    m_hideGndAction->setChecked(false);
+    m_hideGndAction->blockSignals(false);
 }
 
 void MainWindow::GeometricalRouting()
