@@ -3,58 +3,6 @@
 #include "SchematicTerminal.h"
 #include "SchematicWire.h"
 
-#if 0
-int SchematicScene::RenderSchematicDevices(const SDeviceList &devices,
-                    int colCount, int rowCount, bool ignoreGroundCap)
-{
-#ifdef TRACE
-    qInfo() << LINE_INFO << endl;
-#endif
-
-#ifdef DEBUG
-    qDebug() << LINE_INFO << "colCount(" << QString::number(colCount) << "), "
-             << "rowCount(" << rowCount << ")";
-#endif
-
-    clear();
-
-    /* 1. Change device scale according to col and row count */
-    ChangeDeviceScale(colCount, rowCount);
-
-    /* 2. Change device orientation (BUG) */ 
-    ChangeDeviceOrientation(devices);
-
-    /* 3. In order to place all devices at scene center position,
-     *    calculate start col and row.
-     */
-
-    int startRow = CalStartRow(rowCount);
-    int startCol = CalStartCol(colCount);
-
-    /* 4. Set device geometrical position and add to scene */
-    SDeviceList gCaps;
-    int geoCol = 0, geoRow = 0;
-    SchematicDevice *device = nullptr;
-    foreach (device, devices) {
-        if (ignoreGroundCap && device->GroundCap()) {
-            gCaps.push_back(device);
-            continue;
-        }
-        geoRow = device->LogicalRow() + startRow;
-        geoCol = device->LogicalCol() * 2 + startCol;
-        device->SetGeometricalPos(/*col*/geoCol, /*row*/geoRow);
-        SetDeviceAt(geoCol, geoRow, device);
-    }
-
-
-    /* 5. Render extra widgets, such as gnd, groundCap */
-    if (ignoreGroundCap) RenderGroundCaps(gCaps);
-    RenderFixedGnds(devices); // not device
-
-    return OKAY;
-}
-#endif
-
 int SchematicScene::RenderSchematicDevices(const SDeviceList &devices, int colCount,
                                            int rowCount, IgnoreCap ignore)
 {
@@ -70,6 +18,8 @@ int SchematicScene::RenderSchematicDevices(const SDeviceList &devices, int colCo
     clear();
     m_gCapDeviceList.clear();
     m_cCapDeviceList.clear();
+    m_gndList.clear();
+    m_hasGndWireList.clear();
 
     /* 1. Change device scale according to col and row count */
     ChangeDeviceScale(colCount, rowCount);
