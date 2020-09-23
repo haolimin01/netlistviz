@@ -7,6 +7,7 @@
  * @date     : 2020.09.11
  * @email    : haolimin01.sjtu.edu.cn 
  * @desp     : Device class, DO NOT contain geometrical information.
+ * @modified : Hao Limin, 2020.09.23
  */
 
 #include "Define/TypeDefine.h"
@@ -22,9 +23,8 @@ class SchematicDevice;
  * 
  * horizontal: +-
  * 
- * reverse: change orientation
+ * reverse: change (+-) to (-+)
  * 
- * We assume that device is horizontal now.
  */
 
 class Device
@@ -39,7 +39,7 @@ public:
     int          Id() const                { return m_id; }
     QString      Name() const              { return m_name; }
     DeviceType   GetDeviceType() const     { return m_deviceType; }
-    void         AddConnectDevice(Device *dev);
+    void         AddConnectDevice(TerminalType type, Device *dev);
     void         SetAsGroundCap(bool is)   { m_groundCap = is; }
     bool         GroundCap() const         { return m_groundCap; }
     bool         CoupledCap() const; 
@@ -74,8 +74,8 @@ public:
     void                SetSchematicDevice(SchematicDevice *sDevice) { m_sDevice=sDevice;}
     SchematicDevice*    GetSchematicDevice() const { return m_sDevice; } 
 
-    DeviceList          CapConnectDeviceList() const { return m_capConnectDeviceList; }
-    STerminalTable      CapConnectSTerminalTable() const;
+    // DeviceList          CapConnectDeviceList() const { return m_capConnectDeviceList; }
+    // STerminalTable      CapConnectSTerminalTable() const;
 
     void Print() const;
     void PrintBubbleValue() const;
@@ -101,8 +101,9 @@ private:
     int                               m_bubbleValue;
     int                               m_row;   // row
 
-    DeviceList                        m_capConnectDeviceList;    // for cap
-    TerminalTable                     m_capConnectTerminalTable; // for cap
+    QMap<TerminalType, Device*>       m_connectDevices;
+    // DeviceList                        m_capConnectDeviceList;    // for cap
+    // TerminalTable                     m_capConnectTerminalTable; // for cap
     SchematicDevice                  *m_sDevice; // For creating SchematicWire
 
     friend class SchematicDevice;

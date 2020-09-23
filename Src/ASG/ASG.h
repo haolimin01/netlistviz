@@ -31,6 +31,7 @@ public:
 
     void SetCircuitgraph(CircuitGraph *ckt);
     void SetIgnoreCapType(IgnoreCap type) { m_ignoreCap = type; }
+    int  Prepare();
     int  LogicalPlacement();
     int  LogicalRouting();
     int  GeometricalPlacement(SchematicScene *scene);
@@ -44,9 +45,9 @@ private:
     DISALLOW_COPY_AND_ASSIGN(ASG);
 
     /* ---------- Logical Placement ---------- */
-    int    BuildIncidenceMatrix(); // undirected graph
-    int    CalLogicalCol();        // calculate logical column by depth
-    int    CalLogicalRow();        // calculate logical row by bubble sort
+    int    BuildIncidenceMatrix();
+    int    CalLogicalCol();
+    int    CalLogicalRow();
     int    InsertBasicDevice(Device *device);
     Level* CreateNextLevel(Level *prevLevel) const;
     int    BubbleSort();
@@ -56,8 +57,8 @@ private:
     /* --------------------------------------- */
 
     /* ----------- Logical Routing ----------- */
-    int  CreateChannels();       // to m_channels
-    int  AssignTrackNumber();    // assign track number to vertical line segment
+    int  CreateChannels();
+    int  AssignTrackNumber();
     /* --------------------------------------- */
 
     /* -------- Geometrical Placement -------- */
@@ -65,14 +66,14 @@ private:
     int  DecideDeviceWhetherToReverseIgnoreNoCap();
     int  DecideDeviceWhetherToReverseIgnoreGCap();
     int  DecideDeviceWhetherToReverseIgnoreGCCap();
-    int  LinkDeviceForGCCap();     // Ground and Coupled Cap
-    int  CreateSchematicDevices(); // create schematicdevices and schematicterminals
-    int  RenderSchematicDevices(SchematicScene *scene); // render devices to scene
+    int  LinkDeviceForGCCap();
+    int  CreateSchematicDevices();
+    int  RenderSchematicDevices(SchematicScene *scene);
     /* --------------------------------------- */
 
     /* --------- Geometrical Routing --------- */
-    int  CreateSchematicWires();   // create schematicwires
-    int  RenderSchematicWires(SchematicScene *scene);   // render wires to scene
+    int  CreateSchematicWires();
+    int  RenderSchematicWires(SchematicScene *scene);
     /* --------------------------------------- */
 
 

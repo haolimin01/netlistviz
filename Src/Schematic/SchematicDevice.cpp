@@ -31,13 +31,13 @@ SchematicDevice::SchematicDevice(Device *dev, QMenu *contextMenu,
     m_terminals.clear();
 
     if (dev->GroundCap()) {
-        m_capConnectTerminalTable = dev->CapConnectSTerminalTable();
-        Q_ASSERT(m_capConnectTerminalTable.size() == 1);
+        // m_capConnectTerminalTable = dev->CapConnectSTerminalTable();
+        // Q_ASSERT(m_capConnectTerminalTable.size() == 1);
     }
 
     if (dev->CoupledCap()) {
-        m_capConnectTerminalTable = dev->CapConnectSTerminalTable();
-        qDebug() << m_name << " " << m_capConnectTerminalTable << endl;
+        // m_capConnectTerminalTable = dev->CapConnectSTerminalTable();
+        // qDebug() << m_name << " " << m_capConnectTerminalTable << endl;
         Q_ASSERT(m_capConnectTerminalTable.size() == 2);
     }
 

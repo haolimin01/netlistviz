@@ -32,6 +32,7 @@ Device::~Device()
         delete it.value();
     m_terminals.clear();
 
+    m_connectDevices.clear();
     m_predecessors.clear();
     m_successors.clear();
 }
@@ -67,8 +68,9 @@ Terminal* Device::GetTerminal(Node *node) const
     return nullptr;
 }
 
-void Device::AddConnectDevice(Device *dev)
+void Device::AddConnectDevice(TerminalType type, Device *dev)
 {
+#if 0
     Q_ASSERT(dev);
     qDebug() << Name() << endl;
     m_capConnectDeviceList.push_back(dev);
@@ -90,6 +92,9 @@ void Device::AddConnectDevice(Device *dev)
     }
     
     Q_ASSERT(m_capConnectTerminalTable.size() > 0);
+#endif
+
+    m_connectDevices.insert(type, dev);
 }
 
 bool Device::CoupledCap() const
@@ -317,6 +322,7 @@ bool Device::HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType)
     return has;
 }
 
+#if 0
 STerminalTable Device::CapConnectSTerminalTable() const
 {
     STerminalTable table;
@@ -327,6 +333,7 @@ STerminalTable Device::CapConnectSTerminalTable() const
     }
     return table;
 }
+#endif
 
 void Device::Print() const
 {
