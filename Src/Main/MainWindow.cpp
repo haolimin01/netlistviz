@@ -424,11 +424,6 @@ void MainWindow::CreateActions()
     m_showTerminalAction->setChecked(false);
     connect(m_showTerminalAction, &QAction::toggled, this, &MainWindow::ShowItemTerminalToggled);
 
-    m_showBranchAction = new QAction(QIcon(":/images/show_branch.png"), tr("Show Branch"), this);
-    m_showBranchAction->setCheckable(true);
-    m_showBranchAction->setChecked(false);
-    connect(m_showBranchAction, &QAction::toggled, this, &MainWindow::ShowBranchToggled);
-
     m_showGridAction = new QAction(QIcon(":/images/grid.png"), tr("Show Grid"), this);
     m_showGridAction->setCheckable(true);
     m_showGridAction->setChecked(true);
@@ -493,7 +488,6 @@ void MainWindow::CreateMenus()
     m_viewMenu = menuBar()->addMenu(tr("&View"));
     m_viewMenu->addAction(m_devicePanelDockWidget->toggleViewAction());
     m_viewMenu->addAction(m_showTerminalAction);
-    m_viewMenu->addAction(m_showBranchAction);
     m_viewMenu->addAction(m_showGridAction);
     m_viewMenu->addAction(m_zoomAction);
     m_viewMenu->addAction(m_moveToCenterAction);
@@ -527,7 +521,6 @@ void MainWindow::CreateToolBars()
     m_editToolBar->addAction(m_toFrontAction);
     m_editToolBar->addAction(m_sendBackAction);
     m_editToolBar->addAction(m_showTerminalAction);
-    m_editToolBar->addAction(m_showBranchAction);
     m_editToolBar->addAction(m_showGridAction);
     m_editToolBar->addAction(m_zoomAction);
     m_editToolBar->addAction(m_moveToCenterAction);
@@ -670,15 +663,6 @@ QIcon MainWindow::CreateColorIcon(QColor color)
 void MainWindow::ShowItemTerminalToggled(bool show)
 {
     m_scene->SetShowTerminal(show);
-}
-
-void MainWindow::ShowBranchToggled(bool show)
-{
-#ifdef TRACEx
-    qInfo() << LINE_INFO << endl;
-#endif
-
-    // m_scene->SetShowBranchFlag(show);
 }
 
 void MainWindow::ShowGridToggled(bool show)

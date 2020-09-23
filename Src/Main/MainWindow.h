@@ -120,9 +120,6 @@ private slots:
     /* Show or Hide terminal on items */
     void ShowItemTerminalToggled(bool show);
 
-    /* Show as branch on wires and devices */
-    void ShowBranchToggled(bool show);
-
     void ShowGridToggled(bool show);
 
     void NetlistChangedSlot();
@@ -236,7 +233,6 @@ private:
     QAction            *m_italicAction;
     QAction            *m_textAction;
     QAction            *m_showTerminalAction;
-    QAction            *m_showBranchAction;
     QAction            *m_showGridAction;
     QAction            *m_zoomAction;
     QAction            *m_moveToCenterAction;

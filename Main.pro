@@ -96,4 +96,3 @@ SOURCES += ./Src/Main/Main.cpp\
 
 
 RESOURCES += ./Src/Schematic/Schematic.qrc
-RC_ICONS = ./Src/Main/netlistviz.ico

@@ -23,6 +23,7 @@ int main(int argv, char *args[])
     QRect rect = QApplication::desktop()->availableGeometry(); 
     mainWindow.setGeometry(0, 0, rect.width(), rect.height());
 
+    mainWindow.setWindowIcon(QIcon(":/images/netlistviz.png"));
     mainWindow.show();
 
     return app.exec();

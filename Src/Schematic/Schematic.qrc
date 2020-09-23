@@ -29,5 +29,6 @@
     <file>images/hide_ground_cap.png</file>
     <file>images/hide_coupled_cap.png</file>
     <file>images/hide_gnd.png</file>
+    <file>images/netlistviz.png</file>
 </qresource>
 </RCC>
