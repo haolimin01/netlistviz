@@ -5,9 +5,13 @@
 #include "MatrixElement.h"
 #include "TablePlotter.h"
 #include "Circuit/Device.h"
+#include "Circuit/Node.h"
 #include "Circuit/CircuitGraph.h"
 #include "Level.h"
 #include "Channel.h"
+#include "Circuit/ConnectDescriptor.h"
+#include "Terminal.h"
+#include "HyperLevel.h"
 
 
 ASG::ASG(CircuitGraph *ckt)
@@ -15,12 +19,14 @@ ASG::ASG(CircuitGraph *ckt)
     Q_ASSERT(ckt);
     m_ckt = ckt;
     m_matrix = nullptr;
-    m_levelsPlotter = nullptr;
+    m_levelPlotter = nullptr;
     m_logDataDestroyed = false;
     m_ignoreCap = IgnoreGCap;
 
     m_visited = new int[m_ckt->DeviceCount()];  
     memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCount());
+
+    Prepare();
 }
 
 ASG::ASG()
@@ -28,7 +34,7 @@ ASG::ASG()
     m_ckt = nullptr;
     m_matrix = nullptr;
     m_visited = nullptr;
-    m_levelsPlotter = nullptr;
+    m_levelPlotter = nullptr;
     m_logDataDestroyed = false;
     m_ignoreCap = IgnoreGCap;
 }
@@ -45,8 +51,12 @@ ASG::~ASG()
         delete level;
     m_levels.clear();
 
-    if (m_levelsPlotter)
-        delete m_levelsPlotter;
+    foreach (HyperLevel *hl, m_hyperLevels)
+        delete hl;
+    m_hyperLevels.clear();
+
+    if (m_levelPlotter)
+        delete m_levelPlotter;
 
     foreach (Channel *channel, m_channels)
         delete channel;
@@ -71,8 +81,57 @@ void ASG::SetCircuitgraph(CircuitGraph *ckt)
     memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCount());
 
     m_logDataDestroyed = false;
+
+    Prepare();
 }
 
+int ASG::Prepare()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    int error = LinkDevice();
+
+    return error;
+}
+
+/* Add connected devices to device, include connecting by gnd */
+int ASG::LinkDevice()
+{
+    /* Clear connections firstly */
+    foreach (Device *dev, m_ckt->GetDeviceList())
+        dev->ClearConnectDesps();
+
+    Node *node = nullptr;
+    Device *fromDev = nullptr, *toDev = nullptr;
+    foreach (node, m_ckt->GetNodeList()) {
+        foreach (fromDev, node->ConnectDeviceList()) {
+            foreach (toDev, node->ConnectDeviceList()) {
+                if (fromDev == toDev) continue;
+                fromDev->AddConnectDevice(toDev);
+            }
+        }
+    }
+
+#ifdef DEBUG
+    printf("--------------- Connect Devices ---------------\n");
+    QString tmp = "";
+    foreach (Device *dev, m_ckt->GetDeviceList()) {
+        qDebug() << dev->Name();
+        foreach (ConnectDescriptor *cd, dev->ConnectDesps()) {
+            tmp += ("thisTer(" + QString::number(cd->thisTerminal->Id()) + "), ");
+            tmp += ("connectDev(" + cd->connectDevice->Name() + "), ");
+            tmp += ("connectTer(" + QString::number(cd->connectTerminal->Id()) + ")");
+            qInfo() << tmp;
+            tmp = "";
+        }
+    }
+    printf("-----------------------------------------------\n");
+#endif
+
+    return OKAY;
+}
 
 void ASG::DestroyLogicalData()
 {
@@ -92,6 +151,10 @@ void ASG::DestroyLogicalData()
         delete level;
     m_levels.clear();
 
+    foreach (HyperLevel *hl, m_hyperLevels)
+        delete hl;
+    m_hyperLevels.clear();
+
     /* Matrix and it's elements */
     if (m_matrix) {
         delete m_matrix;
@@ -103,45 +166,45 @@ void ASG::DestroyLogicalData()
 
 
 /* Print and Plot */
-void ASG::PlotLevels(const QString &title)
+void ASG::PlotHyperLevels(const QString &title)
 {
-    if (m_levels.size() < 1)
+    if (m_hyperLevels.size() < 1)
         return;
     
-    if (m_levelsPlotter) {
-        m_levelsPlotter->close();
-        m_levelsPlotter->clear();
+    if (m_levelPlotter) {
+        m_levelPlotter->close();
+        m_levelPlotter->clear();
     } else {
-        m_levelsPlotter = new TablePlotter();
+        m_levelPlotter = new TablePlotter();
     }
 
     int maxDeviceCountInLevel = -1;
-    foreach (Level *level, m_levels) {
-        if (level->AllDeviceCount() > maxDeviceCountInLevel)
-            maxDeviceCountInLevel = level->AllDeviceCount();
+    foreach (HyperLevel *hl, m_hyperLevels) {
+        if (hl->AllDeviceCount() > maxDeviceCountInLevel)
+            maxDeviceCountInLevel = hl->AllDeviceCount();
     }
 
-    m_levelsPlotter->SetTableRowColCount(maxDeviceCountInLevel, m_levels.size());
+    m_levelPlotter->SetTableRowColCount(maxDeviceCountInLevel, m_hyperLevels.size());
 
     /* header */
     QStringList headerText;
-    for (int i = 0; i < m_levels.size(); ++ i) {
-        QString tmp = "L" + QString::number(m_levels.at(i)->Id());
+    for (int i = 0; i < m_hyperLevels.size(); ++ i) {
+        QString tmp = "HL" + QString::number(m_hyperLevels.at(i)->Id());
         headerText << tmp;
     }
-    m_levelsPlotter->SetColHeaderText(headerText);
+    m_levelPlotter->SetColHeaderText(headerText);
 
     /* content */
     int row = 0;
-    for (int i = 0; i < m_levels.size(); ++ i) {
-        Level *level = m_levels.at(i);
+    for (int i = 0; i < m_hyperLevels.size(); ++ i) {
+        HyperLevel *hl = m_hyperLevels.at(i);
         row = 0;
-        foreach (Device *dev, level->AllDevices()) {
-            m_levelsPlotter->AddItem(row, i, dev->Name());
+        foreach (Device *dev, hl->AllDevices()) {
+            m_levelPlotter->AddItem(row, i, dev->Name());
             row++;
         }
     }
 
-    m_levelsPlotter->setWindowTitle(title);
-    m_levelsPlotter->Display();
+    m_levelPlotter->setWindowTitle(title);
+    m_levelPlotter->Display();
 }

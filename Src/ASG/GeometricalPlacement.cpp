@@ -3,7 +3,7 @@
 #include "Circuit/Device.h"
 #include "Circuit/Terminal.h"
 #include "Circuit/CircuitGraph.h"
-#include "Level.h"
+#include "HyperLevel.h"
 #include "Schematic/SchematicDevice.h"
 #include "Schematic/SchematicTerminal.h"
 #include "Schematic/SchematicScene.h"
@@ -16,13 +16,25 @@ int ASG::GeometricalPlacement(SchematicScene *scene)
 #endif
     int error = 0;
     error = DecideDeviceWhetherToReverse();
-
     if (error)
         return ERROR;
 
-    error = LinkDeviceForGCCap();
+    error = CalGeometricalCol();
     if (error)
         return ERROR;
+
+    error = CalGeometricalRow();
+    if (error)
+        return ERROR;
+
+#ifdef DEBUG
+    foreach (HyperLevel *hl, m_hyperLevels)
+        hl->PrintGeometricalPos();
+#endif
+
+    // error = LinkDeviceForGCCap();
+    // if (error)
+    //     return ERROR;
 
     error = CreateSchematicDevices();
     if (error)
@@ -52,19 +64,21 @@ int ASG::DecideDeviceWhetherToReverse()
 
 int ASG::DecideDeviceWhetherToReverseIgnoreNoCap()
 {
-    /* First, set maxDeviceCount Level as no reverse */
+    /* First, set maxDeviceCount HyperLevel as no reverse */
     int indexOfMaxDeviceCount = 0;
-    Level *levelOfMaxDeviceCount = m_levels.front();
+    HyperLevel *levelOfMaxDeviceCount = m_hyperLevels.front();
     int maxDeviceCountInLevel = levelOfMaxDeviceCount->AllDeviceCount();
 
-    Level *level = nullptr;
+    // Level *level = nullptr;
+    HyperLevel *hl = nullptr;
 
-    for (int i = 1; i < m_levels.size(); ++ i) {
-        level = m_levels.at(i);
-        if (level->AllDeviceCount() >= maxDeviceCountInLevel) {
-            maxDeviceCountInLevel = level->AllDeviceCount();
+    for (int i = 1; i < m_hyperLevels.size(); ++ i) {
+        // level = m_levels.at(i);
+        hl = m_hyperLevels.at(i);
+        if (hl->AllDeviceCount() >= maxDeviceCountInLevel) {
+            maxDeviceCountInLevel = hl->AllDeviceCount();
             indexOfMaxDeviceCount = i;
-            levelOfMaxDeviceCount = level;
+            levelOfMaxDeviceCount = hl;
         }
     }
 
@@ -74,15 +88,15 @@ int ASG::DecideDeviceWhetherToReverseIgnoreNoCap()
 
     /* Second, deal with [0, indexOfMaxDeviceCount) */
     for (int i = indexOfMaxDeviceCount - 1; i >= 0; -- i) {
-        level = m_levels.at(i);
-        foreach (Device *dev, level->AllDevices())
+        hl = m_hyperLevels.at(i);
+        foreach (Device *dev, hl->AllDevices())
             dev->DecideReverseBySuccessors(m_ignoreCap);
     }
 
     /* Third, deal with (indexOfMaxDeviceCount, last] */
     for (int i = indexOfMaxDeviceCount + 1; i < m_levels.size(); ++ i) {
-        level = m_levels.at(i);
-        foreach (Device *dev, level->AllDevices())
+        hl = m_hyperLevels.at(i);
+        foreach (Device *dev, hl->AllDevices())
             dev->DecideReverseByPredecessors(m_ignoreCap);
     }
 
@@ -102,7 +116,7 @@ int ASG::DecideDeviceWhetherToReverseIgnoreGCap()
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-
+#if 0
     /* ignore ground cap */
     int indexOfMaxDeviceCount = 0;
     Level *levelOfMaxDeviceCount = m_levels.front();
@@ -148,7 +162,7 @@ int ASG::DecideDeviceWhetherToReverseIgnoreGCap()
     }
     qDebug() << "----------------------------------------------";
 #endif
-
+#endif
     return OKAY;
 }
 
@@ -157,7 +171,7 @@ int ASG::DecideDeviceWhetherToReverseIgnoreGCCap()
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-
+#if 0
     /* ignore coupled and ground cap */
     int indexOfMaxDeviceCount = 0;
     Level *levelOfMaxDeviceCount = m_levels.front();
@@ -205,6 +219,31 @@ int ASG::DecideDeviceWhetherToReverseIgnoreGCCap()
     }
     qDebug() << "----------------------------------------------";
 #endif
+#endif
+    return OKAY;
+}
+
+int ASG::CalGeometricalCol()
+{
+    HyperLevel *hl = nullptr;
+    int colIndex = 0;
+    Device *dev = nullptr;
+    foreach (hl, m_hyperLevels) { 
+        hl->AssignGeometricalCol(colIndex);
+        colIndex++; // for channel between hyperlevels
+    }
+
+    return OKAY;
+}
+
+int ASG::CalGeometricalRow()
+{
+    /* geometricalRow = logicalRow now */
+
+    Device *dev = nullptr;
+
+    foreach (dev, m_ckt->GetDeviceList())
+        dev->SetGeometricalRow(dev->LogicalRow());
 
     return OKAY;
 }
@@ -227,6 +266,7 @@ int ASG::CreateSchematicDevices()
         }
         /* Initialize schematicDevice (Draw device shape, set annotation and terminals pos) */
         sdevice->Initialize();
+        sdevice->SetOrientation(device->GetOrientation()); // ugly!
         m_sdeviceList.push_back(sdevice);
         device->SetSchematicDevice(sdevice);
     }
@@ -286,19 +326,19 @@ int ASG::RenderSchematicDevices(SchematicScene *scene)
 {
     Q_ASSERT(scene);
 
-    int levelCount = m_levels.size();
-    int maxRow = -1;
-
+    int maxGeoCol = 0, maxGeoRow = 0;
     foreach (Device *dev, m_ckt->GetDeviceList()) {
-        if (dev->Row() > maxRow)
-            maxRow = dev->Row();
+        if (dev->GeometricalCol() > maxGeoCol)
+            maxGeoCol = dev->GeometricalCol();
+        if (dev->GeometricalRow() > maxGeoRow)
+            maxGeoRow = dev->GeometricalRow();
     }
 
-    Q_ASSERT(maxRow >= 0);
-    int rowCount = maxRow * Row_Device_Factor + 1; 
-    int colCount = levelCount * 2; // levels + channels
+    int colCount = maxGeoCol + 1;
+    int rowCount = maxGeoRow + 1;
 
     int error = scene->RenderSchematicDevices(m_sdeviceList, colCount, rowCount, m_ignoreCap);
+
     return error;
 }
 

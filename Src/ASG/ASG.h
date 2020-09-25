@@ -6,6 +6,7 @@
  * @author   : Hao Limin
  * @date     : 2020.09.12
  * @desp     : Automatic Schematic Generator.
+ * @modified : Hao Limin, 2020.09.24
  */
 
 #include "Define/Define.h"
@@ -44,32 +45,44 @@ public:
 private:
     DISALLOW_COPY_AND_ASSIGN(ASG);
 
-    /* ---------- Logical Placement ---------- */
-    int    BuildIncidenceMatrix();
-    int    CalLogicalCol();
-    int    CalLogicalRow();
-    int    InsertBasicDevice(Device *device);
-    Level* CreateNextLevel(Level *prevLevel) const;
-    int    BubbleSort();
-    int    BubbleSortIgnoreNoCap();
-    int    BubbleSortIgnoreGCap();
-    int    BubbleSortIgnoreGCCap();
+    /* --------------- Prepare --------------- */
+    int    LinkDevice();
     /* --------------------------------------- */
+
+
+    /* ---------- Logical Placement ---------- */
+    int         BuildIncidenceMatrix();
+    int         CalLogicalCol();
+    int         CalLogicalRow();
+    int         InsertBasicDevice(Device *device);
+    HyperLevel* CreateNextHyperLevel(HyperLevel *preHyperLevel) const;
+    int         ClassifyConnectDeviceByHyperLevel();
+    int         BubbleSort();
+    int         BubbleSortIgnoreNoCap();
+    int         BubbleSortIgnoreGCap();
+    int         BubbleSortIgnoreGCCap();
+    int         AdjustHyperLevelInside();
+    /* --------------------------------------- */
+
 
     /* ----------- Logical Routing ----------- */
     int  CreateChannels();
     int  AssignTrackNumber();
     /* --------------------------------------- */
 
+
     /* -------- Geometrical Placement -------- */
     int  DecideDeviceWhetherToReverse();
     int  DecideDeviceWhetherToReverseIgnoreNoCap();
     int  DecideDeviceWhetherToReverseIgnoreGCap();
     int  DecideDeviceWhetherToReverseIgnoreGCCap();
+    int  CalGeometricalCol();
+    int  CalGeometricalRow();
     int  LinkDeviceForGCCap();
     int  CreateSchematicDevices();
     int  RenderSchematicDevices(SchematicScene *scene);
     /* --------------------------------------- */
+
 
     /* --------- Geometrical Routing --------- */
     int  CreateSchematicWires();
@@ -78,7 +91,8 @@ private:
 
 
     /* Print and Plot */
-    void PlotLevels(const QString &title);
+    // void PlotLevels(const QString &title);
+    void PlotHyperLevels(const QString &title);
 
 
     /* ASG members */
@@ -87,8 +101,10 @@ private:
     int               *m_visited;
 
     QVector<Level*>    m_levels;
+    HyperLevelList     m_hyperLevels;
     QVector<Channel*>  m_channels;
-    TablePlotter      *m_levelsPlotter;
+    // TablePlotter      *m_levelsPlotter;
+    TablePlotter      *m_levelPlotter;
 
     SDeviceList        m_sdeviceList;
     SWireList          m_swireList;

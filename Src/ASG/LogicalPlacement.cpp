@@ -7,6 +7,7 @@
 #include "Circuit/Terminal.h"
 #include "Circuit/Node.h"
 #include "Level.h"
+#include "HyperLevel.h"
 
 int ASG::LogicalPlacement()
 {
@@ -22,14 +23,16 @@ int ASG::LogicalPlacement()
         return ERROR;
 
 // #ifdef DEBUG
-//     PlotLevels(QObject::tr("After CalLogicalCol"));
+//     PlotHyperLevels(QObject::tr("After CalLogicalCol"));
 // #endif
     
     error = CalLogicalRow();
 
 #ifdef DEBUG
-    PlotLevels(QObject::tr("After CalLogicalRow"));
+    PlotHyperLevels(QObject::tr("After CalLogicalRow"));
 #endif
+
+    error = AdjustHyperLevelInside();
 
     return error;
 }
@@ -112,40 +115,40 @@ int ASG::CalLogicalCol()
 {
     /* set all device unvisited */
     memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCount());
-    m_levels.clear();
+    m_hyperLevels.clear();
 
-    Level *level = nullptr;
+    HyperLevel *hl = nullptr;
     int currLevelId = 0;
-    /* level 0 */
-    level = new Level(currLevelId);
-    level->AddDevices(m_ckt->FirstLevelDeviceList());
+    /* hyper level 0 */
+    hl = new HyperLevel(currLevelId);
+    hl->AddDevices(m_ckt->FirstLevelDeviceList());
 
 #ifdef DEBUG
-    level->PrintAllDevices();
+    hl->PrintAllDevices();
 #endif
 
-    /* set first level devices as visited */
+    /* set first hyper level devices as visited */
     Device *device = nullptr;
     foreach (device, m_ckt->FirstLevelDeviceList())
         m_visited[device->Id()] = 1;
     
     int totalDeviceNumber = m_ckt->GetDeviceList().size();
-    int currDeviceNumber = level->AllDeviceCount();
+    int currDeviceNumber = hl->AllDeviceCount();
     
-    m_levels.push_back(level);
+    m_hyperLevels.push_back(hl);
     currLevelId++;
 
-    /* the rest levels */
-    while (level->AllDeviceCount() > 0) {
-        level = CreateNextLevel(level);
-        if (level->AllDeviceCount() == 0) break;
-        level->SetId(currLevelId);
+    /* the rest hyper levels */
+    while (hl->AllDeviceCount() > 0) {
+        hl = CreateNextHyperLevel(hl);
+        if (hl->AllDeviceCount() == 0) break;
+        hl->SetId(currLevelId);
         currLevelId++;
 #ifdef DEBUG
-        level->PrintAllDevices();
+        hl->PrintAllDevices();
 #endif
-        m_levels.push_back(level);
-        currDeviceNumber += level->AllDeviceCount();
+        m_hyperLevels.push_back(hl);
+        currDeviceNumber += hl->AllDeviceCount();
     }
 
 #ifdef DEBUG
@@ -156,16 +159,16 @@ int ASG::CalLogicalCol()
     return OKAY;
 }
 
-Level* ASG::CreateNextLevel(Level *prevLevel) const
+HyperLevel* ASG::CreateNextHyperLevel(HyperLevel *prevHyperLevel) const
 {
-    Q_ASSERT(prevLevel);
+    Q_ASSERT(prevHyperLevel);
 
-    Level *nextLevel = new Level();
+    HyperLevel *nextHyperLevel = new HyperLevel();
     int id = 0;
     MatrixElement *element = nullptr;
     Device *device = nullptr;
 
-    foreach (device, prevLevel->AllDevices()) {
+    foreach (device, prevHyperLevel->AllDevices()) {
         id = device->Id();
         element = m_matrix->RowHead(id).head;
         while (element) {
@@ -174,18 +177,35 @@ Level* ASG::CreateNextLevel(Level *prevLevel) const
                 element = element->NextInRow();
                 continue;
             }
-            nextLevel->AddDevice(device);
+            nextHyperLevel->AddDevice(device);
             element = element->NextInRow();
             m_visited[device->Id()] = 1;
         }
     }
 
-    return nextLevel;
+    return nextHyperLevel;
 }
 
 int ASG::CalLogicalRow()
 {
-    return BubbleSort();
+    int error = ClassifyConnectDeviceByHyperLevel();
+    if (error)
+        return ERROR;
+
+    error = BubbleSort();
+
+    return error;
+}
+
+int ASG::ClassifyConnectDeviceByHyperLevel()
+{
+    foreach (Device *dev, m_ckt->GetDeviceList())
+        dev->ClassifyConnectDeviceByHyperLevel();
+
+#ifdef DEBUG
+    foreach (HyperLevel *hl, m_hyperLevels)
+        hl->PrintAllConnections();
+#endif
 }
 
 int ASG::BubbleSort()
@@ -208,48 +228,19 @@ int ASG::BubbleSortIgnoreNoCap()
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
-    if (m_levels.size() <= 1)
-        return OKAY;
 
-    foreach (Device *dev, m_ckt->GetDeviceList()) {
-        dev->ClearPredecessors();
-        dev->ClearSuccessors();
-    }
-
-    /* First, create device connections */
-    Level *frontLevel = m_levels.front();
-    Level *rearLevel = nullptr;
-    Device *frontDev = nullptr, *rearDev = nullptr;
-
-    for (int i = 1; i < m_levels.size(); ++ i) {
-        rearLevel = m_levels.at(i);
-        foreach (frontDev, frontLevel->AllDevices()) {
-            foreach (rearDev, rearLevel->AllDevices()) {
-                if (frontDev->HasConnectionIgnoreGnd(rearDev)) {
-                    frontDev->AddSuccessor(rearDev);
-                    rearDev->AddPredecessor(frontDev);
-                }
-            }
-        }
-        frontLevel = rearLevel;
-    }
-#ifdef DEBUG
-    foreach (Level *level, m_levels)
-        level->PrintAllConnections();
-#endif
-
-    /* Second, find indexOfMaxDeviceCount */
+    /* First, find indexOfMaxDeviceCount */
     int indexOfMaxDeviceCount = 0;
-    Level *levelOfMaxDeviceCount = m_levels.front();
+    HyperLevel *levelOfMaxDeviceCount = m_hyperLevels.front();
     int maxDeviceCountInLevel = levelOfMaxDeviceCount->AllDeviceCount();
 
-    Level *level = nullptr;
-    for (int i = 1; i < m_levels.size(); ++ i) {
-        level = m_levels.at(i);
-        if (level->AllDeviceCount() > maxDeviceCountInLevel) {
-            maxDeviceCountInLevel = level->AllDeviceCount();
+    HyperLevel *hl = nullptr;
+    for (int i = 1; i < m_hyperLevels.size(); ++ i) {
+        hl = m_hyperLevels.at(i);
+        if (hl->AllDeviceCount() > maxDeviceCountInLevel) {
+            maxDeviceCountInLevel = hl->AllDeviceCount();
             indexOfMaxDeviceCount = i;
-            levelOfMaxDeviceCount = level;
+            levelOfMaxDeviceCount = hl;
         }
     }
 
@@ -259,28 +250,28 @@ int ASG::BubbleSortIgnoreNoCap()
 #endif
     Q_ASSERT(levelOfMaxDeviceCount);
 
-    /* Third, assign row number to indexOfMaxDeviceCount */
+    /* Second, assign row number to indexOfMaxDeviceCount */
     int row = 0;
     foreach (Device *dev, levelOfMaxDeviceCount->AllDevices()) {
-        dev->SetRow(row);
+        dev->SetLogicalRow(row);
         dev->SetBubbleValue(row); // useless here
         row += Row_Device_Factor;
     }
 
-    /* Fourth, assign row number to [0, indexOfMaxDeviceCount) */
+    /* Third, assign row number to [0, indexOfMaxDeviceCount) */
     for (int i = indexOfMaxDeviceCount - 1; i >= 0; -- i) {
-        level = m_levels.at(i);
-        foreach (Device *dev, level->AllDevices())
+        hl = m_hyperLevels.at(i);
+        foreach (Device *dev, hl->AllDevices())
             dev->CalBubbleValueBySuccessors(m_ignoreCap);
-        level->AssignRowNumberByBubbleValue(m_ignoreCap);
+        hl->AssignRowNumberByBubbleValue(m_ignoreCap);
     }
 
-    /* Fifth, assign row number to (indexOfMaxDeviceCount, lastLevel] */
-    for (int i = indexOfMaxDeviceCount + 1; i < m_levels.size(); ++ i) {
-        level = m_levels.at(i);
-        foreach (Device *dev, level->AllDevices())
+    /* Fourth, assign row number to (indexOfMaxDeviceCount, lastLevel] */
+    for (int i = indexOfMaxDeviceCount + 1; i < m_hyperLevels.size(); ++ i) {
+        hl = m_hyperLevels.at(i);
+        foreach (Device *dev, hl->AllDevices())
             dev->CalBubbleValueByPredecessors(m_ignoreCap);
-        level->AssignRowNumberByBubbleValue(m_ignoreCap);
+        hl->AssignRowNumberByBubbleValue(m_ignoreCap);
     }
 
 #ifdef DEBUG
@@ -288,8 +279,8 @@ int ASG::BubbleSortIgnoreNoCap()
     QString tmp;
     foreach (Device *dev, m_ckt->GetDeviceList()) {
         tmp += (dev->Name() + " ");
-        tmp += ("level(" + QString::number(dev->LevelId()) + "), ");
-        tmp += ("row(" + QString::number(dev->Row()) + "), ");
+        tmp += ("logicalCol(" + QString::number(dev->LogicalCol()) + "), ");
+        tmp += ("logicalRow(" + QString::number(dev->LogicalRow()) + "), ");
         tmp += ("bubbleValue(" + QString::number(dev->BubbleValue()) + ")");
         qDebug() << tmp;
         tmp = "";
@@ -306,104 +297,6 @@ int ASG::BubbleSortIgnoreGCap()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    if (m_levels.size() <= 1)
-        return OKAY;
-
-    foreach (Device *dev, m_ckt->GetDeviceList()) {
-        dev->ClearPredecessors();
-        dev->ClearSuccessors();
-    }
-
-    /* First, create device connections */
-    Level *frontLevel = m_levels.front();
-    Level *rearLevel = nullptr;
-    Device *frontDev = nullptr, *rearDev = nullptr;
-
-    for (int i = 1; i < m_levels.size(); ++ i) {
-        rearLevel = m_levels.at(i);
-        foreach (frontDev, frontLevel->AllDevices()) {
-            foreach (rearDev, rearLevel->AllDevices()) {
-                if (frontDev->HasConnectionIgnoreGnd(rearDev)) {
-                    frontDev->AddSuccessor(rearDev);
-                    rearDev->AddPredecessor(frontDev);
-                }
-            }
-        }
-        frontLevel = rearLevel;
-    }
-#ifdef DEBUG
-    foreach (Level *level, m_levels)
-        level->PrintAllConnections();
-#endif
-
-    /* Second, find indexofMaxDeviceCount ignore groundCap */
-    int indexOfMaxDeviceCount = 0;
-    Level *levelOfMaxDeviceCount = m_levels.front();
-    int maxDeviceCountInLevel = levelOfMaxDeviceCount->DeviceCountWithoutGCap();
-
-    Level *level = nullptr;
-    for (int i = 1; i < m_levels.size(); ++ i) {
-        level = m_levels.at(i);
-        if (level->DeviceCountWithoutGCap() > maxDeviceCountInLevel) {
-            maxDeviceCountInLevel = level->DeviceCountWithoutGCap();
-            indexOfMaxDeviceCount = i;
-            levelOfMaxDeviceCount = level;
-        }
-    }
-
-#ifdef DEBUG
-    qInfo() << "max device count without ground cap(" << maxDeviceCountInLevel
-            << "), index(" << indexOfMaxDeviceCount << ")" << endl;
-#endif
-
-    /* Third, assign row number to indexOfMaxDeviceCount */
-    int row = 0;
-    foreach (Device *dev, levelOfMaxDeviceCount->AllDevices()) {
-        if (dev->GroundCap()) {
-            dev->SetRow(0);
-            dev->SetBubbleValue(0);
-            continue;
-        }
-        dev->SetRow(row);
-        dev->SetBubbleValue(row);
-        row += Row_Device_Factor;
-    }
-
-    /* Fourth, assign row number to [0, indexOfMaxDeviceCount) */
-    for (int i = indexOfMaxDeviceCount - 1; i >= 0; -- i) {
-        level = m_levels.at(i);
-        foreach (Device *dev, level->AllDevices()) {
-            if (dev->GroundCap()) continue;
-            dev->CalBubbleValueBySuccessors(m_ignoreCap); // ignore ground cap
-        }
-        level->AssignRowNumberByBubbleValue(m_ignoreCap); // ignore ground cap
-    }
-
-    /* Fifth, assign row number to (indexOfMaxDeviceCount, lastLevel] */
-    for (int i = indexOfMaxDeviceCount + 1; i < m_levels.size(); ++ i) {
-        level = m_levels.at(i);
-        foreach (Device *dev, level->AllDevices()) {
-            if (dev->GroundCap()) continue;
-            dev->CalBubbleValueByPredecessors(m_ignoreCap); // ignore ground cap
-        }
-        level->AssignRowNumberByBubbleValue(m_ignoreCap);   // ignore ground cap
-    }
-
-#ifdef DEBUG
-    printf("-----------------------------------\n");
-    QString tmp;
-    foreach (Device *dev, m_ckt->GetDeviceList()) {
-        tmp += (dev->Name() + " ");
-        tmp += ("level(" + QString::number(dev->LevelId()) + "), ");
-        tmp += ("row(" + QString::number(dev->Row()) + "), ");
-        tmp += ("bubbleValue(" + QString::number(dev->BubbleValue()) + "), ");
-        tmp += ("groundCap(" + QString::number(dev->GroundCap()) + ")");
-        qDebug() << tmp;
-        tmp = "";
-    }
-    printf("-----------------------------------\n");
-#endif
-    
     return OKAY;
 }
 
@@ -413,105 +306,19 @@ int ASG::BubbleSortIgnoreGCCap()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    if (m_levels.size() <= 1)
-        return OKAY;
+    return OKAY;
+}
 
-    foreach (Device *dev, m_ckt->GetDeviceList()) {
-        dev->ClearPredecessors();
-        dev->ClearSuccessors();
-    }
-
-    /* First, create device connections */
-    Level *frontLevel = m_levels.front();
-    Level *rearLevel = nullptr;
-    Device *frontDev = nullptr, *rearDev = nullptr;
-
-    for (int i = 1; i < m_levels.size(); ++ i) {
-        rearLevel = m_levels.at(i);
-        foreach (frontDev, frontLevel->AllDevices()) {
-            foreach (rearDev, rearLevel->AllDevices()) {
-                if (frontDev->HasConnectionIgnoreGnd(rearDev)) {
-                    frontDev->AddSuccessor(rearDev);
-                    rearDev->AddPredecessor(frontDev);
-                }
-            }
-        }
-        frontLevel = rearLevel;
-    }
-#ifdef DEBUG
-    foreach (Level *level, m_levels)
-        level->PrintAllConnections();
-#endif
-
-    /* Second, find indexofMaxDeviceCount ignore coupled and groundCap */
-    int indexOfMaxDeviceCount = 0;
-    Level *levelOfMaxDeviceCount = m_levels.front();
-    int maxDeviceCountInLevel = levelOfMaxDeviceCount->DeviceCountWithoutGCCap();
-
-    Level *level = nullptr;
-    for (int i = 1; i < m_levels.size(); ++ i) {
-        level = m_levels.at(i);
-        if (level->DeviceCountWithoutGCCap() > maxDeviceCountInLevel) {
-            maxDeviceCountInLevel = level->DeviceCountWithoutGCCap();
-            indexOfMaxDeviceCount = i;
-            levelOfMaxDeviceCount = level;
-        }
-    }
+/* decide device orientation in this function */
+int ASG::AdjustHyperLevelInside()
+{
+    foreach (HyperLevel *hl, m_hyperLevels)
+        hl->Adjust();
 
 #ifdef DEBUG
-    qInfo() << "max device count without coupled and ground cap(" << maxDeviceCountInLevel
-            << "), index(" << indexOfMaxDeviceCount << ")" << endl;
+    foreach (HyperLevel *hl, m_hyperLevels)
+        hl->PrintAdjustment();
 #endif
 
-    /* Third, assign row number to indexOfMaxDeviceCount */
-    int row = 0;
-    foreach (Device *dev, levelOfMaxDeviceCount->AllDevices()) {
-        if (dev->GroundCap() || dev->CoupledCap()) {
-            dev->SetRow(0);
-            dev->SetBubbleValue(0);
-            continue;
-        }
-        dev->SetRow(row);
-        dev->SetBubbleValue(row);
-        row += Row_Device_Factor;
-    }
-
-    /* Fourth, assign row number to [0, indexOfMaxDeviceCount) */
-    for (int i = indexOfMaxDeviceCount - 1; i >= 0; -- i) {
-        level = m_levels.at(i);
-        foreach (Device *dev, level->AllDevices()) {
-            if (dev->GroundCap()) continue;
-            if (dev->CoupledCap()) continue;
-            dev->CalBubbleValueBySuccessors(m_ignoreCap); // ignore coupled and ground cap
-        }
-        level->AssignRowNumberByBubbleValue(m_ignoreCap); // ignore coupled and ground cap
-    }
-
-    /* Fifth, assign row number to (indexOfMaxDeviceCount, lastLevel] */
-    for (int i = indexOfMaxDeviceCount + 1; i < m_levels.size(); ++ i) {
-        level = m_levels.at(i);
-        foreach (Device *dev, level->AllDevices()) {
-            if (dev->GroundCap()) continue;
-            if (dev->CoupledCap()) continue;
-            dev->CalBubbleValueByPredecessors(m_ignoreCap); // ignore coupled and ground cap
-        }
-        level->AssignRowNumberByBubbleValue(m_ignoreCap);   // ignore coupled and ground cap
-    }
-
-#ifdef DEBUG
-    printf("-----------------------------------\n");
-    QString tmp;
-    foreach (Device *dev, m_ckt->GetDeviceList()) {
-        tmp += (dev->Name() + " ");
-        tmp += ("level(" + QString::number(dev->LevelId()) + "), ");
-        tmp += ("row(" + QString::number(dev->Row()) + "), ");
-        tmp += ("bubbleValue(" + QString::number(dev->BubbleValue()) + "), ");
-        tmp += ("groundCap(" + QString::number(dev->GroundCap()) + ")");
-        qDebug() << tmp;
-        tmp = "";
-    }
-    printf("-----------------------------------\n");
-#endif
-    
     return OKAY;
 }

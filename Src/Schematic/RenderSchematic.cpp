@@ -24,18 +24,15 @@ int SchematicScene::RenderSchematicDevices(const SDeviceList &devices, int colCo
     /* 1. Change device scale according to col and row count */
     ChangeDeviceScale(colCount, rowCount);
 
-    /* 2. Change device orientation (BUG) */ 
-    ChangeDeviceOrientation(devices);
-
-    /* 3. In order to place all devices at scene center position,
+    /* 2. In order to place all devices at scene center position,
      *    calculate start col and row.
      */
     int startRow = CalStartRow(rowCount);
     int startCol = CalStartCol(colCount);
 
-    /* 4. Set device geometrical position and add to scene */
+    /* 3. Set device geometrical position and add to scene */
     SDeviceList gCaps;
-    int geoCol = 0, geoRow = 0;
+    int sceneCol = 0, sceneRow = 0;
     SchematicDevice *device = nullptr;
     foreach (device, devices) {
         if (device->GroundCap()) {
@@ -47,13 +44,13 @@ int SchematicScene::RenderSchematicDevices(const SDeviceList &devices, int colCo
             if (ignore == IgnoreGCCap) continue;
         }
 
-        geoRow = device->LogicalRow() + startRow;
-        geoCol = device->LogicalCol() * 2 + startCol;
-        device->SetGeometricalPos(/*col*/geoCol, /*row*/geoRow);
-        SetDeviceAt(geoCol, geoRow, device);
+        sceneRow = device->GeometricalRow() + startRow;
+        sceneCol = device->GeometricalCol() + startCol;
+        device->SetGeometricalPos(/*col*/sceneCol, /*row*/sceneRow);
+        SetDeviceAt(sceneCol, sceneRow, device);
     }
 
-    /* 5. Render extra widgets, such as gnd, groundCap, coupledCap */
+    /* 4. Render extra widgets, such as gnd, groundCap, coupledCap */
     if (ignore == IgnoreGCCap) RenderCoupledCaps(m_cCapDeviceList);
     if (ignore == IgnoreGCap || ignore == IgnoreGCCap)
         RenderGroundCaps(m_gCapDeviceList);
@@ -134,32 +131,6 @@ void SchematicScene::UpdateWireScale(qreal newScale)
     }
 }
 
-void SchematicScene::ChangeDeviceOrientation(const SDeviceList &devices)
-{
-    SchematicTerminal *negTer = nullptr;
-    // Orientation orien = Horizontal;
-
-    foreach (SchematicDevice *dev, devices) {
-        switch (dev->GetDeviceType()) {
-            case RESISTOR:
-            case CAPACITOR:
-            case INDUCTOR:
-            case ISRC:
-            case VSRC:
-                negTer = dev->GetTerminal(Negative);
-            default:;
-        }
-        if (NOT negTer) continue;
-
-        // if (dev->GroundCap())
-        //     orien = Vertical;
-        
-        // dev->SetOrientation(orien);
-
-        dev->SetOrientation(Horizontal);
-    }
-}
-
 /* row, col is the geometrical's pos, not logical col and row */
 /* consider scene margin */
 void SchematicScene::SetDeviceAt(int col, int row, SchematicDevice *device)
@@ -167,7 +138,6 @@ void SchematicScene::SetDeviceAt(int col, int row, SchematicDevice *device)
     qreal xPos = col * m_gridW + m_margin;
     qreal yPos = row * m_gridH + m_margin;
     device->setPos(xPos, yPos);
-    // device->SetGeometricalPos(/*col*/col, /*row*/row);
     device->SetShowTerminal(m_showTerminal);
     device->SetScale(m_itemScale);
     addItem(device);
@@ -306,8 +276,8 @@ int SchematicScene::RenderSchematicWires(const SWireList &wires)
     /* 1. assign geometrical col. */
     SchematicWire *wire = nullptr;
     foreach (wire, wires) {
-        int geoCol = wire->LogicalCol() * 2 + 1;
-        wire->SetGeometricalCol(geoCol);
+        // int geoCol = wire->LogicalCol() * 2 + 1;
+        // wire->SetGeometricalCol(geoCol);
         if (wire->HasGroundCap())  m_hasGCapWireList.push_back(wire);
         if (wire->HasCoupledCap()) m_hasCCapWireList.push_back(wire);
     }

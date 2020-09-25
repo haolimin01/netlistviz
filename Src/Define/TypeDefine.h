@@ -30,13 +30,19 @@ class Device;
 class Node;
 class Terminal;
 class Wire;
-class QRectF;
+struct ConnectDescriptor;
+class HyperLevel;
+class Channel;
 typedef QMap<QString, Device*>          DeviceTable;   
 typedef QMap<QString, Node*>            NodeTable;
 typedef QVector<Device*>                DeviceList;
+typedef QVector<Node*>                  NodeList;
 typedef QMap<TerminalType, Terminal*>   TerminalTable;
 typedef QVector<Terminal*>              TerminalList;
 typedef QVector<Wire*>                  WireList;
+typedef QVector<ConnectDescriptor*>     ConnectDespList;
+typedef QVector<HyperLevel*>            HyperLevelList;
+typedef QVector<Channel*>               ChannelList;
 
 /* Schematic Containers */
 class SchematicDevice;

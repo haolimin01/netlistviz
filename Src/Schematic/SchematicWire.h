@@ -23,15 +23,6 @@ class Wire;
 class SchematicDevice;
 class SchematicTerminal;
 
-// struct WireDescriptor
-// {
-//     SchematicDevice   *startDevice;
-//     SchematicDevice   *endDevice;
-//     SchematicTerminal *startTerminal;
-//     SchematicTerminal *endTersminal;
-//     QVector<QPointF>   pathPoints;
-//     QPointF            scenePos;       // wire position in the scene
-// };
 
 class SchematicWire : public QGraphicsItem
 {
@@ -58,8 +49,6 @@ public:
     int       ThisChannelTrackCount() const { return m_thisChannelTrackCount; }
     void      UpdatePosition(SchematicTerminal *terminal); // terminal is unique
     void      SetScale(qreal scale) { m_lineWidth = DFT_Wire_W * scale; }
-    int       LogicalCol() const { return m_logCol; }
-    void      SetGeometricalCol(int col) { m_geoCol = col; }
     bool      HasGroundCap() const;
     bool      HasCoupledCap() const;
 
@@ -83,9 +72,7 @@ private:
     qreal              m_lineWidth;
 
     /* For ASG */
-    int                m_logCol; // logical column
     int                m_track;  // track number
-    int                m_geoCol;  // geometrical column
     int                m_thisChannelTrackCount; // track count in this channel (DO NOT contain track=-1)
 };
 

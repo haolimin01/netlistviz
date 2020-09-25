@@ -10,6 +10,12 @@ Channel::Channel(int id)
     m_trackCount = 0;
 }
 
+Channel::Channel()
+{
+    m_id = 0;
+    m_trackCount = 0;
+}
+
 Channel::~Channel()
 {
     /* delete wires here */
@@ -47,7 +53,7 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
     Device *fromDevice = nullptr, *toDevice = nullptr;
     
     int baseline = 0;
-    int fromDeviceRowSum = 0;
+    int fromDeviceLogicalRowSum = 0;
     int fromDeviceCount = 0;
 
     foreach (wire, m_wires) {
@@ -62,19 +68,19 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
 
         fromDevice = wire->m_fromDevice;
         toDevice = wire->m_toDevice;
-        if (fromDevice->Row() == toDevice->Row())
+        if (fromDevice->LogicalRow() == toDevice->LogicalRow())
             wire->SetTrack(-1);
-        fromDeviceRowSum += fromDevice->Row();
+        fromDeviceLogicalRowSum += fromDevice->LogicalRow();
         fromDeviceCount++;
     }
 
     if (fromDeviceCount == 0)
         baseline = 0;
     else
-        baseline = fromDeviceRowSum / fromDeviceCount;
+        baseline = fromDeviceLogicalRowSum / fromDeviceCount;
 
     /* sort m_wires by toDevice row */
-    qSort(m_wires.begin(), m_wires.end(), [](Wire *w1, Wire *w2) {return w1->m_toDevice->Row() < w2->m_toDevice->Row();});
+    qSort(m_wires.begin(), m_wires.end(), [](Wire *w1, Wire *w2) {return w1->m_toDevice->LogicalRow() < w2->m_toDevice->LogicalRow();});
 
     int number = 0;
 
@@ -82,7 +88,7 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
     foreach (wire, m_wires) {
         if (wire->TrackGiven()) continue;
         toDevice = wire->m_toDevice;
-        if (toDevice->Row() <= baseline) {
+        if (toDevice->LogicalRow() <= baseline) {
             wire->SetTrack(number);
             number++;
         } else {
@@ -95,7 +101,7 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
         wire = m_wires.at(i);
         if (wire->TrackGiven()) continue;
         toDevice = wire->m_toDevice;
-        if (toDevice->Row() > baseline) {
+        if (toDevice->LogicalRow() > baseline) {
             wire->SetTrack(number);
             number++;
         } else {
@@ -111,8 +117,8 @@ void Channel::Print() const
     printf("--------------- Channel %d ---------------\n", m_id);
     QString tmp;
     foreach (Wire *wire, m_wires) {
-        tmp += (wire->m_fromDevice->Name() + "(" + QString::number(wire->m_fromDevice->Row())+ "), ");
-        tmp += (wire->m_toDevice->Name() + "(" + QString::number(wire->m_toDevice->Row()) + "), ");
+        tmp += (wire->m_fromDevice->Name() + "(" + QString::number(wire->m_fromDevice->LogicalRow())+ "), ");
+        tmp += (wire->m_toDevice->Name() + "(" + QString::number(wire->m_toDevice->LogicalRow()) + "), ");
         tmp += ("track(" + QString::number(wire->m_track) + ")");
         qInfo() << tmp;
         tmp = "";

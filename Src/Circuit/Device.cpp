@@ -5,6 +5,7 @@
 #include "Node.h"
 #include "Terminal.h"
 #include "ASG/Wire.h"
+#include "ConnectDescriptor.h"
 
 Device::Device(DeviceType type, QString name)
 {
@@ -12,13 +13,16 @@ Device::Device(DeviceType type, QString name)
     m_deviceType = type;
     m_id = 0;
     m_maybeAtFirstLevel = false;
-    m_levelId = 0;
+    m_hyperLevelId = 0;
     m_reverse = false;
     m_bubbleValue = 0;
     m_reverse = false;
-    m_row = 0;
+    m_logRow = 0;
     m_sDevice = nullptr;
     m_groundCap = false;
+    m_orien = Horizontal;
+    m_geoRow = 0;
+    m_geoCol = 0;
 }
 
 Device::~Device()
@@ -32,9 +36,11 @@ Device::~Device()
         delete it.value();
     m_terminals.clear();
 
-    m_connectDevices.clear();
+    m_connectDesps.clear();
     m_predecessors.clear();
     m_successors.clear();
+    m_fellows.clear();
+    ClearConnectDesps();
 }
 
 int Device::AddTerminal(Terminal *terminal, TerminalType type)
@@ -68,33 +74,21 @@ Terminal* Device::GetTerminal(Node *node) const
     return nullptr;
 }
 
-void Device::AddConnectDevice(TerminalType type, Device *dev)
+void Device::AddConnectDevice(Device *dev)
 {
-#if 0
     Q_ASSERT(dev);
-    qDebug() << Name() << endl;
-    m_capConnectDeviceList.push_back(dev);
 
-    TerminalTable::const_iterator thisCit;
-    TerminalTable::const_iterator otherCit;
+    TerminalTable::const_iterator thisCit, otherCit;
     thisCit = m_terminals.constBegin();
-    otherCit = dev->m_terminals.constBegin();
-
     for (; thisCit != m_terminals.constEnd(); ++ thisCit) {
-        if (thisCit.value()->NodeId() == 0) continue;
         otherCit = dev->m_terminals.constBegin();
         for (; otherCit != dev->m_terminals.constEnd(); ++ otherCit) {
-            if (otherCit.value()->NodeId() == 0) continue;
             if (thisCit.value()->NodeId() == otherCit.value()->NodeId()) {
-                m_capConnectTerminalTable.insert(thisCit.key(), otherCit.value());
+                ConnectDescriptor *cd = new ConnectDescriptor(thisCit.value(), otherCit.value(), dev);
+                m_connectDesps.push_back(cd);
             }
         }
     }
-    
-    Q_ASSERT(m_capConnectTerminalTable.size() > 0);
-#endif
-
-    m_connectDevices.insert(type, dev);
 }
 
 bool Device::CoupledCap() const
@@ -105,69 +99,64 @@ bool Device::CoupledCap() const
     return coupled;
 }
 
-/* If they connect to the same node, return true (ignore orientation) */
-bool Device::HasConnection(Device *otherDevice) const
+void Device::ClassifyConnectDeviceByHyperLevel()
 {
-    bool has = false;
-    TerminalTable::const_iterator thisCit;
-    thisCit = m_terminals.constBegin();
-    TerminalTable::const_iterator otherCit;
-    Terminal *thisTerminal = nullptr, *otherTerminal = nullptr;
+    m_predecessors.clear();
+    m_fellows.clear();
+    m_successors.clear();
 
-    for (; thisCit != m_terminals.constEnd(); ++ thisCit) {
-        thisTerminal = thisCit.value();
-        otherCit = otherDevice->m_terminals.constBegin();
-        for (; otherCit != otherDevice->m_terminals.constEnd(); ++ otherCit) {
-            otherTerminal = otherCit.value();
-            if (thisTerminal->NodeId() == otherTerminal->NodeId()) {
-                has = true;
-                return has;
-            }
-        }
+    if (m_connectDesps.size() < 1)
+        return;
+
+    Device *cntDev = nullptr;
+    int cntDevHyperLevelId = 0;
+    foreach (ConnectDescriptor *cd, m_connectDesps) {
+        cntDev = cd->connectDevice;
+        cntDevHyperLevelId = cntDev->HyperLevelId();
+        if (cntDevHyperLevelId == m_hyperLevelId)
+            m_fellows.push_back(cntDev);
+        else if (cntDevHyperLevelId == m_hyperLevelId - 1)
+            m_predecessors.push_back(cntDev);
+        else if (cntDevHyperLevelId == m_hyperLevelId + 1)
+            m_successors.push_back(cntDev);
     }
-
-    return has;
 }
 
 /* If they connect to the same node, return true (ignore gnd and orientation) */
 bool Device::HasConnectionIgnoreGnd(Device *otherDevice) const
 {
     bool has = false;
-    TerminalTable::const_iterator thisCit;
-    thisCit = m_terminals.constBegin();
-    TerminalTable::const_iterator otherCit;
-    Terminal *thisTerminal = nullptr, *otherTerminal = nullptr;
-
-    for (; thisCit != m_terminals.constEnd(); ++ thisCit) {
-        thisTerminal = thisCit.value();
-        if (thisTerminal->GetNode()->IsGnd()) continue;
-        otherCit = otherDevice->m_terminals.constBegin();
-        for (; otherCit != otherDevice->m_terminals.constEnd(); ++ otherCit) {
-            otherTerminal = otherCit.value();
-            if (thisTerminal->NodeId() == otherTerminal->NodeId()) {
-                has = true;
-                return has;
-            }
+    foreach (ConnectDescriptor *cd, m_connectDesps) {
+        if (cd->thisTerminal->NodeId() == 0) continue;
+        if (cd->connectTerminal->NodeId() == 0) continue;
+        if (otherDevice == cd->connectDevice) {
+            has = true;
+            break;
         }
     }
 
     return has;
 }
 
-void Device::AddPredecessor(Device *dev)
+bool Device::HasConnectionIgnoreGnd(Device *otherDev, Terminal **thisTer, Terminal **otherTer) const
 {
-    m_predecessors.push_back(dev);
-}
+    bool has = false;
+    ConnectDescriptor *cd = nullptr;
+    foreach (cd, m_connectDesps) {
+        if (cd->thisTerminal->NodeId() == 0) continue;
+        if (cd->connectTerminal->NodeId() == 0) continue;
+        if (otherDev == cd->connectDevice) {
+            has = true;
+            break;
+        }
+    }
 
-void Device::AddSuccessor(Device *dev)
-{
-    m_successors.push_back(dev);
-}
+    if (has) {
+        (*thisTer) = cd->thisTerminal;
+        (*otherTer) = cd->connectTerminal;
+    }
 
-void Device::SetRow(int row)
-{
-    Q_ASSERT(row >= 0);
-    m_row = row;
+    return has;
 }
 
 void Device::CalBubbleValueByPredecessors(IgnoreCap ignore)
@@ -181,13 +170,13 @@ void Device::CalBubbleValueByPredecessors(IgnoreCap ignore)
     foreach (Device *dev, m_predecessors) {
         if ((ignore == IgnoreGCap) && (dev->GroundCap())) continue;
         if ((ignore == IgnoreGCCap) && (dev->GroundCap() || dev->CoupledCap())) continue; 
-        sum += dev->Row();
+        sum += dev->LogicalRow();
         count++;
     }
     if (count == 0)
         m_bubbleValue = 0;
     else
-        m_bubbleValue = sum / count;
+        m_bubbleValue = (sum / count);
 }
 
 void Device::CalBubbleValueBySuccessors(IgnoreCap ignore)
@@ -201,13 +190,13 @@ void Device::CalBubbleValueBySuccessors(IgnoreCap ignore)
     foreach (Device *dev, m_successors) {
         if ((ignore == IgnoreGCap) && (dev->GroundCap())) continue;
         if ((ignore == IgnoreGCCap) && (dev->GroundCap() || dev->CoupledCap())) continue; 
-        sum += dev->Row();
+        sum += dev->LogicalRow();
         count++;
     }
     if (count == 0)
         m_bubbleValue = 0;
     else
-        m_bubbleValue = sum / count;
+        m_bubbleValue = (sum / count);
 }
 
 WireList Device::WiresFromPredecessors() const
@@ -322,6 +311,13 @@ bool Device::HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType)
     return has;
 }
 
+void Device::ClearConnectDesps()
+{
+    foreach (ConnectDescriptor *cd, m_connectDesps)
+        delete cd;
+    m_connectDesps.clear();
+}
+
 #if 0
 STerminalTable Device::CapConnectSTerminalTable() const
 {
@@ -334,6 +330,44 @@ STerminalTable Device::CapConnectSTerminalTable() const
     return table;
 }
 #endif
+
+/* R, L, V, V, I now */
+bool Device::IsVertical() const
+{
+    int cntToPredCount = m_predecessors.size();
+    int cntToGndCount = 0;
+    
+    foreach (Terminal *ter, m_terminals.values()) {
+        if (ter->NodeId() == 0)
+            cntToGndCount++;
+    }
+
+    int sum = cntToPredCount + cntToGndCount;
+
+    if (sum >= 2)
+        return true;
+    else
+        return false;
+}
+
+/* R, L, C, V, I now */
+bool Device::IsParallel(Device *otherDev) const
+{
+    int cntCount = 0;
+    Terminal *thisTer, *otherTer;
+    foreach (thisTer, m_terminals.values()) {
+        foreach (otherTer, otherDev->m_terminals.values()) {
+            if (thisTer->NodeId() == otherTer->NodeId()) {
+                cntCount++;
+                break;
+            }
+        }
+    }
+    if (cntCount >= 2)
+        return true;
+    else
+        return false;
+}
 
 void Device::Print() const
 {

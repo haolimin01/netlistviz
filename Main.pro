@@ -54,6 +54,7 @@ HEADERS += ./Src/Main/MainWindow.h\
            ./Src/Circuit/Terminal.h\
            ./Src/Circuit/CircuitGraph.h\
            ./Src/Circuit/Device.h\
+           ./Src/Circuit/ConnectDescriptor.h\
            ./Src/Define/Define.h\
            ./Src/Define/TypeDefine.h\
            ./Src/ASG/ASG.h\
@@ -63,6 +64,7 @@ HEADERS += ./Src/Main/MainWindow.h\
            ./Src/ASG/Channel.h\
            ./Src/ASG/TablePlotter.h\
            ./Src/ASG/Wire.h\
+           ./Src/ASG/HyperLevel.h\
            ./Src/Utilities/MyString.h
 
 
@@ -96,6 +98,7 @@ SOURCES += ./Src/Main/Main.cpp\
            ./Src/ASG/Channel.cpp\
            ./Src/ASG/TablePlotter.cpp\
            ./Src/ASG/Wire.cpp\
+           ./Src/ASG/HyperLevel.cpp\
            ./Src/Utilities/MyString.cpp
 
 

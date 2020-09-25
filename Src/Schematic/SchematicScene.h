@@ -86,7 +86,6 @@ private:
     int   CalStartCol(int colCount) const;
     void  UpdateDeviceScale(qreal newScale);
     void  UpdateWireScale(qreal newScale);
-    void  ChangeDeviceOrientation(const SDeviceList &devices);
     void  RenderFixedGnds(const SDeviceList &devices);
     void  RenderGroundCaps(const SDeviceList &gcaps);
     void  RenderCoupledCaps(const SDeviceList &ccaps);
