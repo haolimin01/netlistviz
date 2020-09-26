@@ -6,6 +6,7 @@
  * @author   : Hao Limin
  * @date     : 2020.09.12
  * @desp     : Automatic Schematic Generator.
+ * @modified : Hao Limin, 2020.09.24
  */
 
 #include "Define/Define.h"
@@ -31,6 +32,7 @@ public:
 
     void SetCircuitgraph(CircuitGraph *ckt);
     void SetIgnoreCapType(IgnoreCap type) { m_ignoreCap = type; }
+    int  Prepare();
     int  LogicalPlacement();
     int  LogicalRouting();
     int  GeometricalPlacement(SchematicScene *scene);
@@ -43,41 +45,60 @@ public:
 private:
     DISALLOW_COPY_AND_ASSIGN(ASG);
 
-    /* ---------- Logical Placement ---------- */
-    int    BuildIncidenceMatrix(); // undirected graph
-    int    CalLogicalCol();        // calculate logical column by depth
-    int    CalLogicalRow();        // calculate logical row by bubble sort
-    int    InsertBasicDevice(Device *device);
-    Level* CreateNextLevel(Level *prevLevel) const;
-    int    BubbleSort();
-    int    BubbleSortIgnoreNoCap();
-    int    BubbleSortIgnoreGCap();
-    int    BubbleSortIgnoreGCCap();
+    /* --------------- Prepare --------------- */
+    int    LinkDevice();
     /* --------------------------------------- */
 
-    /* ----------- Logical Routing ----------- */
-    int  CreateChannels();       // to m_channels
-    int  AssignTrackNumber();    // assign track number to vertical line segment
+
+    /* ---------- Logical Placement ---------- */
+    int         BuildIncidenceMatrix();
+    int         CalLogicalCol();
+    int         CalLogicalRow();
+    int         InsertBasicDevice(Device *device);
+    HyperLevel* CreateNextHyperLevel(HyperLevel *preHyperLevel) const;
+    int         ClassifyConnectDeviceByHyperLevel();
+    int         DetermineFirstHyperLevelLogicalRow();
+    int         BubbleSort();
+    int         BubbleSortIgnoreNoCap();
+    int         BubbleSortIgnoreGCap();
+    int         BubbleSortIgnoreGCCap();
+    int         AdjustHyperLevelInside();
+
+    int         DetermineReferHyperLevelLogicalRow(); // simulated annealing now
+    double      SACalCost(HyperLevel *prev, HyperLevel *curr, HyperLevel *next);
+    int         WireCrossCount(const QVector<QPair<int, int>> &rowPairs);
+    int         SAExchangeLogicalRow(HyperLevel *curr);
     /* --------------------------------------- */
+
+
+    /* ----------- Logical Routing ----------- */
+    int  CreateChannels();
+    int  AssignTrackNumber();
+    /* --------------------------------------- */
+
 
     /* -------- Geometrical Placement -------- */
     int  DecideDeviceWhetherToReverse();
     int  DecideDeviceWhetherToReverseIgnoreNoCap();
     int  DecideDeviceWhetherToReverseIgnoreGCap();
     int  DecideDeviceWhetherToReverseIgnoreGCCap();
-    int  LinkDeviceForGCCap();     // Ground and Coupled Cap
-    int  CreateSchematicDevices(); // create schematicdevices and schematicterminals
-    int  RenderSchematicDevices(SchematicScene *scene); // render devices to scene
+    int  CalGeometricalCol();
+    int  CalGeometricalRow();
+    int  LinkDeviceForGCCap();
+    int  CreateSchematicDevices();
+    int  RenderSchematicDevices(SchematicScene *scene);
     /* --------------------------------------- */
 
+
     /* --------- Geometrical Routing --------- */
-    int  CreateSchematicWires();   // create schematicwires
-    int  RenderSchematicWires(SchematicScene *scene);   // render wires to scene
+    int  CreateSchematicWires();
+    int  RenderSchematicWires(SchematicScene *scene);
     /* --------------------------------------- */
 
 
     /* Print and Plot */
-    void PlotLevels(const QString &title);
+    // void PlotLevels(const QString &title);
+    void PlotHyperLevels(const QString &title);
 
 
     /* ASG members */
@@ -85,9 +106,10 @@ private:
     Matrix            *m_matrix;
     int               *m_visited;
 
-    QVector<Level*>    m_levels;
+    HyperLevelList     m_hyperLevels;
+    HyperLevel        *m_referHyperLevel;
     QVector<Channel*>  m_channels;
-    TablePlotter      *m_levelsPlotter;
+    TablePlotter      *m_levelPlotter;
 
     SDeviceList        m_sdeviceList;
     SWireList          m_swireList;

@@ -11,40 +11,28 @@
 
 #include "Define/Define.h"
 #include "Define/TypeDefine.h"
+#include <set>
 
 class Device;
 
 class Level
 {
 public:
-    explicit Level(int id);
     Level();
     ~Level();
 
-    void SetId(int id);
-    int  Id() const    { return m_id; }
     void AddDevice(Device *device);
-    void AddDevices(const DeviceList &devList);
-
-    int  DeviceCountWithoutGCap() const;
-    int  DeviceCountWithoutGCCap() const;
-    int  AllDeviceCount() const;
-    void AssignRowNumberByBubbleValue(IgnoreCap ignore);
 
     DeviceList AllDevices() const;
-
-    void PrintAllDevices() const;
-    void PrintAllConnections() const;
+    bool       LogicalRowOccupied(int logRow) const;
+    bool       Empty() const { return (m_devices.size() == 0); }
+    int        AllDeviceCount() const { return m_devices.size(); }
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Level);
 
-    int        m_id;
-    DeviceList m_deviceList;
-
-    int        m_deviceCountWithoutCap;
-    int        m_gCapCount;
-    int        m_cCapCount;
+    DeviceList    m_devices;
+    std::set<int> m_devLogRowSet;
 };
 
 #endif // NETLISTVIZ_ASG_LEVEL_H
