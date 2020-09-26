@@ -69,11 +69,9 @@ int ASG::DecideDeviceWhetherToReverseIgnoreNoCap()
     HyperLevel *levelOfMaxDeviceCount = m_hyperLevels.front();
     int maxDeviceCountInLevel = levelOfMaxDeviceCount->AllDeviceCount();
 
-    // Level *level = nullptr;
     HyperLevel *hl = nullptr;
 
     for (int i = 1; i < m_hyperLevels.size(); ++ i) {
-        // level = m_levels.at(i);
         hl = m_hyperLevels.at(i);
         if (hl->AllDeviceCount() >= maxDeviceCountInLevel) {
             maxDeviceCountInLevel = hl->AllDeviceCount();
@@ -94,7 +92,7 @@ int ASG::DecideDeviceWhetherToReverseIgnoreNoCap()
     }
 
     /* Third, deal with (indexOfMaxDeviceCount, last] */
-    for (int i = indexOfMaxDeviceCount + 1; i < m_levels.size(); ++ i) {
+    for (int i = indexOfMaxDeviceCount + 1; i < m_hyperLevels.size(); ++ i) {
         hl = m_hyperLevels.at(i);
         foreach (Device *dev, hl->AllDevices())
             dev->DecideReverseByPredecessors(m_ignoreCap);

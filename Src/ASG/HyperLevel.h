@@ -40,6 +40,7 @@ public:
     void       Adjust();
     Channel*   CreateChannel();
     void       AssignGeometricalCol(int &startCol);
+    int        MinLogicalRow() const;
 
     void       PrintAllDevices() const;
     void       PrintAllConnections() const;

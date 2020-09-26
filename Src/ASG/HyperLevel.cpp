@@ -62,12 +62,18 @@ void HyperLevel::SetId(int id)
 
 void HyperLevel::AssignRowNumberByBubbleValue(IgnoreCap ignore)
 {
+#ifdef DEBUGx
+    qInfo() << "HyperLevel " << m_id << ", Before sorting ";
+    foreach (Device *dev, m_allDevices)
+        dev->PrintBubbleValue();
+#endif
+
     /* sort device by bubble value */
     qSort(m_allDevices.begin(), m_allDevices.end(),
         [](Device *a, Device *b){ return a->BubbleValue() < b->BubbleValue(); });
 
-#ifdef DEBUG
-    qInfo() << "HyperLevel" << m_id;
+#ifdef DEBUGx
+    qInfo() << "HyperLevel " << m_id << ", After sorting ";
     foreach (Device *dev, m_allDevices)
         dev->PrintBubbleValue();
 #endif
@@ -110,13 +116,15 @@ void HyperLevel::AdjustDeviceOrientation()
     Orientation orien = Horizontal;
 
     foreach (Device *dev, m_allDevices) {
-        if (dev->IsVertical()) {
-            orien = Vertical;
-            AddToFrontLevel(dev);
-        } else {
-            orien = Horizontal;
-            m_backLevel->AddDevice(dev);
-        }
+        // if (dev->IsVertical()) {
+        //     orien = Vertical;
+        //     AddToFrontLevel(dev);
+        // } else {
+        //     orien = Horizontal;
+        //     m_backLevel->AddDevice(dev);
+        // }
+        orien = Horizontal;
+        m_backLevel->AddDevice(dev);
         dev->SetOrientation(orien);
     }
 }
@@ -213,7 +221,7 @@ void HyperLevel::AssignGeometricalCol(int &startCol)
     }
 
     if (NOT m_frontRightLevel->Empty()) {
-        foreach (dev, m_frontRightLevel->AllDevices())
+        foreach (dev, m_frontRightLevel->AllDevices());
             dev->SetGeometricalCol(startCol);
         startCol++;
     }
@@ -226,6 +234,19 @@ void HyperLevel::AssignGeometricalCol(int &startCol)
             dev->SetGeometricalCol(startCol);
         startCol++;
     }
+}
+
+int HyperLevel::MinLogicalRow() const
+{
+    Device *dev= m_allDevices.front();
+    int minRow = dev->LogicalRow();
+    for (int i = 1; i < m_allDevices.size(); ++ i) {
+        dev = m_allDevices.at(i);
+        if (dev->LogicalRow() < minRow)
+            minRow = dev->LogicalRow();
+    }
+
+    return minRow;
 }
 
 void HyperLevel::PrintAllDevices() const

@@ -22,6 +22,7 @@ ASG::ASG(CircuitGraph *ckt)
     m_levelPlotter = nullptr;
     m_logDataDestroyed = false;
     m_ignoreCap = IgnoreGCap;
+    m_referHyperLevel = nullptr;
 
     m_visited = new int[m_ckt->DeviceCount()];  
     memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCount());
@@ -37,6 +38,7 @@ ASG::ASG()
     m_levelPlotter = nullptr;
     m_logDataDestroyed = false;
     m_ignoreCap = IgnoreGCap;
+    m_referHyperLevel = nullptr;
 }
 
 ASG::~ASG()
@@ -47,10 +49,6 @@ ASG::~ASG()
     if (m_matrix) delete m_matrix;
     delete []m_visited;
     
-    foreach (Level *level, m_levels)
-        delete level;
-    m_levels.clear();
-
     foreach (HyperLevel *hl, m_hyperLevels)
         delete hl;
     m_hyperLevels.clear();
@@ -145,11 +143,6 @@ void ASG::DestroyLogicalData()
     foreach (Channel *ch, m_channels)
         delete ch;
     m_channels.clear();
-
-    /* levels */
-    foreach (Level *level, m_levels)
-        delete level;
-    m_levels.clear();
 
     foreach (HyperLevel *hl, m_hyperLevels)
         delete hl;

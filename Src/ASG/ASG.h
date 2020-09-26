@@ -57,11 +57,17 @@ private:
     int         InsertBasicDevice(Device *device);
     HyperLevel* CreateNextHyperLevel(HyperLevel *preHyperLevel) const;
     int         ClassifyConnectDeviceByHyperLevel();
+    int         DetermineFirstHyperLevelLogicalRow();
     int         BubbleSort();
     int         BubbleSortIgnoreNoCap();
     int         BubbleSortIgnoreGCap();
     int         BubbleSortIgnoreGCCap();
     int         AdjustHyperLevelInside();
+
+    int         DetermineReferHyperLevelLogicalRow(); // simulated annealing now
+    double      SACalCost(HyperLevel *prev, HyperLevel *curr, HyperLevel *next);
+    int         WireCrossCount(const QVector<QPair<int, int>> &rowPairs);
+    int         SAExchangeLogicalRow(HyperLevel *curr);
     /* --------------------------------------- */
 
 
@@ -100,10 +106,9 @@ private:
     Matrix            *m_matrix;
     int               *m_visited;
 
-    QVector<Level*>    m_levels;
     HyperLevelList     m_hyperLevels;
+    HyperLevel        *m_referHyperLevel;
     QVector<Channel*>  m_channels;
-    // TablePlotter      *m_levelsPlotter;
     TablePlotter      *m_levelPlotter;
 
     SDeviceList        m_sdeviceList;

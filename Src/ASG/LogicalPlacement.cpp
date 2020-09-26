@@ -1,5 +1,7 @@
 #include "ASG.h"
 #include <QDebug>
+#include <QtMath>
+#include <QTime>
 #include "Circuit/CircuitGraph.h"
 #include "Matrix.h"
 #include "MatrixElement.h"
@@ -191,6 +193,18 @@ int ASG::CalLogicalRow()
     int error = ClassifyConnectDeviceByHyperLevel();
     if (error)
         return ERROR;
+    
+#if 0
+    /* Simulated Annealing */
+    error = DetermineReferHyperLevelLogicalRow();
+    if (error)
+        return ERROR;
+#endif
+
+    error = DetermineFirstHyperLevelLogicalRow();
+    if (error)
+        return ERROR;
+
 
     error = BubbleSort();
 
@@ -206,6 +220,287 @@ int ASG::ClassifyConnectDeviceByHyperLevel()
     foreach (HyperLevel *hl, m_hyperLevels)
         hl->PrintAllConnections();
 #endif
+
+    return OKAY;
+}
+
+int ASG::DetermineFirstHyperLevelLogicalRow()
+{
+    /* 1. Find the max device count hyper level */
+    HyperLevel *levelOfMaxDeviceCount = m_hyperLevels.front();
+    int maxDeviceCountInLevel = levelOfMaxDeviceCount->AllDeviceCount();
+    HyperLevel *hl = nullptr;
+
+    for (int i = 1; i < m_hyperLevels.size(); ++ i) {
+        hl = m_hyperLevels.at(i);
+        if (hl->AllDeviceCount() > maxDeviceCountInLevel) {
+            maxDeviceCountInLevel = hl->AllDeviceCount();
+            levelOfMaxDeviceCount = hl;
+        }
+    }
+
+    /* 2. Initial this hyper level logical row */
+    int row = 0;
+    foreach (Device *dev, levelOfMaxDeviceCount->AllDevices()) {
+        dev->SetLogicalRow(row);
+        dev->SetBubbleValue(row); // useless here
+        row += Row_Device_Factor;
+    }
+
+#ifdef DEBUG
+    qInfo() << "MaxDeviceHyperLevel "
+            << "index(" << levelOfMaxDeviceCount->Id() << "), "
+            << "deviceCount(" << levelOfMaxDeviceCount->AllDeviceCount() << ")";
+#endif
+
+    /* 3. Back Propagation */
+    int thisIndex = levelOfMaxDeviceCount->Id();
+    for (int i = thisIndex - 1; i >= 0; -- i) {
+        hl = m_hyperLevels.at(i);
+        foreach (Device *dev, hl->AllDevices())
+            dev->CalBubbleValueBySuccessors(m_ignoreCap);
+        hl->AssignRowNumberByBubbleValue(m_ignoreCap);
+    }
+
+    /* 4. Determine the First HyperLevel logical row */
+    HyperLevel *firstHyperLevel = m_hyperLevels.front();
+    int minRow = firstHyperLevel->MinLogicalRow();
+    int currRow = minRow;
+    foreach (Device *dev, firstHyperLevel->AllDevices()) {
+        dev->SetLogicalRow(currRow);
+        currRow += Row_Device_Factor;
+    }
+
+#ifdef DEBUG
+    qInfo() << "First Hyper Level Logical Row";
+    foreach (Device *dev, firstHyperLevel->AllDevices()) {
+        qInfo() << dev->Name() << dev->LogicalRow();
+    }
+#endif
+
+    return OKAY;
+}
+
+int ASG::DetermineReferHyperLevelLogicalRow()
+{
+    /* 1. find the refer hyper level */
+    m_referHyperLevel = nullptr;
+    HyperLevel *levelOfMaxDeviceCount = m_hyperLevels.front();
+    int maxDeviceCountInLevel = levelOfMaxDeviceCount->AllDeviceCount();
+    HyperLevel *hl = nullptr;
+
+    for (int i = 1; i < m_hyperLevels.size(); ++ i) {
+        hl = m_hyperLevels.at(i);
+        if (hl->AllDeviceCount() > maxDeviceCountInLevel) {
+            maxDeviceCountInLevel = hl->AllDeviceCount();
+            levelOfMaxDeviceCount = hl;
+        }
+    }
+
+    m_referHyperLevel = levelOfMaxDeviceCount;
+    Q_ASSERT(m_referHyperLevel);
+    /* Initial refer hyper level logical row */
+    int row = 0;
+    foreach (Device *dev, m_referHyperLevel->AllDevices()) {
+        dev->SetLogicalRow(row);
+        dev->SetBubbleValue(row); // useless here
+        row += Row_Device_Factor;
+    }
+
+#ifdef DEBUG
+    qInfo() << LINE_INFO << "HyperLevel "
+            << "index(" << QString::number(m_referHyperLevel->Id()) << "), "
+            << "deviceCount(" << QString::number(m_referHyperLevel->AllDeviceCount()) << ")";
+#endif
+    int referId = m_referHyperLevel->Id();
+    HyperLevel *prevHyperLevel = nullptr, *nextHyperLevel = nullptr;
+    if (referId >= 1)
+        prevHyperLevel = m_hyperLevels.at(referId - 1);
+    if (referId < m_hyperLevels.size() - 1)
+        nextHyperLevel = m_hyperLevels.at(referId + 1);
+
+
+    double initT = SA_INIT_T;
+    double endT = SA_END_T;
+    double alpha = SA_ALPHA;
+    double oldCost = 0, currCost = 0;
+
+    /* random number seed */
+    qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
+    // qsrand(QTime::currentTime().second());
+
+    currCost = SACalCost(prevHyperLevel, m_referHyperLevel, nextHyperLevel);
+    oldCost = currCost;
+
+    double currT = initT;
+    double dCost = 0;
+    double P = 0;
+    int iter = 0;
+    double randF = 0;
+    QVector<int> rowResult;
+
+    foreach (Device *dev, m_referHyperLevel->AllDevices())
+        rowResult.push_back(dev->LogicalRow());
+
+    bool accept = true;
+
+    while (currT > endT) {
+
+        SAExchangeLogicalRow(m_referHyperLevel); 
+
+        currCost = SACalCost(prevHyperLevel, m_referHyperLevel, nextHyperLevel);
+        dCost = currCost - oldCost;
+
+        if (dCost < 0)
+            accept = true;
+        else {
+            P = qExp(- dCost / currT);
+            randF = qrand() % 10000 / 10000.0;
+
+            if (P > randF)
+                accept = true;
+            else
+                accept = false;
+        }
+
+        if (accept) {
+            oldCost = currCost;
+            rowResult.clear();
+            foreach (Device *dev, m_referHyperLevel->AllDevices())
+                rowResult.push_back(dev->LogicalRow());
+        }
+        
+#ifdef DEBUG
+        qInfo() << "iter(" << iter << "), "
+                << "oldCost(" << oldCost << "), "
+                << "currCost(" << currCost << ")";
+        qInfo() << "currT(" << currT << "), "
+                << "P(" << P << "), "
+                << "randF(" << randF << ")";
+        qInfo() << rowResult;
+#endif
+        currT *= alpha;
+        iter++;
+    }
+
+    return OKAY;
+}
+
+double ASG::SACalCost(HyperLevel *prev, HyperLevel *curr, HyperLevel *next)
+{
+    if (NOT curr)
+        return 0;
+
+    double wireCost = 0;
+    double crossCost = 0;
+
+    if (prev) {
+        foreach (Device *dev, prev->AllDevices()) {
+            dev->CalBubbleValueBySuccessors(m_ignoreCap);
+        }
+        prev->AssignRowNumberByBubbleValue(m_ignoreCap);
+    }
+
+    if (next) {
+        foreach (Device *dev, next->AllDevices()) {
+            dev->CalBubbleValueByPredecessors(m_ignoreCap);
+        }
+        next->AssignRowNumberByBubbleValue(m_ignoreCap);
+    }
+
+    Device *thisDev = nullptr, *otherDev = nullptr;
+    int thisRow = 0, thisCol = 0;
+    int otherRow = 0, otherCol = 0;
+    QVector<QPair<int, int>> rowPairs;
+
+    foreach (thisDev, curr->AllDevices()) {
+        foreach (otherDev, thisDev->Predecessors()) {
+            thisRow = thisDev->LogicalRow();
+            thisCol = thisDev->LogicalCol();
+            otherRow = otherDev->LogicalRow();
+            otherCol = otherDev->LogicalCol();
+            wireCost += (qFabs(thisRow - otherRow) + qFabs(thisCol - otherCol));
+            // wireCost = qSqrt(qPow(thisRow - otherRow, 2) + qPow(thisCol - otherCol, 2));
+            rowPairs.push_back(qMakePair(thisRow, otherRow));
+        }
+    }
+    crossCost += WireCrossCount(rowPairs);
+
+    foreach (thisDev, curr->AllDevices()) {
+        foreach (otherDev, thisDev->Successors()) {
+            thisRow = thisDev->LogicalRow();
+            thisCol = thisDev->LogicalCol();
+            otherRow = otherDev->LogicalRow();
+            otherCol = otherDev->LogicalCol();
+            wireCost += (qFabs(thisRow - otherRow) + qFabs(thisCol - otherCol));
+            // wireCost = qSqrt(qPow(thisRow - otherRow, 2) + qPow(thisCol - otherCol, 2));
+            rowPairs.push_back(qMakePair(thisRow, otherRow));
+        }
+    }
+    crossCost += WireCrossCount(rowPairs);
+
+    double totalCost = 0.5 * wireCost + 0.5 * crossCost;
+
+#ifdef DEBUGx
+    QString tmp;
+    foreach (Device *dev, curr->AllDevices())
+        tmp += (QString::number(dev->LogicalRow()) + " ");
+    qInfo() << tmp << " totalCost " << totalCost;
+#endif
+
+    return totalCost;
+}
+
+int ASG::WireCrossCount(const QVector<QPair<int, int>> &rowPairs)
+{
+    int count = 0;
+    QPair<int, int> outPair, inPair;
+    for (int i = 0; i < rowPairs.size(); ++ i) {
+        outPair = rowPairs.at(i);
+        for (int j = i + 1; j < rowPairs.size(); ++ j) {
+            inPair = rowPairs.at(j);
+            if ((outPair.first - inPair.first) * (outPair.second - inPair.second) < 0)
+                count++;
+        }
+    }
+
+    return count;
+}
+
+int ASG::SAExchangeLogicalRow(HyperLevel *curr)
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    if (NOT curr)
+        return OKAY;
+
+    if (curr->AllDeviceCount() < 1)
+        return OKAY;
+
+    int size = curr->AllDeviceCount();
+    int index1 = qrand() % size;
+    int index2 = qrand() % size;
+    while (index2 == index1)
+        index2 = qrand() % size;
+    
+    Device *dev1 = curr->AllDevices().at(index1);
+    Device *dev2 = curr->AllDevices().at(index2);
+
+    int dev1Row = dev1->LogicalRow();
+    int dev2Row = dev2->LogicalRow();
+    dev1->SetLogicalRow(dev2Row);
+    dev2->SetLogicalRow(dev1Row);
+
+#ifdef DEBUGx
+    qInfo() << dev1->Name() << "original row(" << QString::number(dev1Row) << "), "
+            << "new row(" << QString::number(dev2Row) << ")";
+    qInfo() << dev2->Name() << "original row(" << QString::number(dev2Row) << "), "
+            << "new row(" << QString::number(dev1Row) << ")";
+#endif
+
+    return OKAY;
 }
 
 int ASG::BubbleSort()
@@ -228,6 +523,9 @@ int ASG::BubbleSortIgnoreNoCap()
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
+
+#if 0
+    Q_ASSERT(m_referHyperLevel);
 
     /* First, find indexOfMaxDeviceCount */
     int indexOfMaxDeviceCount = 0;
@@ -257,17 +555,32 @@ int ASG::BubbleSortIgnoreNoCap()
         dev->SetBubbleValue(row); // useless here
         row += Row_Device_Factor;
     }
+#endif
 
-    /* Third, assign row number to [0, indexOfMaxDeviceCount) */
-    for (int i = indexOfMaxDeviceCount - 1; i >= 0; -- i) {
+#if 0 // (Simulated Annealing)
+    int referIndex = m_referHyperLevel->Id();
+    HyperLevel *hl = nullptr;
+
+    /* Third, assign row number to [0, referIndex) */
+    for (int i = referIndex - 1; i >= 0; -- i) {
         hl = m_hyperLevels.at(i);
         foreach (Device *dev, hl->AllDevices())
             dev->CalBubbleValueBySuccessors(m_ignoreCap);
         hl->AssignRowNumberByBubbleValue(m_ignoreCap);
     }
 
-    /* Fourth, assign row number to (indexOfMaxDeviceCount, lastLevel] */
-    for (int i = indexOfMaxDeviceCount + 1; i < m_hyperLevels.size(); ++ i) {
+    /* Fourth, assign row number to (referIndex, lastLevel] */
+    for (int i = referIndex + 1; i < m_hyperLevels.size(); ++ i) {
+        hl = m_hyperLevels.at(i);
+        foreach (Device *dev, hl->AllDevices())
+            dev->CalBubbleValueByPredecessors(m_ignoreCap);
+        hl->AssignRowNumberByBubbleValue(m_ignoreCap);
+    }
+#endif
+
+    /* Forward Propagation by First HyperLevel */
+    HyperLevel *hl = nullptr;
+    for (int i = 1; i < m_hyperLevels.size(); ++ i) {
         hl = m_hyperLevels.at(i);
         foreach (Device *dev, hl->AllDevices())
             dev->CalBubbleValueByPredecessors(m_ignoreCap);
