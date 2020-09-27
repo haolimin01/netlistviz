@@ -8,6 +8,7 @@ Visualization for Netlist
 - [x] geometrical routing
 - [x] Information on ASG property dialog
 - [x] Coupled Tree case
+- [ ] Manhattan Wire
 - [ ] Mesh RCL case
 - [ ] General circuit case
 - [ ] circuit recognition

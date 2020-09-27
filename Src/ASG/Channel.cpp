@@ -8,12 +8,14 @@ Channel::Channel(int id)
 {
     m_id = id;
     m_trackCount = 0;
+    m_geoCol = 0;
 }
 
 Channel::Channel()
 {
     m_id = 0;
     m_trackCount = 0;
+    m_geoCol = 0;
 }
 
 Channel::~Channel()
@@ -110,6 +112,13 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
     }
 
     m_trackCount = number;
+}
+
+void Channel::SetGeometricalCol(int col)
+{
+    m_geoCol = col;
+    foreach (Wire *wire, m_wires)
+        wire->SetGeometricalCol(col);
 }
 
 void Channel::Print() const

@@ -10,7 +10,7 @@ Terminal::Terminal(Node *node)
 {
     assert(node);
     m_node = node;
-    m_id = -1;
+    m_id = 0;
     m_device = nullptr;
     m_type = General;
     m_sTerminal = nullptr;

@@ -30,6 +30,7 @@ public:
     WireList  Wires() const { return m_wires; }
     int       TrackCount() const { return m_trackCount; }
     bool      Empty() const { return (m_wires.size() == 0); }
+    void      SetGeometricalCol(int col);
 
     void Print() const;
 
@@ -39,6 +40,7 @@ private:
     WireList   m_wires;
     int        m_trackCount;
     int        m_id;
+    int        m_geoCol;
 };
 
 #endif // NETLISTVIZ_ASG_CHANNEL_H

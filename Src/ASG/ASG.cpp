@@ -11,7 +11,6 @@
 #include "Channel.h"
 #include "Circuit/ConnectDescriptor.h"
 #include "Terminal.h"
-#include "HyperLevel.h"
 
 
 ASG::ASG(CircuitGraph *ckt)
@@ -22,7 +21,6 @@ ASG::ASG(CircuitGraph *ckt)
     m_levelPlotter = nullptr;
     m_logDataDestroyed = false;
     m_ignoreCap = IgnoreGCap;
-    m_referHyperLevel = nullptr;
 
     m_visited = new int[m_ckt->DeviceCount()];  
     memset(m_visited, 0, sizeof(int) * m_ckt->DeviceCount());
@@ -38,7 +36,6 @@ ASG::ASG()
     m_levelPlotter = nullptr;
     m_logDataDestroyed = false;
     m_ignoreCap = IgnoreGCap;
-    m_referHyperLevel = nullptr;
 }
 
 ASG::~ASG()
@@ -49,9 +46,9 @@ ASG::~ASG()
     if (m_matrix) delete m_matrix;
     delete []m_visited;
     
-    foreach (HyperLevel *hl, m_hyperLevels)
-        delete hl;
-    m_hyperLevels.clear();
+    foreach (Level *level, m_levels)
+        delete level;
+    m_levels.clear();
 
     if (m_levelPlotter)
         delete m_levelPlotter;
@@ -144,9 +141,9 @@ void ASG::DestroyLogicalData()
         delete ch;
     m_channels.clear();
 
-    foreach (HyperLevel *hl, m_hyperLevels)
-        delete hl;
-    m_hyperLevels.clear();
+    foreach (Level *level, m_levels)
+        delete level;
+    m_levels.clear();
 
     /* Matrix and it's elements */
     if (m_matrix) {
@@ -159,9 +156,9 @@ void ASG::DestroyLogicalData()
 
 
 /* Print and Plot */
-void ASG::PlotHyperLevels(const QString &title)
+void ASG::PlotLevels(const QString &title)
 {
-    if (m_hyperLevels.size() < 1)
+    if (m_levels.size() < 1)
         return;
     
     if (m_levelPlotter) {
@@ -172,27 +169,27 @@ void ASG::PlotHyperLevels(const QString &title)
     }
 
     int maxDeviceCountInLevel = -1;
-    foreach (HyperLevel *hl, m_hyperLevels) {
-        if (hl->AllDeviceCount() > maxDeviceCountInLevel)
-            maxDeviceCountInLevel = hl->AllDeviceCount();
+    foreach (Level *level, m_levels) {
+        if (level->AllDeviceCount() > maxDeviceCountInLevel)
+            maxDeviceCountInLevel = level->AllDeviceCount();
     }
 
-    m_levelPlotter->SetTableRowColCount(maxDeviceCountInLevel, m_hyperLevels.size());
+    m_levelPlotter->SetTableRowColCount(maxDeviceCountInLevel, m_levels.size());
 
     /* header */
     QStringList headerText;
-    for (int i = 0; i < m_hyperLevels.size(); ++ i) {
-        QString tmp = "HL" + QString::number(m_hyperLevels.at(i)->Id());
+    for (int i = 0; i < m_levels.size(); ++ i) {
+        QString tmp = "L" + QString::number(m_levels.at(i)->Id());
         headerText << tmp;
     }
     m_levelPlotter->SetColHeaderText(headerText);
 
     /* content */
     int row = 0;
-    for (int i = 0; i < m_hyperLevels.size(); ++ i) {
-        HyperLevel *hl = m_hyperLevels.at(i);
+    for (int i = 0; i < m_levels.size(); ++ i) {
+        Level *level = m_levels.at(i);
         row = 0;
-        foreach (Device *dev, hl->AllDevices()) {
+        foreach (Device *dev, level->AllDevices()) {
             m_levelPlotter->AddItem(row, i, dev->Name());
             row++;
         }

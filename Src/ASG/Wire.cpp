@@ -10,7 +10,8 @@ Wire::Wire(Device *fromDevice, Terminal *fromTerminal,
     m_toDevice = toDevice;
     m_toTerminal = toTerminal;
     m_track = -1;
-    m_channelId = -1;
+    m_geoCol = 0;
+    m_channelId = 0;
     m_trackGiven = false;
 }
 

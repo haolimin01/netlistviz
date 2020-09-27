@@ -49,8 +49,6 @@ private:
     Device             *m_device;
     TerminalType        m_type;
     SchematicTerminal  *m_sTerminal; // for creating SchematicWire
-
-    friend class SchematicTerminal;
 };
 
 #endif // NETLISTVIZ_CIRCUIT_TERMINAL_H

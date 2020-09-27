@@ -10,7 +10,6 @@ class QGraphicsPixmapItem;
 class QGraphicsSceneMouseEvent;
 QT_END_NAMESPACE;
 
-class Device;
 class SchematicWire;
 class SchematicTerminal;
 
@@ -21,8 +20,7 @@ public:
 
 public:
     /* ASG entrance */
-    SchematicDevice(Device *dev, QMenu *contextMenu = nullptr,
-                QTransform transform = QTransform(), QGraphicsItem *parent = nullptr);
+    SchematicDevice();
 
     /* Insert SchematicDevice (in Scene) entrance*/
     SchematicDevice(DeviceType type, QMenu *contextMenu,
@@ -34,10 +32,13 @@ public:
     QPixmap      Image();
     int          type() const override { return Type; }
     QRectF       boundingRect() const override;
+    void         SetDeviceType(DeviceType type) {m_deviceType = type; }
     DeviceType   GetDeviceType() const { return m_deviceType; }
     void         SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
     void         AddTerminal(TerminalType type, SchematicTerminal *terminal);
+    void         SetName(const QString &name) { m_name = name; }
     QString      Name() const { return m_name; }
+    void         SetId(int id) { m_id = id; }
     void         SetShowTerminal(bool show) { m_showTerminal = show; }
 	void         SetOrientation(Orientation orien);
 	Orientation  GetOrientation() const { return m_devOrien; }
@@ -105,7 +106,7 @@ private:
     STerminalTable     m_terminals;    // type : SchematicTerminal Ptr
     bool               m_showTerminal; // draw terminal rect on scene
 
-    /* Copy from Circuit Device (Logical) */
+    /* Copy from Circuit Device */
     int                m_id;
     DeviceType         m_deviceType;
     QString            m_name;

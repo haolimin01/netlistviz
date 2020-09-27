@@ -31,8 +31,8 @@ class Node;
 class Terminal;
 class Wire;
 struct ConnectDescriptor;
-class HyperLevel;
 class Channel;
+class Level;
 typedef QMap<QString, Device*>          DeviceTable;   
 typedef QMap<QString, Node*>            NodeTable;
 typedef QVector<Device*>                DeviceList;
@@ -41,8 +41,8 @@ typedef QMap<TerminalType, Terminal*>   TerminalTable;
 typedef QVector<Terminal*>              TerminalList;
 typedef QVector<Wire*>                  WireList;
 typedef QVector<ConnectDescriptor*>     ConnectDespList;
-typedef QVector<HyperLevel*>            HyperLevelList;
 typedef QVector<Channel*>               ChannelList;
+typedef QVector<Level*>                 LevelList;
 
 /* Schematic Containers */
 class SchematicDevice;

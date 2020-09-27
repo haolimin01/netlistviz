@@ -3,7 +3,6 @@
 #include "Channel.h"
 #include "Level.h"
 #include "Circuit/Device.h"
-#include "HyperLevel.h"
 
 int ASG::LogicalRouting()
 {
@@ -11,7 +10,6 @@ int ASG::LogicalRouting()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    /* Now we just consider channels, extra wires in HyperLevel are ignored */
     int error = CreateChannels();
     if (error)
         return ERROR;
@@ -45,27 +43,15 @@ int ASG::CreateChannels()
     Channel *newChannel = nullptr;
     Device *dev = nullptr;
 
-    foreach (HyperLevel *hl, m_hyperLevels) {
-        newChannel = hl->CreateChannel();
-        if (newChannel) {
-            newChannel->SetId(channelIndex);
-            channelIndex++;
-            m_channels.push_back(newChannel);
-        }
-    }
+    Level *level = nullptr;
 
-    if (m_hyperLevels.size() < 2)
-        return OKAY;
-
-    HyperLevel *hl = nullptr;
-
-    for (int i = 1; i < m_hyperLevels.size(); ++ i) {
-        hl = m_hyperLevels.at(i);
+    for (int i = 1; i < m_levels.size(); ++ i) {
+        level = m_levels.at(i);
 
         // new channel
         newChannel = new Channel(channelIndex);
 
-        foreach (dev, hl->AllDevices()) {
+        foreach (dev, level->AllDevices()) {
             newChannel->AddWires(dev->WiresFromPredecessors());
         }
 

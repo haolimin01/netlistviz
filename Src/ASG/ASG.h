@@ -7,6 +7,7 @@
  * @date     : 2020.09.12
  * @desp     : Automatic Schematic Generator.
  * @modified : Hao Limin, 2020.09.24
+ * @modified : Hao Limin, 2020.09.26
  */
 
 #include "Define/Define.h"
@@ -55,19 +56,12 @@ private:
     int         CalLogicalCol();
     int         CalLogicalRow();
     int         InsertBasicDevice(Device *device);
-    HyperLevel* CreateNextHyperLevel(HyperLevel *preHyperLevel) const;
-    int         ClassifyConnectDeviceByHyperLevel();
-    int         DetermineFirstHyperLevelLogicalRow();
-    int         BubbleSort();
-    int         BubbleSortIgnoreNoCap();
-    int         BubbleSortIgnoreGCap();
-    int         BubbleSortIgnoreGCCap();
-    int         AdjustHyperLevelInside();
-
-    int         DetermineReferHyperLevelLogicalRow(); // simulated annealing now
-    double      SACalCost(HyperLevel *prev, HyperLevel *curr, HyperLevel *next);
-    int         WireCrossCount(const QVector<QPair<int, int>> &rowPairs);
-    int         SAExchangeLogicalRow(HyperLevel *curr);
+    Level*      CreateNextLevel(Level *preLevel) const;
+    int         ClassifyConnectDeviceByLevel();
+    int         DetermineFirstLevelLogicalRow();
+    int         ForwardPropagateLogicalRow();   // level0 -> level1 -> level2 -> ... -> leveln
+    int         DecideDeviceOrientation();
+    int         DecideDeviceWhetherToReverse();
     /* --------------------------------------- */
 
 
@@ -78,27 +72,24 @@ private:
 
 
     /* -------- Geometrical Placement -------- */
-    int  DecideDeviceWhetherToReverse();
-    int  DecideDeviceWhetherToReverseIgnoreNoCap();
-    int  DecideDeviceWhetherToReverseIgnoreGCap();
-    int  DecideDeviceWhetherToReverseIgnoreGCCap();
-    int  CalGeometricalCol();
-    int  CalGeometricalRow();
-    int  LinkDeviceForGCCap();
-    int  CreateSchematicDevices();
-    int  RenderSchematicDevices(SchematicScene *scene);
+    int                CalGeometricalCol();
+    int                CalGeometricalRow();
+    int                CreateSchematicDevices();
+    int                RenderSchematicDevices(SchematicScene *scene);
+    SchematicDevice*   CreateSchematicDevice(Device *dev) const;
+    SchematicTerminal* CreateSchematicTerminal(Terminal *ter) const;
     /* --------------------------------------- */
 
 
     /* --------- Geometrical Routing --------- */
-    int  CreateSchematicWires();
-    int  RenderSchematicWires(SchematicScene *scene);
+    int            CreateSchematicWires();
+    int            RenderSchematicWires(SchematicScene *scene);
+    SchematicWire* CreateSchematicWire(Wire *wire) const;
     /* --------------------------------------- */
 
 
     /* Print and Plot */
-    // void PlotLevels(const QString &title);
-    void PlotHyperLevels(const QString &title);
+    void PlotLevels(const QString &title);
 
 
     /* ASG members */
@@ -106,9 +97,8 @@ private:
     Matrix            *m_matrix;
     int               *m_visited;
 
-    HyperLevelList     m_hyperLevels;
-    HyperLevel        *m_referHyperLevel;
-    QVector<Channel*>  m_channels;
+    LevelList          m_levels;
+    ChannelList        m_channels;
     TablePlotter      *m_levelPlotter;
 
     SDeviceList        m_sdeviceList;

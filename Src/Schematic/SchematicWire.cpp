@@ -1,25 +1,9 @@
 #include "SchematicWire.h"
-#include "ASG/Wire.h"
 #include "SchematicTerminal.h"
 #include "SchematicDevice.h"
 #include <QDebug>
 #include <QStyleOptionGraphicsItem>
 #include <QPainter>
-
-SchematicWire::SchematicWire(Wire *wire, QGraphicsItem *parent, QGraphicsScene *scene)
-    : QGraphicsItem(parent)
-{
-    m_startDevice = wire->FromSDevice();
-    m_endDevice = wire->ToSDevice();
-    m_startTerminal = wire->FromSTerminal();
-    m_endTerminal = wire->ToSTerminal();
-
-    m_track = wire->Track();
-
-    Q_UNUSED(scene);
-
-    Initialize();
-}
 
 SchematicWire::SchematicWire(SchematicDevice *startDevice, SchematicDevice *endDevice,
     SchematicTerminal *startTer, SchematicTerminal *endTer, QGraphicsItem *parent, QGraphicsScene *scene)
@@ -31,6 +15,8 @@ SchematicWire::SchematicWire(SchematicDevice *startDevice, SchematicDevice *endD
     m_endTerminal = endTer;
 
     m_track = 0;
+    m_geoCol = 0;
+    m_thisChannelTrackCount = 0;
 
     Q_UNUSED(scene);
 
@@ -45,7 +31,6 @@ SchematicWire::~SchematicWire()
 void SchematicWire::Initialize()
 {
     m_color = Qt::black;
-    m_thisChannelTrackCount = 0;
     m_lineWidth = DFT_Wire_W;
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
@@ -149,7 +134,8 @@ void SchematicWire::Print() const
     QString tmp;
     tmp += ("(" + m_startDevice->Name() + " " + m_endDevice->Name() + "), ");
     tmp += ("track(" + QString::number(m_track) + "), ");
-    tmp += ("thisChannelTrackCount(" + QString::number(m_thisChannelTrackCount) + ")");
+    tmp += ("thisChannelTrackCount(" + QString::number(m_thisChannelTrackCount) + "), ");
+    tmp += ("geoCol(" + QString::number(m_geoCol) + ")");
     qInfo() << tmp;
     printf("----------------------------------------------\n");
 }

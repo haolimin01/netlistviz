@@ -14,7 +14,6 @@
 #include "Define/TypeDefine.h"
 #include <QRectF>
 
-class Terminal;
 class Node;
 class SchematicDevice;
 class SchematicWire;
@@ -23,15 +22,19 @@ class SchematicTerminal
 {
 public:
     /* ASG entrance */
-    explicit SchematicTerminal(Terminal *terminal);
+    SchematicTerminal();
 
     /* CreateTerminalsBySelf (in SchematicDevice) entrance*/
     SchematicTerminal(TerminalType type, SchematicDevice *device);
     ~SchematicTerminal();
 
     void         SetDevice(SchematicDevice *device);
+    void         SetTerminalType(TerminalType type) { m_type = type; }
     TerminalType GetTerminalType() const { return m_type; }
+    void         SetNode(Node *node) { m_node = node; }
     Node*        GetNode() const { return m_node; }
+    void         SetId(int id) { m_id = id; }
+    int          Id() const { return m_id; }
     void         SetRect(const QRectF &rect) { m_rect = rect; }
     QRectF       Rect() const { return m_rect; }
     bool         ConnectToGnd() const;
