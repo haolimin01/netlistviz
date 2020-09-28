@@ -7,14 +7,12 @@
 Channel::Channel(int id)
 {
     m_id = id;
-    m_trackCount = 0;
     m_geoCol = 0;
 }
 
 Channel::Channel()
 {
     m_id = 0;
-    m_trackCount = 0;
     m_geoCol = 0;
 }
 
@@ -39,26 +37,21 @@ void Channel::AddWires(const WireList &wires)
 }
 
 /*
- * baseline = sum(from device row) / number (from device)
- * above on baseline    : the row is less, track is smaller
- * below under baseline : the row is greater, track is smaller
  * horizontal line      : track is -1
  */
 
 void Channel::AssignTrackNumber(IgnoreCap ignore)
 {
+    Q_UNUSED(ignore);
+
     if (m_wires.size() < 1)
         return;
 
     /* First, we assign -1 to horizontal line */
     Wire *wire = nullptr;
-    Device *fromDevice = nullptr, *toDevice = nullptr;
-    
-    int baseline = 0;
-    int fromDeviceLogicalRowSum = 0;
-    int fromDeviceCount = 0;
 
     foreach (wire, m_wires) {
+#if 0
         if (ignore == IgnoreGCap && wire->HasGCap()) {
             wire->SetTrack(-1);
             continue;
@@ -67,51 +60,55 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
             wire->SetTrack(-1);
             continue;
         }
+#endif
 
-        fromDevice = wire->m_fromDevice;
-        toDevice = wire->m_toDevice;
-        if (fromDevice->LogicalRow() == toDevice->LogicalRow())
+        if (wire->IsHorizontal())
             wire->SetTrack(-1);
-        fromDeviceLogicalRowSum += fromDevice->LogicalRow();
-        fromDeviceCount++;
     }
-
-    if (fromDeviceCount == 0)
-        baseline = 0;
-    else
-        baseline = fromDeviceLogicalRowSum / fromDeviceCount;
 
     /* sort m_wires by toDevice row */
-    qSort(m_wires.begin(), m_wires.end(), [](Wire *w1, Wire *w2) {return w1->m_toDevice->LogicalRow() < w2->m_toDevice->LogicalRow();});
+    qSort(m_wires.begin(), m_wires.end(),
+            [](Wire *w1, Wire *w2) {return w1->m_toDevice->LogicalRow() < w2->m_toDevice->LogicalRow();});
 
-    int number = 0;
+    int trackIndex = 0;
+    bool hasRest = false;
+    WireList sameTrackWires;
+    Wire *otherWire = nullptr;
 
-    /* Second, assign number to lines, which are above on baseline */
-    foreach (wire, m_wires) {
-        if (wire->TrackGiven()) continue;
-        toDevice = wire->m_toDevice;
-        if (toDevice->LogicalRow() <= baseline) {
-            wire->SetTrack(number);
-            number++;
-        } else {
-            break;
-        } 
-    }
-
-    /* Third, assign number to lines, which are below under baseline */
-    for (int i = m_wires.size() - 1; i >= 0; -- i) {
-        wire = m_wires.at(i);
-        if (wire->TrackGiven()) continue;
-        toDevice = wire->m_toDevice;
-        if (toDevice->LogicalRow() > baseline) {
-            wire->SetTrack(number);
-            number++;
-        } else {
-            break;
+    while (true) {
+        for (int i = 0; i < m_wires.size(); ++ i) {
+            if (NOT m_wires.at(i)->TrackGiven()) {
+                wire = m_wires.at(i);
+                hasRest = true;
+                break;
+            }
         }
+        if (NOT hasRest) break;
+
+        sameTrackWires.push_back(wire);
+        for (int i = 0; i < m_wires.size(); ++ i) {
+            otherWire = m_wires.at(i);
+            if (otherWire->TrackGiven()) continue;
+            if (wire->CouldBeMerged(otherWire))
+                sameTrackWires.push_back(otherWire);
+        }
+
+        for (int i = 0; i < m_wires.size(); ++ i) {
+            otherWire = m_wires.at(i);
+            if (otherWire->TrackGiven()) continue;
+            if (CouldBeSameTrackWithWires(sameTrackWires, otherWire))
+                sameTrackWires.push_back(otherWire);
+        }
+
+        foreach (wire, sameTrackWires)
+            wire->SetTrack(trackIndex);
+        trackIndex++;
+
+        sameTrackWires.clear();
+        hasRest = false;
     }
 
-    m_trackCount = number;
+    m_trackCount = trackIndex;
 }
 
 void Channel::SetGeometricalCol(int col)
@@ -119,6 +116,16 @@ void Channel::SetGeometricalCol(int col)
     m_geoCol = col;
     foreach (Wire *wire, m_wires)
         wire->SetGeometricalCol(col);
+}
+
+bool Channel::CouldBeSameTrackWithWires(const WireList &wires, Wire *wire) const
+{
+    Wire *thisWire = nullptr;
+    foreach (thisWire, wires) {
+        if (NOT thisWire->CouldBeSameTrack(wire))
+            return false;
+    }
+    return true;
 }
 
 void Channel::Print() const
@@ -132,5 +139,7 @@ void Channel::Print() const
         qInfo() << tmp;
         tmp = "";
     }
+    qInfo() << "trackCount(" << m_trackCount << ")";
+
     printf("------------------------------------------\n");
 }

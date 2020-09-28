@@ -134,6 +134,7 @@ WireList Device::WiresFromPredecessors() const
         for (; otherCit != dev->m_terminals.constEnd(); ++ otherCit) {
             thisCit = m_terminals.constBegin();
             for (; thisCit != m_terminals.constEnd(); ++ thisCit) {
+                if (thisCit.value()->NodeId() == 0) continue;
                 if (otherCit.value()->NodeId() == thisCit.value()->NodeId()) {
                     // new Wire
                     newWire = new Wire(dev, otherCit.value(),

@@ -39,7 +39,7 @@ int ASG::CreateSchematicWires()
     foreach (channel, m_channels) {
         foreach (wire, channel->Wires()) {
             swire = CreateSchematicWire(wire);
-            swire->SetThisChannelTrackCount(channel->TrackCount());
+            swire->SetTrackCount(channel->TrackCount());
             m_swireList.push_back(swire);
         }
     }

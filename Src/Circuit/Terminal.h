@@ -33,6 +33,7 @@ public:
     Device*      GetDevice() const { return m_device; }
     void         SetTerminalType(TerminalType type) { m_type = type; }
     TerminalType GetTerminalType() const { return m_type; }
+    qreal        LogicalRelRow() const; // relative row about device's logical row
     
     /* For creating SchematicWire */
     void               SetSchematicTerminal(SchematicTerminal *sTerminal)

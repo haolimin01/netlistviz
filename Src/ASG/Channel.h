@@ -37,10 +37,12 @@ public:
 private:
     DISALLOW_COPY_AND_ASSIGN(Channel);
 
+    bool      CouldBeSameTrackWithWires(const WireList &wires, Wire *wire) const;
+
     WireList   m_wires;
-    int        m_trackCount;
     int        m_id;
     int        m_geoCol;
+    int        m_trackCount;
 };
 
 #endif // NETLISTVIZ_ASG_CHANNEL_H

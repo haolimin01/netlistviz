@@ -8,6 +8,7 @@
  * @email    : haolimin01@sjtu.edu.cn
  * @desp     : Wire to connect devices and gnds.
  * @modified : Hao Limin, 2020.09.17
+ * @modified : Hao Limin, 2020.09.28
  */
 
 #include <QGraphicsPathItem>
@@ -44,10 +45,12 @@ public:
     void      SetWirePathPoints(const QVector<QPointF> &points);
     void      SetTrack(int track) { m_track = track; }
     int       Track() const { return m_track; }
+    int       SetTrackCount(int n) { Q_ASSERT(n >= 0); m_trackCount = n; }
+    int       TrackCount() const { return m_trackCount; }
     void      SetGeometricalCol(int col) { m_geoCol = col; }
     int       GeometricalCol() const { return m_geoCol; }
-    void      SetThisChannelTrackCount(int count) { m_thisChannelTrackCount = count; }
-    int       ThisChannelTrackCount() const { return m_thisChannelTrackCount; }
+    void      SetSceneCol(int col) { m_sceneCol = col; }
+    int       SceneCol() const { return m_sceneCol; }
     void      UpdatePosition(SchematicTerminal *terminal); // terminal is unique
     void      SetScale(qreal scale) { m_lineWidth = DFT_Wire_W * scale; }
     bool      HasGroundCap() const;
@@ -73,9 +76,10 @@ private:
     qreal              m_lineWidth;
 
     /* For ASG */
-    int                m_track;  // track number
-    int                m_thisChannelTrackCount; // track count in this channel (DO NOT contain track=-1)
+    int                m_track;      // track number
     int                m_geoCol;
+    int                m_sceneCol;   // real col in scene
+    int                m_trackCount; // this channel track count
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICWIRE_H

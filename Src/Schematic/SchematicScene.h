@@ -92,6 +92,7 @@ private:
     void  SetDeviceAt(int col, int row, SchematicDevice *device);   // col, row (grid)
     void  SetDeviceAt(const QPointF &pos, SchematicDevice *device); // coordinate (scanePos)
     void  AddWiresToScene(const SWireList &wires);
+    QVector<QPointF> CreateWirePathPoints(SchematicWire *wire) const;
     /*---------------------------------------- */
 
     SchematicDevice*   InsertSchematicDevice(DeviceType, const QPointF &);

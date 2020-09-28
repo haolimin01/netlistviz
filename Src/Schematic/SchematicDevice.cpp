@@ -19,7 +19,7 @@ SchematicDevice::SchematicDevice()
 
     m_deviceType = RESISTOR;
     m_id = 0;
-    m_name = "R";
+    m_name = "";
     m_reverse = false;
     m_geoCol = 0;
     m_geoRow = 0;
@@ -37,7 +37,7 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
 
     m_deviceType = type;
     m_id = 0;
-    m_name = "R";
+    m_name = "";
     m_reverse = false;
     m_geoCol = 0;
     m_geoRow = 0;

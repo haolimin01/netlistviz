@@ -16,7 +16,8 @@ SchematicWire::SchematicWire(SchematicDevice *startDevice, SchematicDevice *endD
 
     m_track = 0;
     m_geoCol = 0;
-    m_thisChannelTrackCount = 0;
+    m_sceneCol = 0;
+    m_trackCount = 0;
 
     Q_UNUSED(scene);
 
@@ -134,7 +135,7 @@ void SchematicWire::Print() const
     QString tmp;
     tmp += ("(" + m_startDevice->Name() + " " + m_endDevice->Name() + "), ");
     tmp += ("track(" + QString::number(m_track) + "), ");
-    tmp += ("thisChannelTrackCount(" + QString::number(m_thisChannelTrackCount) + "), ");
+    tmp += ("thisChannelTrackCount(" + QString::number(m_trackCount) + "), ");
     tmp += ("geoCol(" + QString::number(m_geoCol) + ")");
     qInfo() << tmp;
     printf("----------------------------------------------\n");
