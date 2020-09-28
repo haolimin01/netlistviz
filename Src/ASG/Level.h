@@ -31,9 +31,12 @@ public:
     int        Id() const { return m_id; }
     void       AssignDeviceLogicalRow();
     void       AssignDeviceGeometricalCol(int col);
+    void       SetRowGap(int gap) { m_rowGap = gap; };
+    int        RowGap() const { return m_rowGap; }
 
     void       PrintAllDevices() const;
     void       PrintAllConnections() const;
+    void       PrintRowGap() const;
     void       PrintLogicalPos() const;
     void       PrintOrientation() const;
     void       PrintReverse() const;
@@ -45,10 +48,13 @@ private:
     void UpdateDeviceLevelId();
     void SortByLogicalRow(DeviceList &devList) const;
     void RowsShiftUpBy(QVector<int> &rows, int n) const;
+    void RowsFlexibleShiftUpBy(QVector<int> &rows, int n) const;
 
     DeviceList    m_devices;
     int           m_id;
     QVector<int>  m_rows;
+
+    int           m_rowGap;
 };
 
 #endif // NETLISTVIZ_ASG_LEVEL_H

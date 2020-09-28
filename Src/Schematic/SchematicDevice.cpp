@@ -320,7 +320,6 @@ void SchematicDevice::SetOrientation(Orientation orien)
 {
     if (orien == m_devOrien)  return;
     qreal angle = rotation();
-    qInfo() << m_name << " " << angle << endl;
     if (orien == Horizontal) {
         angle -= 90;
     } else {

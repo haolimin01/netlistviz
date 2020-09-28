@@ -58,6 +58,7 @@ private:
     int         InsertBasicDevice(Device *device);
     Level*      CreateNextLevel(Level *preLevel) const;
     int         ClassifyConnectDeviceByLevel();
+    int         EstimateLogicalRowGap();
     int         DetermineFirstLevelLogicalRow();
     int         ForwardPropagateLogicalRow();   // level0 -> level1 -> level2 -> ... -> leveln
     int         DecideDeviceOrientation();

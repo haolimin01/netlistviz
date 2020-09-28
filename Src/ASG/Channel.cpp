@@ -89,6 +89,7 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
         for (int i = 0; i < m_wires.size(); ++ i) {
             otherWire = m_wires.at(i);
             if (otherWire->TrackGiven()) continue;
+            if (wire == otherWire) continue; // pointer
             if (wire->CouldBeMerged(otherWire))
                 sameTrackWires.push_back(otherWire);
         }
@@ -96,6 +97,7 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
         for (int i = 0; i < m_wires.size(); ++ i) {
             otherWire = m_wires.at(i);
             if (otherWire->TrackGiven()) continue;
+            if (wire == otherWire) continue; // pointer
             if (CouldBeSameTrackWithWires(sameTrackWires, otherWire))
                 sameTrackWires.push_back(otherWire);
         }
@@ -103,6 +105,13 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
         foreach (wire, sameTrackWires)
             wire->SetTrack(trackIndex);
         trackIndex++;
+
+#ifdef DEBUGx
+        printf("xxxxxxxxxx Same Track Wires xxxxxxxxxx\n");
+        foreach (Wire *w, sameTrackWires)
+            qInfo() << "(" << w->m_fromDevice->Name() << "," << w->m_toDevice->Name();
+        printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n");
+#endif
 
         sameTrackWires.clear();
         hasRest = false;
@@ -122,9 +131,11 @@ bool Channel::CouldBeSameTrackWithWires(const WireList &wires, Wire *wire) const
 {
     Wire *thisWire = nullptr;
     foreach (thisWire, wires) {
-        if (NOT thisWire->CouldBeSameTrack(wire))
+        if (NOT thisWire->CouldBeSameTrack(wire)) {
             return false;
+        }
     }
+
     return true;
 }
 

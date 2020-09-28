@@ -1,6 +1,7 @@
 #include "Wire.h"
 #include "Circuit/Device.h"
 #include "Circuit/Terminal.h"
+#include <QDebug>
 
 Wire::Wire(Device *fromDevice, Terminal *fromTerminal,
     Device *toDevice, Terminal *toTerminal)
@@ -127,6 +128,9 @@ bool Wire::HasCross(Wire *otherWire) const
     if (m1 < 0)
         return true;
 
+    if (m1 == 0) // could be merged
+        return false;
+
     int m2 = 0;
     if (thisFromTerRow < otherFromTerRow) {
         m2 = otherToTerRow - thisFromTerRow;
@@ -158,9 +162,19 @@ bool Wire::CouldBeMerged(Wire *otherWire) const
 bool Wire::CouldBeSameTrack(Wire *otherWire) const
 {
     bool hasCross = HasCross(otherWire);
-    if (hasCross)
-        return false;
+
+#ifdef DEBUGx
+    printf("=============== Wire ===============\n");
+    QString tmp = "";
+    tmp += ("(" + m_fromDevice->Name() + ", " + m_toDevice->Name() + "), ");
+    tmp += ("(" + otherWire->m_fromDevice->Name() + ", " + otherWire->m_toDevice->Name() + ") ");
+    tmp += ("cross(" + QString::number(hasCross) + ")");
+    qInfo() << tmp;
+#endif
 
     bool merged = CouldBeMerged(otherWire);
+
+    return ((NOT hasCross) || merged);
+
     return merged;
 }

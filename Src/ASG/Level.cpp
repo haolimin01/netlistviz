@@ -5,11 +5,13 @@
 Level::Level(int id)
 {
     m_id = id;
+    m_rowGap = DFT_MAX_DEVICE_ROW_GAP;
 }
 
 Level::Level()
 {
     m_id = 0;
+    m_rowGap = DFT_MAX_DEVICE_ROW_GAP;
 }
 
 Level::~Level()
@@ -69,17 +71,15 @@ void Level::AssignDeviceLogicalRow()
     m_rows.push_back(dev->LogicalRow());
 
     /* 4. deal with the rest */
-    /* Maybe refine previous level in the future */
-    int row = 0, currMaxRow = 0, prevRow = 0;
-    bool oneShift = false;
+    int row = 0, currMaxRow = 0;
     for (int i = 1; i < m_devices.size(); ++ i) {
         dev = m_devices.at(i);
         row = dev->LogicalRow();
         currMaxRow = m_rows.back();
 
         if (row < currMaxRow) {
-            RowsShiftUpBy(m_rows, currMaxRow - row);
-            row = currMaxRow + 1;
+            RowsFlexibleShiftUpBy(m_rows, currMaxRow - row);
+            row = m_rows.back() + m_rowGap;
             currMaxRow = row;
             m_rows.push_back(currMaxRow);
             continue;
@@ -92,21 +92,8 @@ void Level::AssignDeviceLogicalRow()
         }
 
         /* row == currMxRow */
-        oneShift = false;
-        if (i >= 2) {
-            prevRow = m_rows.at( i - 2);
-            if (currMaxRow - prevRow >= 2)
-                oneShift = true;
-        }
-
-        if (oneShift) {
-            m_rows[i - 1] = currMaxRow - 1;
-            row = currMaxRow;
-        } else {
-            RowsShiftUpBy(m_rows, 1);
-            row = currMaxRow + 1;
-        }
-
+        RowsFlexibleShiftUpBy(m_rows, m_rowGap);
+        row = currMaxRow + m_rowGap;
         m_rows.push_back(row);
     }
 
@@ -132,6 +119,26 @@ void Level::RowsShiftUpBy(QVector<int> &rows, int n) const
 {
     for (int i = 0; i < rows.size(); ++ i)
         rows[i] -= n;
+}
+
+void Level::RowsFlexibleShiftUpBy(QVector<int> &rows, int n) const
+{
+    if (rows.size() == 0)
+        return;
+    
+    int curr = 0, prev = 0;
+
+    for (int i = rows.size() - 1; i > 0; -- i) {
+        curr = rows.at(i);
+        prev = rows.at(i - 1);
+        if (curr - prev >= (n + 1)) {
+            rows[i] -= n;
+            return;
+        }
+        rows[i] -= n;
+    }
+
+    rows[0] -= n;
 }
 
 void Level::AssignDeviceGeometricalCol(int col)
@@ -170,6 +177,15 @@ void Level::PrintAllConnections() const
         qInfo() << result;
         result = "";
     }
+
+    printf("---------------------------------------\n");
+}
+
+void Level::PrintRowGap() const
+{
+    printf("--------------- Level %d ---------------\n", m_id);
+
+    qInfo() << "Row Gap(" << m_rowGap << ")"; 
 
     printf("---------------------------------------\n");
 }

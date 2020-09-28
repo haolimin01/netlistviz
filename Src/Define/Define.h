@@ -35,7 +35,7 @@
 #define ERROR 1
 
 /* For Scene */
-const static int Row_Device_Factor = 3;
+const static int DFT_MAX_DEVICE_ROW_GAP = 1;
 const static int DFT_Grid_W = 50;
 const static int DFT_Grid_H = 50;
 const static int DFT_DIS = 15;
