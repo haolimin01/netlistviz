@@ -48,9 +48,9 @@ const static int Scene_H = Scene_Margin + 2 * Scene_Available;
 const static int DFT_Wire_W = 2; 
 
 /* For Simulated Annealing */
-const static double SA_INIT_T = 1e3;
-const static double SA_END_T = 0.01;
-const static double SA_ALPHA = 0.98;
+// const static double SA_INIT_T = 1e3;
+// const static double SA_END_T = 0.01;
+// const static double SA_ALPHA = 0.98;
 
 /* For Channel */
 const static int MAX_ONE_COL_WIRE_COUNT = 10;
