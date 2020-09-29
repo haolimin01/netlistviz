@@ -8,6 +8,7 @@
  * @email    : haolimin01@sjtu.edu.cn
  * @desp     : Wire to connect devices and gnds.
  * @modified : Hao Limin, 2020.09.17
+ * @modified : Hao Limin, 2020.09.28
  */
 
 #include <QGraphicsPathItem>
@@ -19,19 +20,9 @@ class QRectF;
 class QPointF;
 QT_END_NAMESPACE;
 
-class Wire;
 class SchematicDevice;
 class SchematicTerminal;
 
-// struct WireDescriptor
-// {
-//     SchematicDevice   *startDevice;
-//     SchematicDevice   *endDevice;
-//     SchematicTerminal *startTerminal;
-//     SchematicTerminal *endTersminal;
-//     QVector<QPointF>   pathPoints;
-//     QPointF            scenePos;       // wire position in the scene
-// };
 
 class SchematicWire : public QGraphicsItem
 {
@@ -39,8 +30,6 @@ public:
     enum { Type = UserType + 6 };
 
 public:
-    /* For ASG entrance */
-    SchematicWire(Wire *wire, QGraphicsItem *parent = nullptr, QGraphicsScene *scene = nullptr);
     /* For InsertSchematicWire in Scene */
     SchematicWire(SchematicDevice *, SchematicDevice *, SchematicTerminal *, SchematicTerminal *,
         QGraphicsItem *parent = nullptr, QGraphicsScene *scene = nullptr);
@@ -54,12 +43,16 @@ public:
     int       type() const override { return Type; }
     QRectF    boundingRect() const override;
     void      SetWirePathPoints(const QVector<QPointF> &points);
-    void      SetThisChannelTrackCount(int count) { m_thisChannelTrackCount = count; }
-    int       ThisChannelTrackCount() const { return m_thisChannelTrackCount; }
+    void      SetTrack(int track) { m_track = track; }
+    int       Track() const { return m_track; }
+    int       SetTrackCount(int n) { Q_ASSERT(n >= 0); m_trackCount = n; }
+    int       TrackCount() const { return m_trackCount; }
+    void      SetSceneCol(int col) { m_sceneCol = col; }
+    void      SetHoldColCount(int count) { m_holdColCount = count; }
+    int       HoldColCount() const { return m_holdColCount; }
+    int       SceneCol() const { return m_sceneCol; }
     void      UpdatePosition(SchematicTerminal *terminal); // terminal is unique
     void      SetScale(qreal scale) { m_lineWidth = DFT_Wire_W * scale; }
-    int       LogicalCol() const { return m_logCol; }
-    void      SetGeometricalCol(int col) { m_geoCol = col; }
     bool      HasGroundCap() const;
     bool      HasCoupledCap() const;
 
@@ -83,10 +76,10 @@ private:
     qreal              m_lineWidth;
 
     /* For ASG */
-    int                m_logCol; // logical column
-    int                m_track;  // track number
-    int                m_geoCol;  // geometrical column
-    int                m_thisChannelTrackCount; // track count in this channel (DO NOT contain track=-1)
+    int                m_track;        // track number
+    int                m_sceneCol;     // real col in scene
+    int                m_trackCount;   // this channel track count
+    int                m_holdColCount; // hold col count on scene
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICWIRE_H

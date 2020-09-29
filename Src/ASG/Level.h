@@ -21,30 +21,40 @@ public:
     Level();
     ~Level();
 
-    void SetId(int id);
-    int  Id() const    { return m_id; }
     void AddDevice(Device *device);
     void AddDevices(const DeviceList &devList);
 
-    int  DeviceCountWithoutGCap() const;
-    int  DeviceCountWithoutGCCap() const;
-    int  AllDeviceCount() const;
-    void AssignRowNumberByBubbleValue(IgnoreCap ignore);
-
     DeviceList AllDevices() const;
+    bool       Empty() const { return (m_devices.size() == 0); }
+    int        AllDeviceCount() const { return m_devices.size(); }
+    void       SetId(int id);
+    int        Id() const { return m_id; }
+    void       AssignDeviceLogicalRow();
+    void       AssignDeviceGeometricalCol(int col);
+    void       SetRowGap(int gap) { m_rowGap = gap; };
+    int        RowGap() const { return m_rowGap; }
 
-    void PrintAllDevices() const;
-    void PrintAllConnections() const;
+    void       PrintAllDevices() const;
+    void       PrintAllConnections() const;
+    void       PrintRowGap() const;
+    void       PrintLogicalPos() const;
+    void       PrintOrientation() const;
+    void       PrintReverse() const;
+    void       PrintGeometricalPos() const;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Level);
 
-    int        m_id;
-    DeviceList m_deviceList;
+    void UpdateDeviceLevelId();
+    void SortByLogicalRow(DeviceList &devList) const;
+    void RowsShiftUpBy(QVector<int> &rows, int n) const;
+    void RowsFlexibleShiftUpBy(QVector<int> &rows, int n) const;
 
-    int        m_deviceCountWithoutCap;
-    int        m_gCapCount;
-    int        m_cCapCount;
+    DeviceList    m_devices;
+    int           m_id;
+    QVector<int>  m_rows;
+
+    int           m_rowGap;
 };
 
 #endif // NETLISTVIZ_ASG_LEVEL_H

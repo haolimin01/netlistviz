@@ -33,6 +33,7 @@ public:
     Device*      GetDevice() const { return m_device; }
     void         SetTerminalType(TerminalType type) { m_type = type; }
     TerminalType GetTerminalType() const { return m_type; }
+    qreal        LogicalRelRow() const; // relative row about device's logical row
     
     /* For creating SchematicWire */
     void               SetSchematicTerminal(SchematicTerminal *sTerminal)
@@ -49,8 +50,6 @@ private:
     Device             *m_device;
     TerminalType        m_type;
     SchematicTerminal  *m_sTerminal; // for creating SchematicWire
-
-    friend class SchematicTerminal;
 };
 
 #endif // NETLISTVIZ_CIRCUIT_TERMINAL_H

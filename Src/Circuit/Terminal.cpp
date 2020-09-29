@@ -10,7 +10,7 @@ Terminal::Terminal(Node *node)
 {
     assert(node);
     m_node = node;
-    m_id = -1;
+    m_id = 0;
     m_device = nullptr;
     m_type = General;
     m_sTerminal = nullptr;
@@ -32,6 +32,30 @@ int Terminal::NodeId() const
 bool Terminal::NodeIsGnd() const
 {
     return m_node->IsGnd();
+}
+
+qreal Terminal::LogicalRelRow() const
+{
+    qreal row = m_device->LogicalRow();
+
+    /* horizontal */
+    if (m_device->GetOrientation() == Horizontal) {
+        return row;
+    }
+
+    /* vertical && not reverse */
+    if (NOT m_device->Reverse()) {
+        if (m_type == Positive)
+            return (row - 0.5);
+        else
+            return (row + 0.5);
+    }
+
+    /* vertical && reverse */
+    if (m_type == Positive)
+        return (row + 0.5);
+    else
+        return (row - 0.5);
 }
 
 void Terminal::Print() const

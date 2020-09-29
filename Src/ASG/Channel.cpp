@@ -7,7 +7,11 @@
 Channel::Channel(int id)
 {
     m_id = id;
-    m_trackCount = 0;
+}
+
+Channel::Channel()
+{
+    m_id = 0;
 }
 
 Channel::~Channel()
@@ -31,26 +35,21 @@ void Channel::AddWires(const WireList &wires)
 }
 
 /*
- * baseline = sum(from device row) / number (from device)
- * above on baseline    : the row is less, track is smaller
- * below under baseline : the row is greater, track is smaller
  * horizontal line      : track is -1
  */
 
 void Channel::AssignTrackNumber(IgnoreCap ignore)
 {
+    Q_UNUSED(ignore);
+
     if (m_wires.size() < 1)
         return;
 
     /* First, we assign -1 to horizontal line */
     Wire *wire = nullptr;
-    Device *fromDevice = nullptr, *toDevice = nullptr;
-    
-    int baseline = 0;
-    int fromDeviceRowSum = 0;
-    int fromDeviceCount = 0;
 
     foreach (wire, m_wires) {
+#if 0
         if (ignore == IgnoreGCap && wire->HasGCap()) {
             wire->SetTrack(-1);
             continue;
@@ -59,51 +58,77 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
             wire->SetTrack(-1);
             continue;
         }
+#endif
 
-        fromDevice = wire->m_fromDevice;
-        toDevice = wire->m_toDevice;
-        if (fromDevice->Row() == toDevice->Row())
+        if (wire->IsHorizontal())
             wire->SetTrack(-1);
-        fromDeviceRowSum += fromDevice->Row();
-        fromDeviceCount++;
     }
-
-    if (fromDeviceCount == 0)
-        baseline = 0;
-    else
-        baseline = fromDeviceRowSum / fromDeviceCount;
 
     /* sort m_wires by toDevice row */
-    qSort(m_wires.begin(), m_wires.end(), [](Wire *w1, Wire *w2) {return w1->m_toDevice->Row() < w2->m_toDevice->Row();});
+    qSort(m_wires.begin(), m_wires.end(),
+            [](Wire *w1, Wire *w2) {return w1->m_toDevice->LogicalRow() < w2->m_toDevice->LogicalRow();});
 
-    int number = 0;
+    int trackIndex = 0;
+    bool hasRest = false;
+    WireList sameTrackWires;
+    Wire *otherWire = nullptr;
 
-    /* Second, assign number to lines, which are above on baseline */
-    foreach (wire, m_wires) {
-        if (wire->TrackGiven()) continue;
-        toDevice = wire->m_toDevice;
-        if (toDevice->Row() <= baseline) {
-            wire->SetTrack(number);
-            number++;
-        } else {
-            break;
-        } 
+    while (true) {
+        for (int i = 0; i < m_wires.size(); ++ i) {
+            if (NOT m_wires.at(i)->TrackGiven()) {
+                wire = m_wires.at(i);
+                hasRest = true;
+                break;
+            }
+        }
+        if (NOT hasRest) break;
+
+        sameTrackWires.push_back(wire);
+        for (int i = 0; i < m_wires.size(); ++ i) {
+            otherWire = m_wires.at(i);
+            if (otherWire->TrackGiven()) continue;
+            if (wire == otherWire) continue; // pointer
+            if (wire->CouldBeMerged(otherWire))
+                sameTrackWires.push_back(otherWire);
+        }
+
+        for (int i = 0; i < m_wires.size(); ++ i) {
+            otherWire = m_wires.at(i);
+            if (otherWire->TrackGiven()) continue;
+            if (wire == otherWire) continue; // pointer
+            if (CouldBeSameTrackWithWires(sameTrackWires, otherWire))
+                sameTrackWires.push_back(otherWire);
+        }
+
+        foreach (wire, sameTrackWires)
+            wire->SetTrack(trackIndex);
+        trackIndex++;
+
+        sameTrackWires.clear();
+        hasRest = false;
     }
 
-    /* Third, assign number to lines, which are below under baseline */
-    for (int i = m_wires.size() - 1; i >= 0; -- i) {
-        wire = m_wires.at(i);
-        if (wire->TrackGiven()) continue;
-        toDevice = wire->m_toDevice;
-        if (toDevice->Row() > baseline) {
-            wire->SetTrack(number);
-            number++;
-        } else {
-            break;
+    m_trackCount = trackIndex;
+}
+
+bool Channel::CouldBeSameTrackWithWires(const WireList &wires, Wire *wire) const
+{
+    Wire *thisWire = nullptr;
+    foreach (thisWire, wires) {
+        if (NOT thisWire->CouldBeSameTrack(wire)) {
+            return false;
         }
     }
 
-    m_trackCount = number;
+    return true;
+}
+
+int Channel::HoldColCount() const
+{
+    int count = m_trackCount * 1.0 / MAX_ONE_COL_WIRE_COUNT + 0.5;
+    if (count < 1)
+        count = 1;
+    return count;
 }
 
 void Channel::Print() const
@@ -111,11 +136,15 @@ void Channel::Print() const
     printf("--------------- Channel %d ---------------\n", m_id);
     QString tmp;
     foreach (Wire *wire, m_wires) {
-        tmp += (wire->m_fromDevice->Name() + "(" + QString::number(wire->m_fromDevice->Row())+ "), ");
-        tmp += (wire->m_toDevice->Name() + "(" + QString::number(wire->m_toDevice->Row()) + "), ");
-        tmp += ("track(" + QString::number(wire->m_track) + ")");
+        tmp += (wire->m_fromDevice->Name() + "(" + QString::number(wire->m_fromDevice->LogicalRow())+ "), ");
+        tmp += (wire->m_toDevice->Name() + "(" + QString::number(wire->m_toDevice->LogicalRow()) + "), ");
+        tmp += ("track(" + QString::number(wire->m_track) + "), ");
         qInfo() << tmp;
         tmp = "";
     }
+    qInfo() << "trackCount(" << m_trackCount << ")";
+    qInfo() << "holdColCount(" << HoldColCount() << ")";
+    qInfo() << "wireCount(" << m_wires.size() << ")";
+
     printf("------------------------------------------\n");
 }

@@ -54,6 +54,7 @@ HEADERS += ./Src/Main/MainWindow.h\
            ./Src/Circuit/Terminal.h\
            ./Src/Circuit/CircuitGraph.h\
            ./Src/Circuit/Device.h\
+           ./Src/Circuit/ConnectDescriptor.h\
            ./Src/Define/Define.h\
            ./Src/Define/TypeDefine.h\
            ./Src/ASG/ASG.h\
@@ -86,6 +87,10 @@ SOURCES += ./Src/Main/Main.cpp\
            ./Src/Circuit/CircuitGraph.cpp\
            ./Src/Circuit/Device.cpp\
            ./Src/ASG/ASG.cpp\
+           ./Src/ASG/LogicalPlacement.cpp\
+           ./Src/ASG/LogicalRouting.cpp\
+           ./Src/ASG/GeometricalPlacement.cpp\
+           ./Src/ASG/GeometricalRouting.cpp\
            ./Src/ASG/MatrixElement.cpp\
            ./Src/ASG/Matrix.cpp\
            ./Src/ASG/Level.cpp\

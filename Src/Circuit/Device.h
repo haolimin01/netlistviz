@@ -7,6 +7,8 @@
  * @date     : 2020.09.11
  * @email    : haolimin01.sjtu.edu.cn 
  * @desp     : Device class, DO NOT contain geometrical information.
+ * @modified : Hao Limin, 2020.09.23
+ * @modified : Hao Limin, 2020.09.26
  */
 
 #include "Define/TypeDefine.h"
@@ -22,9 +24,8 @@ class SchematicDevice;
  * 
  * horizontal: +-
  * 
- * reverse: change orientation
+ * reverse: change (+-) to (-+)
  * 
- * We assume that device is horizontal now.
  */
 
 class Device
@@ -45,44 +46,47 @@ public:
     bool         CoupledCap() const; 
     Terminal*    GetTerminal(TerminalType type) const;
     Terminal*    GetTerminal(Node *node) const;
-    void         SetLevelId(int levelid)   { m_levelId = levelid; }
+    void         DecideOrientationByPredecessors();
+    Orientation  GetOrientation() const    { return m_orien; }
+    void         ClassifyConnectDeviceByLevel();
+    void         SetLogicalRow(int row)    { m_logRow = row; }
+    int          LogicalRow() const        { return m_logRow; }
+    void         SetLevelId(int id)        { m_levelId = id; }
     int          LevelId() const           { return m_levelId; }
-    bool         HasConnection(Device *device) const;
-    bool         HasConnectionIgnoreGnd(Device *device) const;
-    int          BubbleValue() const       { return m_bubbleValue; }
-    void         SetBubbleValue(int value) { m_bubbleValue = value; }
-    void         SetReverse(int reverse)   { m_reverse = reverse; }
-    bool         Reverse() const           { return m_reverse; }       
-    void         DecideReverseByPredecessors(IgnoreCap ignore);
-    void         DecideReverseBySuccessors(IgnoreCap ignore);
-    void         SetRow(int row);
-    int          Row() const               { return m_row; }
-    void         AddPredecessor(Device *dev);
-    void         AddSuccessor(Device *dev);
+    int          LogicalCol() const        { return m_levelId; }
     DeviceList   Predecessors() const      { return m_predecessors; }
     DeviceList   Successors() const        { return m_successors; }
-    void         CalBubbleValueByPredecessors(IgnoreCap ignore);
-    void         CalBubbleValueBySuccessors(IgnoreCap ignore);
-    WireList     WiresFromPredecessors() const;
-    TerminalList GetTerminalList() const;
-    void         ClearPredecessors() { m_predecessors.clear(); }
-    void         ClearSuccessors()   { m_successors.clear(); }
+    void         CalLogicalRowByPredecessors();
+    void         ClearConnectDesps();
     void         SetMaybeAtFirstLevel(bool at) { m_maybeAtFirstLevel = at; }
     bool         MaybeAtFirstLevel() const     { return m_maybeAtFirstLevel; }
+    ConnectDespList ConnectDesps() const { return m_connectDesps; }
+    bool         Reverse() const           { return m_reverse; }       
+    void         DecideReverseByPredecessors();
+    void         DecideReverseBySuccessors();
+    void         SetGeometricalCol(int col) { m_geoCol = col; }
+    int          GeometricalCol() const     { return m_geoCol; }
+    void         SetGeometricalRow(int row) { m_geoRow = row; }
+    int          GeometricalRow() const     { return m_geoRow; }
+    WireList     WiresFromPredecessors() const;
+
+    TerminalList GetTerminalList() const;
+
 
     /* For creating SchematicWire */
     void                SetSchematicDevice(SchematicDevice *sDevice) { m_sDevice=sDevice;}
     SchematicDevice*    GetSchematicDevice() const { return m_sDevice; } 
 
-    DeviceList          CapConnectDeviceList() const { return m_capConnectDeviceList; }
-    STerminalTable      CapConnectSTerminalTable() const;
+    // DeviceList          CapConnectDeviceList() const { return m_capConnectDeviceList; }
+    // STerminalTable      CapConnectSTerminalTable() const;
 
     void Print() const;
-    void PrintBubbleValue() const;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Device);
-    bool    HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType);
+    bool    HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType) const;
+    bool    HasConnectionIgnoreGnd(Device *otherDev, TerminalType thisType) const;
+    bool    MaybeVertical() const;
 
     TerminalTable                     m_terminals;
     QString                           m_name;
@@ -94,18 +98,19 @@ private:
     bool                              m_maybeAtFirstLevel;
     bool                              m_reverse; 
 
-    /* For Bubble Sort */
-    int                               m_levelId; // col
-    DeviceList                        m_predecessors;
-    DeviceList                        m_successors;
-    int                               m_bubbleValue;
-    int                               m_row;   // row
+    DeviceList                        m_predecessors; // previous level
+    DeviceList                        m_fellows;      // the same level
+    DeviceList                        m_successors;   // next level
+    int                               m_levelId;
+    int                               m_logRow;       // logical row, can be < 0
+    int                               m_geoRow;
+    int                               m_geoCol;
+    Orientation                       m_orien;        // orientation : Horizontal/Vertical
+    ConnectDespList                   m_connectDesps;
 
-    DeviceList                        m_capConnectDeviceList;    // for cap
-    TerminalTable                     m_capConnectTerminalTable; // for cap
+    // DeviceList                        m_capConnectDeviceList;    // for cap
+    // TerminalTable                     m_capConnectTerminalTable; // for cap
     SchematicDevice                  *m_sDevice; // For creating SchematicWire
-
-    friend class SchematicDevice;
 };
 
 #endif // NETLISTVIZ_CIRCUIT_DEVICE_H

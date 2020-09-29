@@ -86,13 +86,13 @@ private:
     int   CalStartCol(int colCount) const;
     void  UpdateDeviceScale(qreal newScale);
     void  UpdateWireScale(qreal newScale);
-    void  ChangeDeviceOrientation(const SDeviceList &devices);
     void  RenderFixedGnds(const SDeviceList &devices);
     void  RenderGroundCaps(const SDeviceList &gcaps);
     void  RenderCoupledCaps(const SDeviceList &ccaps);
     void  SetDeviceAt(int col, int row, SchematicDevice *device);   // col, row (grid)
     void  SetDeviceAt(const QPointF &pos, SchematicDevice *device); // coordinate (scanePos)
     void  AddWiresToScene(const SWireList &wires);
+    QVector<QPointF> CreateWirePathPoints(SchematicWire *wire) const;
     /*---------------------------------------- */
 
     SchematicDevice*   InsertSchematicDevice(DeviceType, const QPointF &);

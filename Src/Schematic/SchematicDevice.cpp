@@ -3,7 +3,6 @@
 #include <QPen>
 #include <QDebug>
 #include <QGraphicsScene>
-#include "Circuit/Device.h"
 #include "SchematicTerminal.h"
 #include "SchematicWire.h"
 
@@ -13,33 +12,18 @@ static const int IMAG_LEN = 25;
 static const int BASE_LEN = 20;
 static const int BRECT_W = 30;
 
-
-SchematicDevice::SchematicDevice(Device *dev, QMenu *contextMenu,
-    QTransform transform, QGraphicsItem *parent)
+SchematicDevice::SchematicDevice()
 {
-    Q_ASSERT(dev);
-    m_contextMenu = contextMenu;
+    m_contextMenu = nullptr;
+    setTransform(QTransform());
 
-    m_deviceType = dev->m_deviceType;
-    m_id = dev->m_id;
-    m_logCol = dev->m_levelId;
-    m_name = dev->m_name;
-    m_logRow = dev->m_row;
-    m_reverse = dev->m_reverse;
-
-    setTransform(transform);
-    m_terminals.clear();
-
-    if (dev->GroundCap()) {
-        m_capConnectTerminalTable = dev->CapConnectSTerminalTable();
-        Q_ASSERT(m_capConnectTerminalTable.size() == 1);
-    }
-
-    if (dev->CoupledCap()) {
-        m_capConnectTerminalTable = dev->CapConnectSTerminalTable();
-        qDebug() << m_name << " " << m_capConnectTerminalTable << endl;
-        Q_ASSERT(m_capConnectTerminalTable.size() == 2);
-    }
+    m_deviceType = RESISTOR;
+    m_id = 0;
+    m_name = "";
+    m_reverse = false;
+    m_geoCol = 0;
+    m_geoRow = 0;
+    m_devOrien = Vertical;
 
     /* ASG entrance */
     /* add terminals by AddTerminal() */
@@ -52,11 +36,12 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     m_contextMenu = contextMenu;
 
     m_deviceType = type;
-    m_id = -1;
-    m_logCol = -1;
+    m_id = 0;
     m_name = "";
-    m_logRow = -1;
     m_reverse = false;
+    m_geoCol = 0;
+    m_geoRow = 0;
+    m_devOrien = Vertical;
 
     setTransform(transform);
 
@@ -119,9 +104,9 @@ void SchematicDevice::Initialize()
     m_imag = nullptr;
     m_showTerminal = false;
 
-    m_geoCol = 0;
-    m_geoRow = 0;
     m_gndConnectTerminal = nullptr;
+    m_sceneCol = 0;
+    m_sceneRow = 0;
 
     CreateAnnotation(m_name);
 
@@ -335,7 +320,6 @@ void SchematicDevice::SetOrientation(Orientation orien)
 {
     if (orien == m_devOrien)  return;
     qreal angle = rotation();
-    qInfo() << m_name << " " << angle << endl;
     if (orien == Horizontal) {
         angle -= 90;
     } else {
@@ -669,8 +653,8 @@ void SchematicDevice::Print() const
     QString tmp;
     tmp += (m_name + " " + "type(" + QString::number(m_deviceType) + "), ");
     tmp += ("id(" + QString::number(m_id) + "), ");
-    tmp += ("levelId(" + QString::number(m_logCol) + "), ");
-    tmp += ("row(" + QString::number(m_logRow) + "), ");
+    tmp += ("geoCol(" + QString::number(m_geoCol) + "), ");
+    tmp += ("geoRow(" + QString::number(m_geoRow) + "), ");
     qInfo() << tmp;
     qInfo() << "Terminals";
     foreach (SchematicTerminal *ter, m_terminals.values())

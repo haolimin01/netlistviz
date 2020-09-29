@@ -1,17 +1,14 @@
 #include "SchematicTerminal.h"
-#include "Circuit/Terminal.h"
 #include "Circuit/Node.h"
 #include "SchematicDevice.h"
 #include "SchematicWire.h"
 
-SchematicTerminal::SchematicTerminal(Terminal *terminal)
+SchematicTerminal::SchematicTerminal()
 {
-    Q_ASSERT(terminal);
-    m_node = terminal->m_node;
-    m_id = terminal->m_id;
-    m_type = terminal->m_type;
-
+    m_type = Positive;
     m_device = nullptr;
+    m_node = nullptr;
+    m_id = 0;
 }
 
 SchematicTerminal::SchematicTerminal(TerminalType type, SchematicDevice *device)

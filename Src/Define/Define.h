@@ -35,9 +35,9 @@
 #define ERROR 1
 
 /* For Scene */
-const static int Row_Device_Factor = 2;
-const static int DFT_Grid_W = 50;
-const static int DFT_Grid_H = 50;
+const static int DFT_MAX_DEVICE_ROW_GAP = 1;
+const static int DFT_Grid_W = 60;
+const static int DFT_Grid_H = 60;
 const static int DFT_DIS = 15;
 const static int Scene_Margin = 50;
 const static int Scene_Available = 1250;
@@ -45,6 +45,14 @@ const static int Scene_W = Scene_Margin + 2 * Scene_Available;
 const static int Scene_H = Scene_Margin + 2 * Scene_Available;
 
 /* For SchematicWire */
-const static int DFT_Wire_W = 2;
+const static int DFT_Wire_W = 2; 
+
+/* For Simulated Annealing */
+const static double SA_INIT_T = 1e3;
+const static double SA_END_T = 0.01;
+const static double SA_ALPHA = 0.98;
+
+/* For Channel */
+const static int MAX_ONE_COL_WIRE_COUNT = 10;
 
 #endif //NETLISTVIZ_DEFINE_DEFINE_H

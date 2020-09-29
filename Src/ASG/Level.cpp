@@ -5,35 +5,24 @@
 Level::Level(int id)
 {
     m_id = id;
-    m_deviceCountWithoutCap = 0;
-    m_gCapCount = 0;
-    m_cCapCount = 0;
+    m_rowGap = DFT_MAX_DEVICE_ROW_GAP;
 }
 
 Level::Level()
 {
-    m_id = -1;
-    m_deviceCountWithoutCap = 0;
-    m_gCapCount = 0;
-    m_cCapCount = 0;
+    m_id = 0;
+    m_rowGap = DFT_MAX_DEVICE_ROW_GAP;
 }
 
 Level::~Level()
 {
-    m_deviceList.clear();
+    m_devices.clear();
 }
 
 void Level::AddDevice(Device *device)
 {
-    if (device->GroundCap())
-        m_gCapCount++;
-    else if (device->CoupledCap())
-        m_cCapCount++;
-    else
-        m_deviceCountWithoutCap++;
-    
+    m_devices.push_back(device);
     device->SetLevelId(m_id);
-    m_deviceList.push_back(device);
 }
 
 void Level::AddDevices(const DeviceList &devList)
@@ -42,96 +31,226 @@ void Level::AddDevices(const DeviceList &devList)
         AddDevice(dev);
 }
 
+DeviceList Level::AllDevices() const
+{
+    return m_devices;
+}
+
 void Level::SetId(int id)
 {
     m_id = id;
-    foreach (Device *dev, m_deviceList) {
+    UpdateDeviceLevelId();
+}
+
+void Level::UpdateDeviceLevelId()
+{
+    foreach (Device *dev, m_devices)
         dev->SetLevelId(m_id);
-    }
 }
 
-int Level::DeviceCountWithoutGCap() const
+void Level::AssignDeviceLogicalRow()
 {
-    return m_deviceCountWithoutCap + m_cCapCount;
-}
+    m_rows.clear();
+    if (m_devices.size() < 1)
+        return;
 
-int Level::DeviceCountWithoutGCCap() const
-{
-    return m_deviceCountWithoutCap;
-}
+    /* 1. Initialize logical row */
+    foreach (Device *dev, m_devices)
+        dev->CalLogicalRowByPredecessors();
 
-int Level::AllDeviceCount() const
-{
-    return m_deviceCountWithoutCap + m_gCapCount + m_cCapCount;
-}
+    /* 2. Sort by Logical row */
+    SortByLogicalRow(m_devices);
 
-DeviceList Level::AllDevices() const
-{
-    return m_deviceList;
-}
-
-void Level::AssignRowNumberByBubbleValue(IgnoreCap ignore)
-{
-    /* sort device by bubble value */
-    qSort(m_deviceList.begin(), m_deviceList.end(),
-        [](Device *a, Device *b){ return a->BubbleValue() < b->BubbleValue(); });
-
-#ifdef DEBUGx
-    qInfo() << "Level" << m_id;
-    foreach (Device *dev, m_deviceList)
-        dev->PrintBubbleValue();
+#ifdef DEBUG
+    qInfo() << "Before Assign Logical Row in Level";
+    PrintLogicalPos();
 #endif
-    
-    /* We consider bubble value as device row now */
-    int maxRow = -1, row = -1;
-    int bubbleValue = -1;
-    foreach (Device *dev, m_deviceList) {
 
-        if (ignore == IgnoreGCap && dev->GroundCap()) continue;
-        if ((ignore == IgnoreGCCap) && (dev->GroundCap() || dev->CoupledCap())) continue;
+    /* 3. put the first devie's row into rows */
+    Device *dev = m_devices.front();
+    m_rows.push_back(dev->LogicalRow());
 
-        bubbleValue = dev->BubbleValue();
-        if (bubbleValue > maxRow) {
-            row = bubbleValue;
-            maxRow = row;
-        } else {
-            row = maxRow + 1;
-            maxRow++;
+    /* 4. deal with the rest */
+    int row = 0, currMaxRow = 0;
+    for (int i = 1; i < m_devices.size(); ++ i) {
+        dev = m_devices.at(i);
+        row = dev->LogicalRow();
+        currMaxRow = m_rows.back();
+
+        if (row < currMaxRow) {
+            RowsFlexibleShiftUpBy(m_rows, (currMaxRow - row) / 2);
+            // row = m_rows.back() + m_rowGap;
+            row = currMaxRow + m_rowGap;
+            currMaxRow = row;
+            m_rows.push_back(currMaxRow);
+            continue;
         }
+
+        if (row > currMaxRow) {
+            currMaxRow = row;
+            m_rows.push_back(currMaxRow);
+            continue;
+        }
+
+        /* row == currMxRow */
+        RowsFlexibleShiftUpBy(m_rows, m_rowGap);
+        row = currMaxRow + m_rowGap;
+        currMaxRow = row;
+        m_rows.push_back(currMaxRow);
+    }
+
+    Q_ASSERT(m_rows.size() == m_devices.size());
+
+    for (int i = 0; i < m_rows.size(); ++ i)
+        m_devices[i]->SetLogicalRow(m_rows.at(i));
+
+#ifdef DEBUG
+    qInfo() << "After Assign Logical Row in Level";
+    PrintLogicalPos();
+#endif
+}
+
+void Level::SortByLogicalRow(DeviceList &devList) const
+{
+    /* lambda expression */
+    qSort(devList.begin(), devList.end(),
+        [](Device *a, Device *b){ return a->LogicalRow() < b->LogicalRow(); });
+}
+
+void Level::RowsShiftUpBy(QVector<int> &rows, int n) const
+{
+    for (int i = 0; i < rows.size(); ++ i)
+        rows[i] -= n;
+}
+
+void Level::RowsFlexibleShiftUpBy(QVector<int> &rows, int n) const
+{
+    if (rows.size() == 0)
+        return;
     
-        dev->SetRow(row);
+    int curr = 0, prev = 0;
+
+    for (int i = rows.size() - 1; i > 0; -- i) {
+        curr = rows.at(i);
+        prev = rows.at(i - 1);
+        if (curr - prev >= (n + 1)) {
+            rows[i] -= n;
+            return;
+        }
+        rows[i] -= n;
+    }
+
+    rows[0] -= n;
+}
+
+void Level::AssignDeviceGeometricalCol(int col)
+{
+    foreach (Device *dev, m_devices) {
+        dev->SetGeometricalCol(col);
     }
 }
 
 void Level::PrintAllDevices() const
 {
-    printf("---------------- Level %d ---------------\n", m_id);
+    printf("--------------- Level %d ---------------\n", m_id);
 
-    foreach (Device *dev, m_deviceList)
-        qInfo() << dev->Name();
+    foreach (Device *dev, m_devices)
+        qInfo() << dev->Name()
+                << " Level(" << dev->LevelId() << ")";
 
-    printf("----------------------------------------\n");
+    printf("---------------------------------------\n");
 }
 
 void Level::PrintAllConnections() const
 {
-    printf("---------------- Level %d ---------------\n", m_id);
+    printf("--------------- Level %d ---------------\n", m_id);
 
-    QString result("");
-
-    foreach (Device *dev, m_deviceList) {
+    QString result = "";
+    foreach (Device *dev, m_devices) {
         result += (dev->Name() + " ");
         result += ("predecessors( ");
         foreach (Device *predecessor, dev->Predecessors())
             result += (predecessor->Name() + " ");
-        result += (" ), ");
+        result += ("), ");
         result += ("successors( ");
         foreach (Device *successor, dev->Successors())
             result += (successor->Name() + " ");
-        result += (" )");
+        result += (")");
         qInfo() << result;
         result = "";
     }
 
-    printf("----------------------------------------\n");
+    printf("---------------------------------------\n");
 }
+
+void Level::PrintRowGap() const
+{
+    printf("--------------- Level %d ---------------\n", m_id);
+
+    qInfo() << "Row Gap(" << m_rowGap << ")"; 
+
+    printf("---------------------------------------\n");
+}
+
+void Level::PrintLogicalPos() const
+{
+    printf("--------------- Level %d ---------------\n", m_id);
+
+    foreach (Device *dev, m_devices) {
+        qInfo() << dev->Name()
+                << "logicalRow(" << dev->LogicalRow() << "),"
+                << "logicalCol(" << dev->LogicalCol() << ")";
+    }
+
+    printf("---------------------------------------\n");
+}
+
+void Level::PrintOrientation() const
+{
+    printf("--------------- Level %d ---------------\n", m_id);
+
+    QString tmp = "";
+    foreach (Device *dev, m_devices) {
+        tmp = (dev->Name() + " Orientation(");
+        if (dev->GetOrientation() == Horizontal)
+            tmp += "H)";
+        else
+            tmp += "V)";
+
+        qInfo() << tmp;
+    }
+
+    printf("---------------------------------------\n");
+}
+
+void Level::PrintReverse() const
+{
+    printf("--------------- Level %d ---------------\n", m_id);
+
+    QString tmp = "";
+    foreach (Device *dev, m_devices) {
+        tmp = (dev->Name() + " Reverse(");
+        if (dev->Reverse())
+            tmp += "yes)";
+        else
+            tmp += "no)";
+
+        qInfo() << tmp;
+    }
+
+    printf("---------------------------------------\n");
+}
+
+void Level::PrintGeometricalPos() const
+{
+    printf("--------------- Level %d ---------------\n", m_id);
+
+    foreach (Device *dev, m_devices) {
+        qInfo() << dev->Name()
+                << "geometricalRow(" << dev->GeometricalRow() << "),"
+                << "geometricalCol(" << dev->GeometricalCol() << ")";
+    }
+
+    printf("---------------------------------------\n");
+}
+

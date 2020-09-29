@@ -6,6 +6,8 @@
  * @author   : Hao Limin
  * @date     : 2020.09.12
  * @desp     : Automatic Schematic Generator.
+ * @modified : Hao Limin, 2020.09.24
+ * @modified : Hao Limin, 2020.09.26
  */
 
 #include "Define/Define.h"
@@ -31,6 +33,7 @@ public:
 
     void SetCircuitgraph(CircuitGraph *ckt);
     void SetIgnoreCapType(IgnoreCap type) { m_ignoreCap = type; }
+    int  Prepare();
     int  LogicalPlacement();
     int  LogicalRouting();
     int  GeometricalPlacement(SchematicScene *scene);
@@ -43,36 +46,46 @@ public:
 private:
     DISALLOW_COPY_AND_ASSIGN(ASG);
 
-    /* ---------- Logical Placement ---------- */
-    int    BuildIncidenceMatrix(); // undirected graph
-    int    CalLogicalCol();        // calculate logical column by depth
-    int    CalLogicalRow();        // calculate logical row by bubble sort
-    int    InsertBasicDevice(Device *device);
-    Level* CreateNextLevel(Level *prevLevel) const;
-    int    BubbleSort();
-    int    BubbleSortIgnoreNoCap();
-    int    BubbleSortIgnoreGCap();
-    int    BubbleSortIgnoreGCCap();
+    /* --------------- Prepare --------------- */
+    int    LinkDevice();
     /* --------------------------------------- */
+
+
+    /* ---------- Logical Placement ---------- */
+    int         BuildIncidenceMatrix();
+    int         CalLogicalCol();
+    int         CalLogicalRow();
+    int         InsertBasicDevice(Device *device);
+    Level*      CreateNextLevel(Level *preLevel) const;
+    int         ClassifyConnectDeviceByLevel();
+    int         EstimateLogicalRowGap();
+    int         DetermineFirstLevelLogicalRow();
+    int         ForwardPropagateLogicalRow();   // level0 -> level1 -> level2 -> ... -> leveln
+    int         DecideDeviceOrientation();
+    int         DecideDeviceWhetherToReverse();
+    /* --------------------------------------- */
+
 
     /* ----------- Logical Routing ----------- */
-    int  CreateChannels();       // to m_channels
-    int  AssignTrackNumber();    // assign track number to vertical line segment
+    int  CreateChannels();
+    int  AssignTrackNumber();
     /* --------------------------------------- */
+
 
     /* -------- Geometrical Placement -------- */
-    int  DecideDeviceWhetherToReverse();
-    int  DecideDeviceWhetherToReverseIgnoreNoCap();
-    int  DecideDeviceWhetherToReverseIgnoreGCap();
-    int  DecideDeviceWhetherToReverseIgnoreGCCap();
-    int  LinkDeviceForGCCap();     // Ground and Coupled Cap
-    int  CreateSchematicDevices(); // create schematicdevices and schematicterminals
-    int  RenderSchematicDevices(SchematicScene *scene); // render devices to scene
+    int                CalGeometricalCol();
+    int                CalGeometricalRow();
+    int                CreateSchematicDevices();
+    int                RenderSchematicDevices(SchematicScene *scene);
+    SchematicDevice*   CreateSchematicDevice(Device *dev) const;
+    SchematicTerminal* CreateSchematicTerminal(Terminal *ter) const;
     /* --------------------------------------- */
 
+
     /* --------- Geometrical Routing --------- */
-    int  CreateSchematicWires();   // create schematicwires
-    int  RenderSchematicWires(SchematicScene *scene);   // render wires to scene
+    int            CreateSchematicWires();
+    int            RenderSchematicWires(SchematicScene *scene);
+    SchematicWire* CreateSchematicWire(Wire *wire) const;
     /* --------------------------------------- */
 
 
@@ -85,9 +98,9 @@ private:
     Matrix            *m_matrix;
     int               *m_visited;
 
-    QVector<Level*>    m_levels;
-    QVector<Channel*>  m_channels;
-    TablePlotter      *m_levelsPlotter;
+    LevelList          m_levels;
+    ChannelList        m_channels;
+    TablePlotter      *m_levelPlotter;
 
     SDeviceList        m_sdeviceList;
     SWireList          m_swireList;

@@ -24,18 +24,15 @@ int SchematicScene::RenderSchematicDevices(const SDeviceList &devices, int colCo
     /* 1. Change device scale according to col and row count */
     ChangeDeviceScale(colCount, rowCount);
 
-    /* 2. Change device orientation (BUG) */ 
-    ChangeDeviceOrientation(devices);
-
-    /* 3. In order to place all devices at scene center position,
+    /* 2. In order to place all devices at scene center position,
      *    calculate start col and row.
      */
     int startRow = CalStartRow(rowCount);
     int startCol = CalStartCol(colCount);
 
-    /* 4. Set device geometrical position and add to scene */
+    /* 3. Set device geometrical position and add to scene */
     SDeviceList gCaps;
-    int geoCol = 0, geoRow = 0;
+    int sceneCol = 0, sceneRow = 0;
     SchematicDevice *device = nullptr;
     foreach (device, devices) {
         if (device->GroundCap()) {
@@ -47,13 +44,13 @@ int SchematicScene::RenderSchematicDevices(const SDeviceList &devices, int colCo
             if (ignore == IgnoreGCCap) continue;
         }
 
-        geoRow = device->LogicalRow() + startRow;
-        geoCol = device->LogicalCol() * 2 + startCol;
-        device->SetGeometricalPos(/*col*/geoCol, /*row*/geoRow);
-        SetDeviceAt(geoCol, geoRow, device);
+        sceneRow = device->GeometricalRow() + startRow;
+        sceneCol = device->GeometricalCol() + startCol;
+        device->SetScenePos(/*col*/sceneCol, /*row*/sceneRow);
+        SetDeviceAt(sceneCol, sceneRow, device);
     }
 
-    /* 5. Render extra widgets, such as gnd, groundCap, coupledCap */
+    /* 4. Render extra widgets, such as gnd, groundCap, coupledCap */
     if (ignore == IgnoreGCCap) RenderCoupledCaps(m_cCapDeviceList);
     if (ignore == IgnoreGCap || ignore == IgnoreGCCap)
         RenderGroundCaps(m_gCapDeviceList);
@@ -92,7 +89,7 @@ qreal SchematicScene::CalDeviceScale(int colCount, int rowCount)
 
 int SchematicScene::CalStartRow(int rowCount) const
 {
-    int h = height();
+    qreal h = height();
     int totalRowCount = (h - 2 * m_margin) / m_gridH;
     if (totalRowCount <= rowCount)
         return 0;
@@ -102,7 +99,7 @@ int SchematicScene::CalStartRow(int rowCount) const
 
 int SchematicScene::CalStartCol(int colCount) const
 {
-    int w = width();
+    qreal w = width();
     int totalColCount = (w - 2 * m_margin) / m_gridW;
     if (totalColCount <= colCount)
         return 0;
@@ -134,40 +131,13 @@ void SchematicScene::UpdateWireScale(qreal newScale)
     }
 }
 
-void SchematicScene::ChangeDeviceOrientation(const SDeviceList &devices)
-{
-    SchematicTerminal *negTer = nullptr;
-    // Orientation orien = Horizontal;
-
-    foreach (SchematicDevice *dev, devices) {
-        switch (dev->GetDeviceType()) {
-            case RESISTOR:
-            case CAPACITOR:
-            case INDUCTOR:
-            case ISRC:
-            case VSRC:
-                negTer = dev->GetTerminal(Negative);
-            default:;
-        }
-        if (NOT negTer) continue;
-
-        // if (dev->GroundCap())
-        //     orien = Vertical;
-        
-        // dev->SetOrientation(orien);
-
-        dev->SetOrientation(Horizontal);
-    }
-}
-
 /* row, col is the geometrical's pos, not logical col and row */
 /* consider scene margin */
 void SchematicScene::SetDeviceAt(int col, int row, SchematicDevice *device)
 {
-    qreal xPos = col * m_gridW + m_margin;
-    qreal yPos = row * m_gridH + m_margin;
+    qreal xPos = (col + 0.5) * m_gridW + m_margin;
+    qreal yPos = (row + 0.5) * m_gridH + m_margin;
     device->setPos(xPos, yPos);
-    // device->SetGeometricalPos(/*col*/col, /*row*/row);
     device->SetShowTerminal(m_showTerminal);
     device->SetScale(m_itemScale);
     addItem(device);
@@ -207,10 +177,12 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                     gnd = InsertSchematicDevice(GND, gndPos);
                     gnd->SetGndConnectTerminal(terminal);
                     gnd->SetOrientation(Vertical);
+                    gnd->SetScenePos(device->SceneCol(), 0);
 
                     gndTer = gnd->GetTerminal(General);
                     wire = new SchematicWire(device, gnd,
                             terminal, gndTer);
+                    wire->SetTrack(-1);
                     m_gndList.push_back(gnd);
                     m_hasGndWireList.push_back(wire);
                 }
@@ -223,10 +195,12 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                     gnd = InsertSchematicDevice(GND, gndPos);
                     gnd->SetGndConnectTerminal(terminal);
                     gnd->SetOrientation(Vertical);
+                    gnd->SetScenePos(device->SceneCol(), 0);
 
                     gndTer = gnd->GetTerminal(General);
                     wire = new SchematicWire(device, gnd,
                             terminal, gndTer);
+                    wire->SetTrack(-1);
                     m_gndList.push_back(gnd);
                     m_hasGndWireList.push_back(wire);
                 }
@@ -306,8 +280,8 @@ int SchematicScene::RenderSchematicWires(const SWireList &wires)
     /* 1. assign geometrical col. */
     SchematicWire *wire = nullptr;
     foreach (wire, wires) {
-        int geoCol = wire->LogicalCol() * 2 + 1;
-        wire->SetGeometricalCol(geoCol);
+        // int geoCol = wire->LogicalCol() * 2 + 1;
+        // wire->SetGeometricalCol(geoCol);
         if (wire->HasGroundCap())  m_hasGCapWireList.push_back(wire);
         if (wire->HasCoupledCap()) m_hasCCapWireList.push_back(wire);
     }
@@ -325,22 +299,75 @@ void SchematicScene::AddWiresToScene(const SWireList &wires)
 {
     SchematicWire *wire = nullptr;
     SchematicTerminal *terminal = nullptr;
-    QVector<QPointF> wirePoints;
 
     foreach (wire, wires) {
         terminal = wire->StartTerminal();
-        wirePoints.push_back(terminal->ScenePos());
         terminal->AddWire(wire);
 
         terminal = wire->EndTerminal();
-        wirePoints.push_back(terminal->ScenePos());
         terminal->AddWire(wire);
 
-        wire->SetWirePathPoints(wirePoints);
+        wire->SetWirePathPoints(CreateWirePathPoints(wire));
         wire->SetScale(m_itemScale);
         addItem(wire);
-        wirePoints.clear();
     }
+}
+
+QVector<QPointF> SchematicScene::CreateWirePathPoints(SchematicWire *wire) const
+{
+    Q_ASSERT(wire);
+
+    QVector<QPointF> points;
+    QPointF startPoint, endPoint;
+    startPoint = wire->StartTerminal()->ScenePos();
+    endPoint = wire->EndTerminal()->ScenePos();
+    int track = wire->Track();
+
+    if (track == -1) { // horizontal wire or connect to gnd
+        points.push_back(startPoint);
+        points.push_back(endPoint);
+        return points;
+    }
+
+    qreal totalWidth = m_gridW * wire->HoldColCount();
+    int trackCount = wire->TrackCount();
+
+#ifdef DEBUGx
+    qDebug() << "track=" << track << "trackCount=" << trackCount
+             << wire->StartDevice()->Name() << wire->EndDevice()->Name() << endl;
+#endif
+
+    Q_ASSERT(trackCount > 0);
+
+    qreal gap = totalWidth / (trackCount + 1);
+    int sceneCol = wire->StartDevice()->SceneCol() + 1;
+
+#ifdef DEBUGx
+    qDebug() << "wire sceneCol=" << sceneCol;
+    qDebug() << "startDevSceneCol=" << wire->StartDevice()->SceneCol();
+    qDebug() << "endDevSceneCol=" << wire->EndDevice()->SceneCol();
+    qDebug() << "holdColCount=" << wire->HoldColCount();
+#endif
+
+    wire->SetSceneCol(sceneCol);
+
+    qreal startX = sceneCol * m_gridW + m_margin; 
+    qreal sceneX = startX + (track + 1) * gap;
+
+    QPointF segPoint1 = QPointF(sceneX, startPoint.y());
+    QPointF segPoint2 = QPointF(sceneX, endPoint.y());
+
+#ifdef DEBUGx
+    qDebug() << "start=" << startPoint << ", end=" << endPoint
+             << "startX=" << startX << ", gridW=" << m_gridW << endl;
+#endif
+
+    points.push_back(startPoint);
+    points.push_back(segPoint1);
+    points.push_back(segPoint2);
+    points.push_back(endPoint);
+
+    return points;
 }
 
 void SchematicScene::HideGroundCaps(bool hide)

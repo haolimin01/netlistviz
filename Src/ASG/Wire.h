@@ -32,6 +32,10 @@ public:
     bool TrackGiven() const   { return m_trackGiven; }
     bool HasGCap() const;
     bool HasCCap() const;
+    bool IsHorizontal() const;
+    bool HasCross(Wire *otherWire) const;
+    bool CouldBeMerged(Wire *otherWire) const;
+    bool CouldBeSameTrack(Wire *otherWire) const;
 
     SchematicDevice*    FromSDevice() const;
     SchematicDevice*    ToSDevice() const;
@@ -52,7 +56,6 @@ private:
     bool        m_trackGiven;
 
     friend class Channel;
-    friend class SchematicWire;
 };
 
 #endif //  NETLISTVIZ_ASG_WIRE_H
