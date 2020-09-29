@@ -113,7 +113,6 @@ int ASG::CreateSchematicDevices()
         }
         /* Initialize schematicDevice (Draw device shape, set annotation and terminals pos) */
         sdevice->Initialize();
-        sdevice->SetOrientation(device->GetOrientation()); // must be here! ugly...
         m_sdeviceList.push_back(sdevice);
     }
 
@@ -130,11 +129,12 @@ SchematicDevice* ASG::CreateSchematicDevice(Device *dev) const
     Q_ASSERT(dev);
 
     SchematicDevice *sdev = new SchematicDevice();
-    sdev->SetGeometricalPos(/*col*/dev->GeometricalCol(), /*row*/dev->GeometricalRow());
-    sdev->SetReverse(dev->Reverse());
-    sdev->SetDeviceType(dev->GetDeviceType());
     sdev->SetName(dev->Name());
     sdev->SetId(dev->Id());
+    sdev->SetDeviceType(dev->GetDeviceType());
+    sdev->SetReverse(dev->Reverse());
+    sdev->SetGeometricalPos(/*col*/dev->GeometricalCol(), /*row*/dev->GeometricalRow());
+    sdev->SetOrientation(dev->GetOrientation()); 
     dev->SetSchematicDevice(sdev);
 
     return sdev;
