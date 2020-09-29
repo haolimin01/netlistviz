@@ -848,7 +848,7 @@ void MainWindow::ParseNetlist()
         return;
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     m_ckt->PrintCircuit();
 #endif
     ShowInfoMsg(tr("Parse Netlist successfully."));

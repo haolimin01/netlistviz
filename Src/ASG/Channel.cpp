@@ -7,13 +7,11 @@
 Channel::Channel(int id)
 {
     m_id = id;
-    m_geoCol = 0;
 }
 
 Channel::Channel()
 {
     m_id = 0;
-    m_geoCol = 0;
 }
 
 Channel::~Channel()
@@ -106,25 +104,11 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
             wire->SetTrack(trackIndex);
         trackIndex++;
 
-#ifdef DEBUGx
-        printf("xxxxxxxxxx Same Track Wires xxxxxxxxxx\n");
-        foreach (Wire *w, sameTrackWires)
-            qInfo() << "(" << w->m_fromDevice->Name() << "," << w->m_toDevice->Name();
-        printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n");
-#endif
-
         sameTrackWires.clear();
         hasRest = false;
     }
 
     m_trackCount = trackIndex;
-}
-
-void Channel::SetGeometricalCol(int col)
-{
-    m_geoCol = col;
-    foreach (Wire *wire, m_wires)
-        wire->SetGeometricalCol(col);
 }
 
 bool Channel::CouldBeSameTrackWithWires(const WireList &wires, Wire *wire) const
@@ -139,6 +123,14 @@ bool Channel::CouldBeSameTrackWithWires(const WireList &wires, Wire *wire) const
     return true;
 }
 
+int Channel::HoldColCount() const
+{
+    int count = m_trackCount * 1.0 / MAX_ONE_COL_WIRE_COUNT + 0.5;
+    if (count < 1)
+        count = 1;
+    return count;
+}
+
 void Channel::Print() const
 {
     printf("--------------- Channel %d ---------------\n", m_id);
@@ -146,11 +138,13 @@ void Channel::Print() const
     foreach (Wire *wire, m_wires) {
         tmp += (wire->m_fromDevice->Name() + "(" + QString::number(wire->m_fromDevice->LogicalRow())+ "), ");
         tmp += (wire->m_toDevice->Name() + "(" + QString::number(wire->m_toDevice->LogicalRow()) + "), ");
-        tmp += ("track(" + QString::number(wire->m_track) + ")");
+        tmp += ("track(" + QString::number(wire->m_track) + "), ");
         qInfo() << tmp;
         tmp = "";
     }
     qInfo() << "trackCount(" << m_trackCount << ")";
+    qInfo() << "holdColCount(" << HoldColCount() << ")";
+    qInfo() << "wireCount(" << m_wires.size() << ")";
 
     printf("------------------------------------------\n");
 }

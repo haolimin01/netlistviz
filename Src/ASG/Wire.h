@@ -29,8 +29,6 @@ public:
     int  Track() const        { return m_track; }
     void SetChannelId(int id) { m_channelId = id; }
     int  ChannelId() const    { return m_channelId; }
-    void SetGeometricalCol(int col) { m_geoCol = col; }
-    int  GeometricalCol() const  { return m_geoCol; }
     bool TrackGiven() const   { return m_trackGiven; }
     bool HasGCap() const;
     bool HasCCap() const;
@@ -48,7 +46,6 @@ private:
     DISALLOW_COPY_AND_ASSIGN(Wire);
 
     int         m_track;
-    int         m_geoCol;
 
     Device     *m_fromDevice;
     Device     *m_toDevice;

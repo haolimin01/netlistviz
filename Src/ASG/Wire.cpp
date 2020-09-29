@@ -11,7 +11,7 @@ Wire::Wire(Device *fromDevice, Terminal *fromTerminal,
     m_toDevice = toDevice;
     m_toTerminal = toTerminal;
     m_track = -1;
-    m_geoCol = 0;
+    // m_geoCol = 0;
     m_channelId = 0;
     m_trackGiven = false;
 }
@@ -131,13 +131,21 @@ bool Wire::HasCross(Wire *otherWire) const
     if (m1 == 0) // could be merged
         return false;
 
+#if 0
     int m2 = 0;
     if (thisFromTerRow < otherFromTerRow) {
         m2 = otherToTerRow - thisFromTerRow;
     } else {
         m2 = thisToTerRow - otherFromTerRow;
     }
-    if (m2 < 0)
+    if (m2 <= 0)
+        return true;
+    else
+        return false;
+#endif
+
+    int m2 = (thisFromTerRow - otherToTerRow) * (otherFromTerRow - thisToTerRow);
+    if (m2 >= 0)
         return true;
     else
         return false;

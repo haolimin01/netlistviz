@@ -40,11 +40,12 @@ int ASG::CreateSchematicWires()
         foreach (wire, channel->Wires()) {
             swire = CreateSchematicWire(wire);
             swire->SetTrackCount(channel->TrackCount());
+            swire->SetHoldColCount(channel->HoldColCount());
             m_swireList.push_back(swire);
         }
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (SchematicWire *w, m_swireList) {
         w->Print();
     }
@@ -58,7 +59,6 @@ SchematicWire* ASG::CreateSchematicWire(Wire *wire) const
     SchematicWire *swire = new SchematicWire(wire->FromSDevice(), wire->ToSDevice(),
             wire->FromSTerminal(), wire->ToSTerminal());
     swire->SetTrack(wire->Track());
-    swire->SetGeometricalCol(wire->GeometricalCol());
 
     return swire;
 }

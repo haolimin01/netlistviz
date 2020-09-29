@@ -30,7 +30,7 @@ public:
     WireList  Wires() const { return m_wires; }
     int       TrackCount() const { return m_trackCount; }
     bool      Empty() const { return (m_wires.size() == 0); }
-    void      SetGeometricalCol(int col);
+    int       HoldColCount() const; // hold colCount on scene this channel
 
     void Print() const;
 
@@ -41,7 +41,6 @@ private:
 
     WireList   m_wires;
     int        m_id;
-    int        m_geoCol;
     int        m_trackCount;
 };
 

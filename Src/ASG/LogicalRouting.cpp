@@ -18,7 +18,7 @@ int ASG::LogicalRouting()
     if (error)
         return ERROR;
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Channel *ch, m_channels)
         ch->Print();
 #endif
@@ -59,7 +59,7 @@ int ASG::CreateChannels()
         channelIndex++;
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Channel *ch, m_channels)
         ch->Print();
 #endif

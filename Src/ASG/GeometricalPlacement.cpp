@@ -25,7 +25,7 @@ int ASG::GeometricalPlacement(SchematicScene *scene)
     if (error)
         return ERROR;
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Level *level, m_levels)
         level->PrintGeometricalPos();
 #endif
@@ -55,8 +55,7 @@ int ASG::CalGeometricalCol()
         level->AssignDeviceGeometricalCol(colIndex);
         colIndex++;
         ch = m_channels.at(i);
-        ch->SetGeometricalCol(colIndex);
-        colIndex++;
+        colIndex += ch->HoldColCount();
     }
 
     m_levels.back()->AssignDeviceGeometricalCol(colIndex);
@@ -79,7 +78,7 @@ int ASG::CalGeometricalRow()
             minLogRow = dev->LogicalRow();
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     qInfo() << "Min LogicalRow =" << minLogRow;
 #endif
 
@@ -118,7 +117,7 @@ int ASG::CreateSchematicDevices()
         m_sdeviceList.push_back(sdevice);
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (sdevice, m_sdeviceList)
         sdevice->Print();
 #endif

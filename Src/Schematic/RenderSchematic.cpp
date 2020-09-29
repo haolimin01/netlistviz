@@ -329,10 +329,10 @@ QVector<QPointF> SchematicScene::CreateWirePathPoints(SchematicWire *wire) const
         return points;
     }
 
-    qreal totalWidth = m_gridW;
+    qreal totalWidth = m_gridW * wire->HoldColCount();
     int trackCount = wire->TrackCount();
 
-#ifdef DEBUG
+#ifdef DEBUGx
     qDebug() << "track=" << track << "trackCount=" << trackCount
              << wire->StartDevice()->Name() << wire->EndDevice()->Name() << endl;
 #endif
@@ -343,7 +343,10 @@ QVector<QPointF> SchematicScene::CreateWirePathPoints(SchematicWire *wire) const
     int sceneCol = wire->StartDevice()->SceneCol() + 1;
 
 #ifdef DEBUGx
-    qDebug() << "wire sceneCol=" << sceneCol << endl;
+    qDebug() << "wire sceneCol=" << sceneCol;
+    qDebug() << "startDevSceneCol=" << wire->StartDevice()->SceneCol();
+    qDebug() << "endDevSceneCol=" << wire->EndDevice()->SceneCol();
+    qDebug() << "holdColCount=" << wire->HoldColCount();
 #endif
 
     wire->SetSceneCol(sceneCol);

@@ -47,9 +47,9 @@ public:
     int       Track() const { return m_track; }
     int       SetTrackCount(int n) { Q_ASSERT(n >= 0); m_trackCount = n; }
     int       TrackCount() const { return m_trackCount; }
-    void      SetGeometricalCol(int col) { m_geoCol = col; }
-    int       GeometricalCol() const { return m_geoCol; }
     void      SetSceneCol(int col) { m_sceneCol = col; }
+    void      SetHoldColCount(int count) { m_holdColCount = count; }
+    int       HoldColCount() const { return m_holdColCount; }
     int       SceneCol() const { return m_sceneCol; }
     void      UpdatePosition(SchematicTerminal *terminal); // terminal is unique
     void      SetScale(qreal scale) { m_lineWidth = DFT_Wire_W * scale; }
@@ -76,10 +76,10 @@ private:
     qreal              m_lineWidth;
 
     /* For ASG */
-    int                m_track;      // track number
-    int                m_geoCol;
-    int                m_sceneCol;   // real col in scene
-    int                m_trackCount; // this channel track count
+    int                m_track;        // track number
+    int                m_sceneCol;     // real col in scene
+    int                m_trackCount;   // this channel track count
+    int                m_holdColCount; // hold col count on scene
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICWIRE_H

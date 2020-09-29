@@ -78,7 +78,7 @@ int ASG::BuildIncidenceMatrix()
         }
     }
 #ifdef DEBUG
-    m_matrix->Print();
+    // m_matrix->Print();
     m_matrix->Plot();
 #endif
     return OKAY;
@@ -124,7 +124,7 @@ int ASG::InsertBasicDevice(Device *device)
 
 int ASG::CalLogicalCol()
 {
-#ifdef DEBUG
+#ifdef TRACE
     qInfo() << LINE_INFO << endl;
 #endif
 
@@ -140,7 +140,7 @@ int ASG::CalLogicalCol()
     level = new Level(currLevelId);
     level->AddDevices(m_ckt->FirstLevelDeviceList());
 
-#ifdef DEBUG
+#ifdef DEBUGx
     level->PrintAllDevices();
 #endif
 
@@ -161,14 +161,14 @@ int ASG::CalLogicalCol()
         if (level->Empty()) break;
         level->SetId(currLevelId);
         currLevelId++;
-#ifdef DEBUG
+#ifdef DEBUGx
         level->PrintAllDevices();
 #endif
         m_levels.push_back(level);
         currDeviceNumber += level->AllDeviceCount();
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     qInfo() << "total device(" << totalDeviceNumber << "), "
             << "current device(" << currDeviceNumber << ")" << endl;
 #endif
@@ -208,7 +208,7 @@ int ASG::ClassifyConnectDeviceByLevel()
     foreach (Device *dev, m_ckt->GetDeviceList())
         dev->ClassifyConnectDeviceByLevel();
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Level *level, m_levels)
         level->PrintAllConnections();
 #endif
@@ -363,7 +363,7 @@ int ASG::ForwardPropagateLogicalRow()
         level->AssignDeviceLogicalRow(); // assign logical row to devices
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Level *level, m_levels)
         level->PrintLogicalPos();
 #endif
@@ -376,7 +376,7 @@ int ASG::DecideDeviceOrientation()
     foreach (Device *dev, m_ckt->GetDeviceList())
         dev->DecideOrientationByPredecessors();
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Level *level, m_levels)
         level->PrintOrientation();
 #endif
@@ -394,7 +394,7 @@ int ASG::DecideDeviceWhetherToReverse()
             dev->DecideReverseBySuccessors();
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Level *level, m_levels)
         level->PrintReverse();
 #endif

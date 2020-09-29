@@ -78,8 +78,9 @@ void Level::AssignDeviceLogicalRow()
         currMaxRow = m_rows.back();
 
         if (row < currMaxRow) {
-            RowsFlexibleShiftUpBy(m_rows, currMaxRow - row);
-            row = m_rows.back() + m_rowGap;
+            RowsFlexibleShiftUpBy(m_rows, (currMaxRow - row) / 2);
+            // row = m_rows.back() + m_rowGap;
+            row = currMaxRow + m_rowGap;
             currMaxRow = row;
             m_rows.push_back(currMaxRow);
             continue;
@@ -94,7 +95,8 @@ void Level::AssignDeviceLogicalRow()
         /* row == currMxRow */
         RowsFlexibleShiftUpBy(m_rows, m_rowGap);
         row = currMaxRow + m_rowGap;
-        m_rows.push_back(row);
+        currMaxRow = row;
+        m_rows.push_back(currMaxRow);
     }
 
     Q_ASSERT(m_rows.size() == m_devices.size());

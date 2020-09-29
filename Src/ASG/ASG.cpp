@@ -109,7 +109,7 @@ int ASG::LinkDevice()
         }
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     printf("--------------- Connect Devices ---------------\n");
     QString tmp = "";
     foreach (Device *dev, m_ckt->GetDeviceList()) {
