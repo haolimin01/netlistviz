@@ -349,14 +349,6 @@ void SchematicDevice::SetOrientation(Orientation orien)
         }
     }
 
-#if 0
-    if (orien == Vertical) {
-        if (m_reverse) {
-            dx += m_annotText->boundingRect().height() / 2 + 10;
-        }
-    }
-#endif
-
     m_annotRelPos.rx() += dx;
     m_annotRelPos.ry() += dy;
 
@@ -560,9 +552,10 @@ void SchematicDevice::SetReverse(bool reverse)
 {
     if (m_reverse != reverse) {
         setRotation(180 + rotation());
-        SetAnnotRelPos();
+        // SetAnnotRelPos();
+        // ugly implementation
         m_annotRelPos.rx() -= m_annotText->boundingRect().height();
-        m_annotRelPos.ry() += (m_annotText->boundingRect().width() / 2 + 5);
+        m_annotRelPos.ry() += (m_annotText->boundingRect().width() / 2 + 6);
         m_annotText->setPos(mapToScene(m_annotRelPos));
     }
     m_reverse = reverse;
