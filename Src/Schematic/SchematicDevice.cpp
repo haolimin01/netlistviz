@@ -24,6 +24,7 @@ SchematicDevice::SchematicDevice()
     m_geoCol = 0;
     m_geoRow = 0;
     m_devOrien = Vertical;
+    m_annotText = new QGraphicsTextItem();
 
     /* ASG entrance */
     /* add terminals by AddTerminal() */
@@ -42,7 +43,7 @@ SchematicDevice::SchematicDevice(DeviceType type, QMenu *contextMenu,
     m_geoCol = 0;
     m_geoRow = 0;
     m_devOrien = Vertical;
-
+    m_annotText = new QGraphicsTextItem();
     setTransform(transform);
 
     /* Insert SchematicDevice entrance */
@@ -108,14 +109,11 @@ void SchematicDevice::Initialize()
     m_sceneCol = 0;
     m_sceneRow = 0;
 
-    CreateAnnotation(m_name);
+    // CreateAnnotation(m_name);
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-
-    if (m_reverse)
-        setRotation(180);
 
     setZValue(0);
 }
@@ -141,6 +139,12 @@ void SchematicDevice::CreateTerminalsBySelf()
             break;
         default:;
     }
+}
+
+void SchematicDevice::SetName(const QString &name)
+{
+    m_name = name;
+    CreateAnnotation(name);
 }
 
 QPixmap SchematicDevice::Image()
@@ -242,7 +246,7 @@ QRectF SchematicDevice::DashRect() const
 
 void SchematicDevice::CreateAnnotation(const QString &text)
 {
-    m_annotText = new QGraphicsTextItem();
+    // m_annotText = new QGraphicsTextItem();
     m_annotText->setHtml(text);
 
     m_annotText->setFlag(QGraphicsItem::ItemIsMovable, true);
@@ -306,8 +310,10 @@ QVariant SchematicDevice::itemChange(GraphicsItemChange change, const QVariant &
     if (change == ItemSceneChange) {
         scene()->removeItem(m_annotText);
     } else if (change == ItemSceneHasChanged) {
-        scene()->addItem(m_annotText);
-        m_annotText->setPos(mapToScene(m_annotRelPos));
+        if (m_annotText) {
+            scene()->addItem(m_annotText);
+            m_annotText->setPos(mapToScene(m_annotRelPos));
+        }
     } else if (change == ItemPositionHasChanged) {
         m_annotText->setPos(mapToScene(m_annotRelPos));
     }
@@ -327,7 +333,6 @@ void SchematicDevice::SetOrientation(Orientation orien)
     }
 
     setRotation(angle);
-
     m_devOrien = orien;
 
     /* For annotation text */
@@ -545,8 +550,14 @@ void SchematicDevice::SetGeometricalPos(int col, int row)
 
 void SchematicDevice::SetReverse(bool reverse)
 {
-    if (m_reverse != reverse)
-        setRotation(180);
+    if (m_reverse != reverse) {
+        setRotation(180 + rotation());
+        // SetAnnotRelPos();
+        // ugly implementation
+        m_annotRelPos.rx() -= m_annotText->boundingRect().height();
+        m_annotRelPos.ry() += (m_annotText->boundingRect().width() / 2 + 6);
+        m_annotText->setPos(mapToScene(m_annotRelPos));
+    }
     m_reverse = reverse;
 }
 

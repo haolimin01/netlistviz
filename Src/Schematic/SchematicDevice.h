@@ -36,7 +36,7 @@ public:
     DeviceType   GetDeviceType() const { return m_deviceType; }
     void         SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
     void         AddTerminal(TerminalType type, SchematicTerminal *terminal);
-    void         SetName(const QString &name) { m_name = name; }
+    void         SetName(const QString &name);
     QString      Name() const { return m_name; }
     void         SetId(int id) { m_id = id; }
     void         SetShowTerminal(bool show) { m_showTerminal = show; }
