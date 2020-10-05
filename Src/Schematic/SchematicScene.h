@@ -52,6 +52,7 @@ public:
     void    HideGroundCaps(bool hide);
     void    HideCoupledCaps(bool hide);
     void    HideGnds(bool hide);
+    void    SetShowSmallGnd(bool showSmall);
     QPointF Center() const;
 
 
@@ -120,6 +121,7 @@ private:
 
     bool                        m_showTerminal;
     bool                        m_showBackground;
+    bool                        m_showSmallGnd;
 
     qreal                       m_itemScale;
     qreal                       m_gridW;

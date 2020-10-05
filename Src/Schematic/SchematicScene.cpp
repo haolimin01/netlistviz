@@ -30,6 +30,7 @@ void SchematicScene::InitVariables()
     m_deviceColor = Qt::black;
     m_showTerminal = false;
     m_showBackground = true;
+    m_showSmallGnd = false;
 
     m_startDevice = nullptr;
     m_startTerminal = nullptr;
@@ -82,6 +83,25 @@ void SchematicScene::SetShowTerminal(bool show)
             device = qgraphicsitem_cast<SchematicDevice*> (item);
             device->SetShowTerminal(show);
             device->update(); 
+        }
+    }
+}
+
+void SchematicScene::SetShowSmallGnd(bool showSmallGnd)
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << showSmallGnd << endl;
+#endif
+
+    m_showSmallGnd = showSmallGnd;
+
+    SchematicDevice *device = nullptr;
+    foreach (QGraphicsItem *item, items()) {
+        if (item->type() == SchematicDevice::Type) {
+            device = qgraphicsitem_cast<SchematicDevice*> (item);
+            if (device->GetDeviceType() != GND) continue;
+            device->SetAsSmallGnd(showSmallGnd);
+            device->update();
         }
     }
 }
@@ -217,6 +237,8 @@ SchematicDevice* SchematicScene::InsertSchematicDevice(DeviceType type,
     dev->setPos(pos);
     dev->SetShowTerminal(m_showTerminal);
     dev->setScale(m_itemScale);
+    if (type == GND)
+        dev->SetAsSmallGnd(m_showSmallGnd);
     addItem(dev);
     emit DeviceInserted(dev);
 

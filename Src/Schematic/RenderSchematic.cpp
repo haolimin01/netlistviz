@@ -173,7 +173,7 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                 if (terminal->ConnectToGnd()) {
                     devTerPos = terminal->ScenePos();
                     gndPos.rx() = devTerPos.x();
-                    gndPos.ry() = devTerPos.y() + DFT_DIS * m_itemScale;
+                    gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
                     gnd = InsertSchematicDevice(GND, gndPos);
                     gnd->SetGndConnectTerminal(terminal);
                     gnd->SetOrientation(Vertical);
@@ -191,7 +191,7 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                 if (terminal->ConnectToGnd()) {
                     devTerPos = terminal->ScenePos();
                     gndPos.rx() = devTerPos.x();
-                    gndPos.ry() = devTerPos.y() + DFT_DIS * m_itemScale;
+                    gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
                     gnd = InsertSchematicDevice(GND, gndPos);
                     gnd->SetGndConnectTerminal(terminal);
                     gnd->SetOrientation(Vertical);

@@ -39,6 +39,7 @@ const static int DFT_MAX_DEVICE_ROW_GAP = 1;
 const static int DFT_Grid_W = 60;
 const static int DFT_Grid_H = 60;
 const static int DFT_DIS = 15;
+const static int DFT_GND_DIS = 10;
 const static int Scene_Margin = 50;
 const static int Scene_Available = 1250;
 const static int Scene_W = Scene_Margin + 2 * Scene_Available;

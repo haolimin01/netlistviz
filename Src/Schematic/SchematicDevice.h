@@ -56,6 +56,7 @@ public:
     int          GeometricalCol() const { return m_geoCol; }
     int          GeometricalRow() const { return m_geoRow; }
     void         SetGeometricalPos(int col, int row);
+    void         SetAsSmallGnd(bool smallGnd);
 
     SchematicTerminal* GetTerminal(TerminalType type) const;
     STerminalTable     GetTerminalTable() const { return m_terminals; }
@@ -88,6 +89,7 @@ private:
     /* For annotation text */
     void         CreateAnnotation(const QString &text);
     void         SetAnnotRelPos();
+    QRectF       GndTerminalRect(bool gnd) const; // gnd or smallGnd rect
 
     void         DrawResistor();
     void         DrawCapacitor();
@@ -95,6 +97,7 @@ private:
     void         DrawIsrc();
     void         DrawVsrc();
     void         DrawGnd();
+    void         DrawSmallGnd();
 
     QMenu             *m_contextMenu;
     QColor             m_color;        // device color
@@ -105,6 +108,7 @@ private:
     bool               m_isDevice;     // (gnd is not device)
     STerminalTable     m_terminals;    // type : SchematicTerminal Ptr
     bool               m_showTerminal; // draw terminal rect on scene
+    bool               m_smallGnd;     // whether to be small gnd
 
     /* Copy from Circuit Device */
     int                m_id;
