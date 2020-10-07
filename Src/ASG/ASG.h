@@ -19,9 +19,11 @@ class CircuitGraph;
 class Level;
 class Wire;
 class Channel;
+class Dot;
 class SchematicDevice;
 class SchematicScene;
 class SchematicWire;
+class SchematicDot;
 
 
 class ASG
@@ -69,6 +71,7 @@ private:
     /* ----------- Logical Routing ----------- */
     int  CreateChannels();
     int  AssignTrackNumber();
+    int  CreateDots();
     /* --------------------------------------- */
 
 
@@ -86,6 +89,9 @@ private:
     int            CreateSchematicWires();
     int            RenderSchematicWires(SchematicScene *scene);
     SchematicWire* CreateSchematicWire(Wire *wire) const;
+    int            CreateSchematicDots();
+    SchematicDot*  CreateSchematicDot(Dot *dot) const;
+    int            RenderSchematicDots(SchematicScene *scene);
     /* --------------------------------------- */
 
 
@@ -104,6 +110,7 @@ private:
 
     SDeviceList        m_sdeviceList;
     SWireList          m_swireList;
+    SDotList           m_sdotList;
 
     bool               m_logDataDestroyed;
     IgnoreCap          m_ignoreCap;

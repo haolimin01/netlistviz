@@ -53,12 +53,14 @@ ASG::~ASG()
     if (m_levelPlotter)
         delete m_levelPlotter;
 
+    /* dots are destroyed in channel */
     foreach (Channel *channel, m_channels)
         delete channel;
     m_channels.clear();
 
     m_sdeviceList.clear();
     m_swireList.clear();
+    m_sdotList.clear();
 }
 
 void ASG::SetCircuitgraph(CircuitGraph *ckt)

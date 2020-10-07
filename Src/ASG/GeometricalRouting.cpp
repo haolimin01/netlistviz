@@ -3,7 +3,9 @@
 #include "Channel.h"
 #include "SchematicWire.h"
 #include "Schematic/SchematicScene.h"
+#include "Schematic/SchematicDot.h"
 #include "Wire.h"
+#include "Dot.h"
 
 int ASG::GeometricalRouting(SchematicScene *scene)
 {
@@ -15,11 +17,19 @@ int ASG::GeometricalRouting(SchematicScene *scene)
     if (error)
         return ERROR;
 
-    DestroyLogicalData();
-
     error = RenderSchematicWires(scene);
     if (error)
         return ERROR;
+
+    error = CreateSchematicDots();
+    if (error)
+        return ERROR;
+
+    error = RenderSchematicDots(scene);
+    if (error)
+        return ERROR;
+
+    DestroyLogicalData();
 
     return OKAY;
 }
@@ -66,4 +76,52 @@ SchematicWire* ASG::CreateSchematicWire(Wire *wire) const
 int ASG::RenderSchematicWires(SchematicScene *scene)
 {
     return scene->RenderSchematicWires(m_swireList);
+}
+
+int ASG::CreateSchematicDots()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    m_sdotList.clear();
+
+    SchematicDot *sdot = nullptr;
+    Dot *dot = nullptr;
+    Channel *ch = nullptr;
+
+    foreach (ch, m_channels) {
+        foreach (dot, ch->Dots()) {
+            sdot = CreateSchematicDot(dot);
+            sdot->SetTrackCount(ch->TrackCount());
+            sdot->SetHoldColCount(ch->HoldColCount());
+            m_sdotList.push_back(sdot);
+        }
+    }
+
+#ifdef DEBUGx
+    printf("--------------- Schematic Dots --------------\n");
+
+    foreach (SchematicDot *sdot, m_sdotList)
+        sdot->Print();
+
+    printf("---------------------------------------------\n");
+#endif
+
+    return OKAY;
+}
+
+SchematicDot* ASG::CreateSchematicDot(Dot *dot) const
+{
+    SchematicDot *sdot = new SchematicDot();
+    sdot->SetTerminal(dot->STerminal());
+    sdot->SetTrack(dot->Track());
+    sdot->SetGeometricalCol(dot->GeometricalCol());
+
+    return sdot;
+}
+
+int ASG::RenderSchematicDots(SchematicScene *scene)
+{
+    return scene->RenderSchematicDots(m_sdotList);
 }

@@ -97,6 +97,7 @@ void SchematicDevice::Initialize()
         case GND:
             m_devOrien = Vertical;
             DrawGnd();
+            // DrawSmallGnd();
             m_isDevice = false;
             break;
         default:;
@@ -108,7 +109,7 @@ void SchematicDevice::Initialize()
     m_gndConnectTerminal = nullptr;
     m_sceneCol = 0;
     m_sceneRow = 0;
-
+    m_smallGnd = false;
     // CreateAnnotation(m_name);
 
     setFlag(QGraphicsItem::ItemIsMovable, true);
@@ -182,13 +183,17 @@ QPainterPath SchematicDevice::shape() const
     cit = m_terminals.constBegin();
     for (; cit != m_terminals.constEnd(); ++ cit)
         path.addRect(cit.value()->Rect());
-
+#if 0
     if (m_deviceType == GND) {
-        int halfTerSize = TerminalSize / 2;
-        path.addRect(QRectF(-12, -10 + halfTerSize, 24, (10 - halfTerSize) * 2));
+        // int halfTerSize = TerminalSize / 2;
+        // path.addRect(QRectF(-12, -10 + halfTerSize, 24, (10 - halfTerSize) * 2));
+        path.addRect(QRectF(-3.5, -4, 6, 6));
     } else {
         path.addRect(DashRect());
     }
+#endif
+
+    path.addRect(DashRect());
 
     return path;
 }
@@ -238,7 +243,11 @@ QRectF SchematicDevice::DashRect() const
         case VSRC:
             return QRectF(-12, -BASE_LEN + halfTerSize, 24, (BASE_LEN - halfTerSize) * 2);
         case GND:
-            return QRect(-10, -4, 20, 16);
+            if (m_smallGnd)
+                // return QRectF(-3.5, -4, 6, 6);
+                return QRectF(-6, -6, 12, 12);
+            else
+                return QRect(-10, -4, 20, 16);
         default:
             return QRect(-BASE_LEN, -BASE_LEN, BASE_LEN*2, BASE_LEN*2);
     }
@@ -511,7 +520,7 @@ void SchematicDevice::DrawVsrc()
     path.lineTo(0, upsignref + 2);
     path.moveTo(signl, lowsignref);
     path.lineTo(signr, lowsignref);
-    
+
     path.moveTo(0, cb);
     path.lineTo(0, BASE_LEN + halfTerSize);
     setPath(path);
@@ -521,6 +530,24 @@ void SchematicDevice::DrawVsrc()
     SetTerminalRect(Negative, QRectF(-halfTerSize, BASE_LEN, width, width));
 }
 
+QRectF SchematicDevice::GndTerminalRect(bool smallGnd) const
+{
+    if (smallGnd) {
+        /* The terminal-rect is centered at (0, -8) */
+        return QRectF(-2, -10, 4, 4);
+    } else {
+        /* The terminal-rect is centered at (0, -vWire) */
+        int vWire = 10;
+        return QRectF(-TerminalSize/2, -vWire-TerminalSize/2, TerminalSize, TerminalSize);
+    }
+}
+
+/*
+ *       |
+ *     -----
+ *      ---
+ *       -
+ */
 void SchematicDevice::DrawGnd()
 {
     QPainterPath path;
@@ -536,7 +563,33 @@ void SchematicDevice::DrawGnd()
     setPath(path);
 
     // The terminal-rect is centered at (0, -vWire)
-    QRectF rect(-TerminalSize/2, -vWire-TerminalSize/2, TerminalSize, TerminalSize);
+    // QRectF rect(-TerminalSize/2, -vWire-TerminalSize/2, TerminalSize, TerminalSize);
+    QRectF rect = GndTerminalRect(/*small gnd*/);
+    SetTerminalRect(General, rect);
+}
+
+/*
+ *
+ * black triangle
+ *
+ */
+void SchematicDevice::DrawSmallGnd()
+{
+    QPainterPath path;
+
+    QVector<QPointF> points;
+    points.push_back(QPointF(0, -4));
+    points.push_back(QPointF(-3.5, 2));
+    points.push_back(QPointF(3.5, 2));
+
+    path.moveTo(0, -8);
+    path.lineTo(0, -4);
+    path.addPolygon(QPolygonF(points));
+    path.closeSubpath();
+    setPath(path);
+
+    // The terminal-rect is centered at (0, -8)
+    QRectF rect = GndTerminalRect(/*small gnd*/true);
     SetTerminalRect(General, rect);
 }
 
@@ -655,6 +708,25 @@ void SchematicDevice::SetGndConnectTerminal(SchematicTerminal *ter)
 {
     Q_ASSERT(ter);
     m_gndConnectTerminal = ter;
+}
+
+void SchematicDevice::SetAsSmallGnd(bool smallGnd)
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << smallGnd << endl;
+#endif
+
+    if (m_smallGnd == smallGnd)
+        return;
+
+    m_smallGnd = smallGnd;
+
+    if (m_smallGnd) {
+        DrawSmallGnd();
+    } else {
+        DrawGnd();
+    }
+    m_isDevice = false;
 }
 
 /* Print and Plot */

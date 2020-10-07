@@ -3,6 +3,8 @@
 #include "Channel.h"
 #include "Level.h"
 #include "Circuit/Device.h"
+#include "Wire.h"
+#include "Dot.h"
 
 int ASG::LogicalRouting()
 {
@@ -22,6 +24,10 @@ int ASG::LogicalRouting()
     foreach (Channel *ch, m_channels)
         ch->Print();
 #endif
+
+    error = CreateDots();
+    if (error)
+        return ERROR;
 
     return OKAY;
 }
@@ -76,6 +82,25 @@ int ASG::AssignTrackNumber()
     foreach (Channel *ch, m_channels) {
         ch->AssignTrackNumber(m_ignoreCap);
     }
+
+    return OKAY;
+}
+
+/* Create Dot in Channel */
+int ASG::CreateDots()
+{
+    DotList dots;
+    foreach (Channel *ch, m_channels) {
+        dots.append(ch->Dots());
+    }
+
+#ifdef DEBUGx
+    printf("--------------- Dots ---------------\n");
+    foreach (Dot *dot, dots) {
+        qInfo() << dot->Track() << dot->DeviceName() << dot->TerminalId();
+    }
+    printf("------------------------------------\n");
+#endif
 
     return OKAY;
 }

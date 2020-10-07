@@ -42,6 +42,10 @@ public:
     void         AddWire(SchematicWire *wire);
     void         RemoveWire(SchematicWire *wire);
     SWireList    Wires() const { return m_wires; }
+    QString      DeviceName() const;
+    int          SceneCol() const;       // the same as device
+    int          SceneRow() const;       // the same as device
+    int          GeometricalCol() const; // the same as device
 
     /* Print */
     QString      PrintString() const;
@@ -52,7 +56,7 @@ private:
     /* Copy from Terminal */
     Node              *m_node;
     int                m_id;
-    TerminalType       m_type;    
+    TerminalType       m_type; 
     SchematicDevice   *m_device;
 
     QRectF             m_rect;

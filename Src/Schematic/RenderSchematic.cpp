@@ -2,6 +2,7 @@
 #include <QDebug>
 #include "SchematicTerminal.h"
 #include "SchematicWire.h"
+#include "SchematicDot.h"
 
 int SchematicScene::RenderSchematicDevices(const SDeviceList &devices, int colCount,
                                            int rowCount, IgnoreCap ignore)
@@ -173,7 +174,7 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                 if (terminal->ConnectToGnd()) {
                     devTerPos = terminal->ScenePos();
                     gndPos.rx() = devTerPos.x();
-                    gndPos.ry() = devTerPos.y() + DFT_DIS * m_itemScale;
+                    gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
                     gnd = InsertSchematicDevice(GND, gndPos);
                     gnd->SetGndConnectTerminal(terminal);
                     gnd->SetOrientation(Vertical);
@@ -191,7 +192,7 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                 if (terminal->ConnectToGnd()) {
                     devTerPos = terminal->ScenePos();
                     gndPos.rx() = devTerPos.x();
-                    gndPos.ry() = devTerPos.y() + DFT_DIS * m_itemScale;
+                    gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
                     gnd = InsertSchematicDevice(GND, gndPos);
                     gnd->SetGndConnectTerminal(terminal);
                     gnd->SetOrientation(Vertical);
@@ -427,8 +428,8 @@ void SchematicScene::HideGnds(bool hide)
             removeItem(wire);
 
     } else {
-        
-        QPointF terPos, gndPos;            
+
+        QPointF terPos, gndPos;
         foreach (SchematicDevice *gnd, m_gndList) {
             terPos = gnd->GndConnectTerminal()->ScenePos();
             gndPos.rx() = terPos.x();
@@ -439,4 +440,42 @@ void SchematicScene::HideGnds(bool hide)
         AddWiresToScene(m_hasGndWireList);
 
     }
+}
+
+int SchematicScene::RenderSchematicDots(const SDotList &dots)
+{
+    QPointF pos;
+
+    foreach (SchematicDot *dot, dots) {
+        pos = SeekDotScenePos(dot);
+        dot->SetScale(m_itemScale);
+        dot->setPos(pos);
+        addItem(dot);
+    }
+
+    return OKAY;
+}
+
+QPointF SchematicScene::SeekDotScenePos(SchematicDot *dot) const
+{
+    int trackCount = dot->TrackCount();
+    int track = dot->Track();
+
+    qreal totalWidth = m_gridW * dot->HoldColCount();
+
+    Q_ASSERT(trackCount > 0);
+
+    qreal gap = totalWidth / (trackCount + 1);
+    int geoCol = dot->GeometricalCol();
+
+    SchematicTerminal *ter = dot->GetSchematicTerminal();
+    int sceneCol = ter->SceneCol() + geoCol - ter->GeometricalCol();
+    int sceneRow = ter->SceneRow();
+    dot->SetScenePos(sceneCol, sceneRow);
+
+    qreal startX = sceneCol * m_gridW + m_margin; 
+    qreal sceneX = startX + (track+1) * gap;
+    qreal sceneY = ter->ScenePos().y();
+
+    return QPointF(sceneX, sceneY);
 }

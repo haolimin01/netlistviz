@@ -12,6 +12,7 @@
 
 #include "Define/Define.h"
 #include "Define/TypeDefine.h"
+#include <set>
 
 class Wire;
 
@@ -31,6 +32,8 @@ public:
     int       TrackCount() const { return m_trackCount; }
     bool      Empty() const { return (m_wires.size() == 0); }
     int       HoldColCount() const; // hold colCount on scene this channel
+    void      AssignDotGeometricalCol(int col);
+    DotList   Dots() const { return m_dots; }
 
     void Print() const;
 
@@ -38,10 +41,15 @@ private:
     DISALLOW_COPY_AND_ASSIGN(Channel);
 
     bool      CouldBeSameTrackWithWires(const WireList &wires, Wire *wire) const;
+    bool      HaveCrossBetweenWires(const WireList &wl1, const WireList &wl2) const;
+    void      CreateDots(const QVector<WireList> &mergedWireList);
+    bool      SetContains(std::set<int> &Set, int key) const;
 
     WireList   m_wires;
     int        m_id;
     int        m_trackCount;
+
+    DotList    m_dots;
 };
 
 #endif // NETLISTVIZ_ASG_CHANNEL_H

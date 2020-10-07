@@ -467,6 +467,11 @@ void MainWindow::CreateActions()
     m_hideGndAction->setCheckable(true);
     m_hideGndAction->setChecked(false);
     connect(m_hideGndAction, &QAction::toggled, this, &MainWindow::HideGndToggled);
+
+    m_smallGndAction = new QAction(QIcon(":/images/small_gnd.png"), tr("Small Gnd"), this);
+    m_smallGndAction->setCheckable(true);
+    m_smallGndAction->setChecked(false);
+    connect(m_smallGndAction, &QAction::toggled, this, &MainWindow::ShowSmallGndToggled);
 }
 
 void MainWindow::CreateMenus()
@@ -495,6 +500,7 @@ void MainWindow::CreateMenus()
     m_viewMenu->addAction(m_hideGCapAction);
     m_viewMenu->addAction(m_hideCCapAction);
     m_viewMenu->addAction(m_hideGndAction);
+    m_viewMenu->addAction(m_smallGndAction);
 
     m_asgMenu = menuBar()->addMenu(tr("&ASG"));
     m_asgMenu->addAction(m_parseNetlistAction);
@@ -1006,4 +1012,12 @@ void MainWindow::HideCoupledCapToggled(bool hide)
 void MainWindow::HideGndToggled(bool hide)
 {
     m_scene->HideGnds(hide);
+}
+
+void MainWindow::ShowSmallGndToggled(bool showSmall)
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+    m_scene->SetShowSmallGnd(showSmall);
 }

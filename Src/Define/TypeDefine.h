@@ -33,6 +33,7 @@ class Wire;
 struct ConnectDescriptor;
 class Channel;
 class Level;
+class Dot;
 typedef QMap<QString, Device*>          DeviceTable;   
 typedef QMap<QString, Node*>            NodeTable;
 typedef QVector<Device*>                DeviceList;
@@ -43,15 +44,18 @@ typedef QVector<Wire*>                  WireList;
 typedef QVector<ConnectDescriptor*>     ConnectDespList;
 typedef QVector<Channel*>               ChannelList;
 typedef QVector<Level*>                 LevelList;
+typedef QVector<Dot*>                   DotList;
 
 /* Schematic Containers */
 class SchematicDevice;
 class SchematicTerminal;
 class SchematicWire;
+class SchematicDot;
 typedef QMap<QString, SchematicDevice*>        SDeviceTable;
 typedef QVector<SchematicDevice*>              SDeviceList;
 typedef QMap<TerminalType, SchematicTerminal*> STerminalTable;
 typedef QVector<SchematicTerminal*>            STerminalList;
 typedef QVector<SchematicWire*>                SWireList;
+typedef QVector<SchematicDot*>                 SDotList;
 
 #endif // NETLISTVIZ_DEFINE_TYPEDEFINE_H

@@ -46,12 +46,14 @@ public:
     // int  RenderSchematicDevices(const SDeviceList &devices, int colCount, int rowCount, bool ignoreGroundCap);
     int  RenderSchematicDevices(const SDeviceList &devices, int colCount, int rowCount, IgnoreCap ignore);
     int  RenderSchematicWires(const SWireList &wires);
+    int  RenderSchematicDots(const SDotList &dots);
     /* --------------------------------------- */
 
     void    SetShowTerminal(bool show);
     void    HideGroundCaps(bool hide);
     void    HideCoupledCaps(bool hide);
     void    HideGnds(bool hide);
+    void    SetShowSmallGnd(bool showSmall);
     QPointF Center() const;
 
 
@@ -80,18 +82,19 @@ private:
     void  FinishDrawingWireAt(const QPointF &scenePos);
 
     /* --------------- For ASG --------------- */
-    void  ChangeDeviceScale(int colCount, int rowCount);
-    qreal CalDeviceScale(int colCount, int rowCount);
-    int   CalStartRow(int rowCount) const;
-    int   CalStartCol(int colCount) const;
-    void  UpdateDeviceScale(qreal newScale);
-    void  UpdateWireScale(qreal newScale);
-    void  RenderFixedGnds(const SDeviceList &devices);
-    void  RenderGroundCaps(const SDeviceList &gcaps);
-    void  RenderCoupledCaps(const SDeviceList &ccaps);
-    void  SetDeviceAt(int col, int row, SchematicDevice *device);   // col, row (grid)
-    void  SetDeviceAt(const QPointF &pos, SchematicDevice *device); // coordinate (scanePos)
-    void  AddWiresToScene(const SWireList &wires);
+    void     ChangeDeviceScale(int colCount, int rowCount);
+    qreal    CalDeviceScale(int colCount, int rowCount);
+    int      CalStartRow(int rowCount) const;
+    int      CalStartCol(int colCount) const;
+    void     UpdateDeviceScale(qreal newScale);
+    void     UpdateWireScale(qreal newScale);
+    void     RenderFixedGnds(const SDeviceList &devices);
+    void     RenderGroundCaps(const SDeviceList &gcaps);
+    void     RenderCoupledCaps(const SDeviceList &ccaps);
+    void     SetDeviceAt(int col, int row, SchematicDevice *device);   // col, row (grid)
+    void     SetDeviceAt(const QPointF &pos, SchematicDevice *device); // coordinate (scanePos)
+    void     AddWiresToScene(const SWireList &wires);
+    QPointF  SeekDotScenePos(SchematicDot *dot) const;
     QVector<QPointF> CreateWirePathPoints(SchematicWire *wire) const;
     /*---------------------------------------- */
 
@@ -120,6 +123,7 @@ private:
 
     bool                        m_showTerminal;
     bool                        m_showBackground;
+    bool                        m_showSmallGnd;
 
     qreal                       m_itemScale;
     qreal                       m_gridW;

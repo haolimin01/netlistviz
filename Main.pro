@@ -46,6 +46,7 @@ HEADERS += ./Src/Main/MainWindow.h\
            ./Src/Schematic/NetlistDialog.h\
            ./Src/Schematic/SchematicWire.h\
            ./Src/Schematic/SchematicTerminal.h\
+           ./Src/Schematic/SchematicDot.h\
            ./Src/Schematic/ASGDialog.h\
            ./Src/Schematic/SchematicView.h\
            ./Src/Parser/CktParser.hpp\
@@ -64,6 +65,7 @@ HEADERS += ./Src/Main/MainWindow.h\
            ./Src/ASG/Channel.h\
            ./Src/ASG/TablePlotter.h\
            ./Src/ASG/Wire.h\
+           ./Src/ASG/Dot.h\
            ./Src/Utilities/MyString.h
 
 
@@ -75,6 +77,7 @@ SOURCES += ./Src/Main/Main.cpp\
            ./Src/Schematic/NetlistDialog.cpp\
            ./Src/Schematic/SchematicWire.cpp\
            ./Src/Schematic/SchematicTerminal.cpp\
+           ./Src/Schematic/SchematicDot.cpp\
            ./Src/Schematic/ASGDialog.cpp\
            ./Src/Schematic/RenderSchematic.cpp\
            ./Src/Schematic/IOSchematic.cpp\
@@ -97,6 +100,7 @@ SOURCES += ./Src/Main/Main.cpp\
            ./Src/ASG/Channel.cpp\
            ./Src/ASG/TablePlotter.cpp\
            ./Src/ASG/Wire.cpp\
+           ./Src/ASG/Dot.cpp\
            ./Src/Utilities/MyString.cpp
 
 

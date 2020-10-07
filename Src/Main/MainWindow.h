@@ -122,6 +122,9 @@ private slots:
 
     void ShowGridToggled(bool show);
 
+    /* Show Gnd or SmallGnd */
+    void ShowSmallGndToggled(bool showSmall);
+
     void NetlistChangedSlot();
 
     /* Parse Netlist to m_data */
@@ -255,6 +258,7 @@ private:
     QAction            *m_hideGCapAction;
     QAction            *m_hideCCapAction;
     QAction            *m_hideGndAction;
+    QAction            *m_smallGndAction;
 
     /* Device Panel */
     QDockWidget        *m_devicePanelDockWidget;
