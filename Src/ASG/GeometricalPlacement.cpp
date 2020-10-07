@@ -3,10 +3,11 @@
 #include "Circuit/Device.h"
 #include "Circuit/Terminal.h"
 #include "Circuit/CircuitGraph.h"
+#include "Circuit/Connector.h"
 #include "Schematic/SchematicDevice.h"
 #include "Schematic/SchematicTerminal.h"
 #include "Schematic/SchematicScene.h"
-#include "SchematicWire.h"
+#include "Schematic/SConnector.h"
 #include "Level.h"
 #include "Channel.h"
 
@@ -138,6 +139,12 @@ SchematicDevice* ASG::CreateSchematicDevice(Device *dev) const
     sdev->SetGeometricalPos(/*col*/dev->GeometricalCol(), /*row*/dev->GeometricalRow());
     sdev->SetOrientation(dev->GetOrientation()); 
     dev->SetSchematicDevice(sdev);
+
+    foreach (Connector *cd, dev->Connectors()) {
+        SConnector *scd = new SConnector(cd->thisTerminal->GetSchematicTerminal(),
+                cd->connectTerminal->GetSchematicTerminal(), cd->connectDevice->GetSchematicDevice());
+        sdev->AddConnector(scd);
+    }
 
     return sdev;
 }

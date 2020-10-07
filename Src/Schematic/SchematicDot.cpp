@@ -19,7 +19,7 @@ SchematicDot::SchematicDot()
 
     DrawDot();
 
-    setFlag(QGraphicsItem::ItemIsMovable, true);
+    // setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 }
@@ -36,7 +36,8 @@ QRectF SchematicDot::boundingRect() const
 
 void SchematicDot::SetScale(qreal newScale)
 {
-    m_dotLen = DFT_DOT_LEN * newScale;
+    // m_dotLen = DFT_DOT_LEN * newScale;
+    setScale(newScale);
 }
 
 void SchematicDot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,

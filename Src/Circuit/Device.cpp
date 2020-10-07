@@ -5,7 +5,7 @@
 #include "Node.h"
 #include "Terminal.h"
 #include "ASG/Wire.h"
-#include "ConnectDescriptor.h"
+#include "Connector.h"
 
 Device::Device(DeviceType type, QString name)
 {
@@ -35,11 +35,11 @@ Device::~Device()
         delete it.value();
     m_terminals.clear();
 
-    m_connectDesps.clear();
+    m_connectors.clear();
     m_predecessors.clear();
     m_fellows.clear();
     m_successors.clear();
-    ClearConnectDesps();
+    ClearConnectors();
 }
 
 int Device::AddTerminal(Terminal *terminal, TerminalType type)
@@ -83,8 +83,8 @@ void Device::AddConnectDevice(Device *dev)
         otherCit = dev->m_terminals.constBegin();
         for (; otherCit != dev->m_terminals.constEnd(); ++ otherCit) {
             if (thisCit.value()->NodeId() == otherCit.value()->NodeId()) {
-                ConnectDescriptor *cd = new ConnectDescriptor(thisCit.value(), otherCit.value(), dev);
-                m_connectDesps.push_back(cd);
+                Connector *cd = new Connector(thisCit.value(), otherCit.value(), dev);
+                m_connectors.push_back(cd);
             }
         }
     }
@@ -104,12 +104,12 @@ void Device::ClassifyConnectDeviceByLevel()
     m_fellows.clear();
     m_successors.clear();
 
-    if (m_connectDesps.size() < 1)
+    if (m_connectors.size() < 1)
         return;
 
     Device *cntDev = nullptr;
     int cntDevLevelId = 0;
-    foreach (ConnectDescriptor *cd, m_connectDesps) {
+    foreach (Connector *cd, m_connectors) {
         cntDev = cd->connectDevice;
         cntDevLevelId = cntDev->LevelId();
         if (cntDevLevelId == m_levelId)
@@ -325,7 +325,7 @@ bool Device::HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType) c
 bool Device::HasConnectionIgnoreGnd(Device *otherDev, TerminalType type) const
 {
     Terminal *thisTer = m_terminals[type];
-    foreach (ConnectDescriptor *cd, m_connectDesps) {
+    foreach (Connector *cd, m_connectors) {
         if (cd->connectTerminal->Id() == 0) continue;
         if (cd->connectDevice == otherDev && cd->thisTerminal == thisTer) {
             return true;
@@ -335,11 +335,11 @@ bool Device::HasConnectionIgnoreGnd(Device *otherDev, TerminalType type) const
     return false;
 }
 
-void Device::ClearConnectDesps()
+void Device::ClearConnectors()
 {
-    foreach (ConnectDescriptor *cd, m_connectDesps)
+    foreach (Connector *cd, m_connectors)
         delete cd;
-    m_connectDesps.clear();
+    m_connectors.clear();
 }
 
 #if 0

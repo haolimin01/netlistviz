@@ -1,8 +1,8 @@
-#ifndef NETLISTVIZ_CIRCUIT_CONNECT_DESCRIPTOR_H
-#define NETLISTVIZ_CIRCUIT_CONNECT_DESCRIPTOR_H
+#ifndef NETLISTVIZ_CIRCUIT_CONNECTOR_H
+#define NETLISTVIZ_CIRCUIT_CONNECTOR_H
 
 /*
- * @filename : ConnectDescriptor.h
+ * @filename : Connector.h
  * @date     : 2020.09.23
  * @author   : Hao Limin
  * @email    : haolimin01@sjtu.edu.cn
@@ -12,20 +12,20 @@
 class Device;
 class Terminal;
 
-struct ConnectDescriptor
+struct Connector
 {
     Terminal  *thisTerminal;
     Terminal  *connectTerminal;
     Device    *connectDevice;
 
-    ConnectDescriptor()
+    Connector()
         : thisTerminal(nullptr), connectTerminal(nullptr), connectDevice(nullptr) {}
 
-    ConnectDescriptor(Terminal *thisTer, Terminal *cntTer, Device *cntDev)
+    Connector(Terminal *thisTer, Terminal *cntTer, Device *cntDev)
         : thisTerminal(thisTer), connectTerminal(cntTer), connectDevice(cntDev) {} 
 
-    ~ConnectDescriptor() {}
+    ~Connector() {}
 
 };
 
-#endif //NETLISTVIZ_CIRCUIT_CONNECT_DESCRIPTOR_H
+#endif //NETLISTVIZ_CIRCUIT_CONNECTOR_H
