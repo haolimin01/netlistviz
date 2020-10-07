@@ -89,7 +89,7 @@ private:
     /* For annotation text */
     void         CreateAnnotation(const QString &text);
     void         SetAnnotRelPos();
-    QRectF       GndTerminalRect(bool gnd) const; // gnd or smallGnd rect
+    QRectF       GndTerminalRect(bool smallGnd = false) const; // gnd or smallGnd rect
 
     void         DrawResistor();
     void         DrawCapacitor();

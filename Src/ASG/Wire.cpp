@@ -11,13 +11,15 @@ Wire::Wire(Device *fromDevice, Terminal *fromTerminal,
     m_toDevice = toDevice;
     m_toTerminal = toTerminal;
     m_track = -1;
-    // m_geoCol = 0;
     m_channelId = 0;
     m_trackGiven = false;
 }
 
 Wire::~Wire()
 {
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
 
 }
 
@@ -186,3 +188,32 @@ bool Wire::CouldBeSameTrack(Wire *otherWire) const
 
     return merged;
 }
+
+QString Wire::Name() const
+{
+    QString ret;
+    ret = "(" + m_fromDevice->Name() + ", " + m_toDevice->Name() + ")";
+    return ret;
+}
+
+/* The same terminal between merged wires */
+Terminal* Wire::SameTerminal(Wire *otherWire) const
+{
+    Terminal *terminal = nullptr;
+
+    qreal thisFromTerRow = m_fromTerminal->LogicalRelRow();
+    qreal thisToTerRow = m_toTerminal->LogicalRelRow();
+
+    qreal otherFromTerRow = otherWire->m_fromTerminal->LogicalRelRow();
+    qreal otherToTerRow = otherWire->m_toTerminal->LogicalRelRow();
+
+    if (thisFromTerRow == otherFromTerRow)
+        terminal = m_fromTerminal;
+    else if (thisToTerRow == otherToTerRow)
+        terminal = m_toTerminal;
+
+    Q_ASSERT(terminal);
+
+    return terminal;
+}
+

@@ -68,3 +68,8 @@ void Terminal::Print() const
 
     std::cout << ss.str() << std::endl;
 }
+
+QString Terminal::DeviceName() const
+{
+    return m_device->Name();
+}

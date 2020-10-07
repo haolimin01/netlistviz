@@ -55,6 +55,8 @@ int ASG::CalGeometricalCol()
         level->AssignDeviceGeometricalCol(colIndex);
         colIndex++;
         ch = m_channels.at(i);
+        /* Assign dots geometrical col, as to m_dots (same pointer) */
+        ch->AssignDotGeometricalCol(colIndex);
         colIndex += ch->HoldColCount();
     }
 

@@ -11,8 +11,9 @@
  */
 
 #include "Define/Define.h"
+#include <QString>
+#include "Circuit/Device.h"
 
-class Device;
 class Terminal;
 class Channel;
 class SchematicWire;
@@ -25,17 +26,19 @@ public:
     Wire(Device *fromDevice, Terminal *fromTerminal, Device *toDevice, Terminal *toTerminal);
     ~Wire();
 
-    void SetTrack(int track)  { m_trackGiven = true; m_track = track; }
-    int  Track() const        { return m_track; }
-    void SetChannelId(int id) { m_channelId = id; }
-    int  ChannelId() const    { return m_channelId; }
-    bool TrackGiven() const   { return m_trackGiven; }
-    bool HasGCap() const;
-    bool HasCCap() const;
-    bool IsHorizontal() const;
-    bool HasCross(Wire *otherWire) const;
-    bool CouldBeMerged(Wire *otherWire) const;
-    bool CouldBeSameTrack(Wire *otherWire) const;
+    void      SetTrack(int track)  { m_trackGiven = true; m_track = track; }
+    int       Track() const        { return m_track; }
+    void      SetChannelId(int id) { m_channelId = id; }
+    int       ChannelId() const    { return m_channelId; }
+    bool      TrackGiven() const   { return m_trackGiven; }
+    bool      HasGCap() const;
+    bool      HasCCap() const;
+    bool      IsHorizontal() const;
+    bool      HasCross(Wire *otherWire) const;
+    bool      CouldBeMerged(Wire *otherWire) const;
+    bool      CouldBeSameTrack(Wire *otherWire) const;
+    Terminal* SameTerminal(Wire *otherWire) const;
+    QString   Name() const;
 
     SchematicDevice*    FromSDevice() const;
     SchematicDevice*    ToSDevice() const;

@@ -31,6 +31,7 @@ public:
     Node*        GetNode() const { return m_node; }
     void         SetDevice(Device *device) { m_device = device; }
     Device*      GetDevice() const { return m_device; }
+    QString      DeviceName() const;
     void         SetTerminalType(TerminalType type) { m_type = type; }
     TerminalType GetTerminalType() const { return m_type; }
     qreal        LogicalRelRow() const; // relative row about device's logical row

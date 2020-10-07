@@ -530,15 +530,15 @@ void SchematicDevice::DrawVsrc()
     SetTerminalRect(Negative, QRectF(-halfTerSize, BASE_LEN, width, width));
 }
 
-QRectF SchematicDevice::GndTerminalRect(bool gnd) const
+QRectF SchematicDevice::GndTerminalRect(bool smallGnd) const
 {
-    if (gnd) {
+    if (smallGnd) {
+        /* The terminal-rect is centered at (0, -8) */
+        return QRectF(-2, -10, 4, 4);
+    } else {
         /* The terminal-rect is centered at (0, -vWire) */
         int vWire = 10;
         return QRectF(-TerminalSize/2, -vWire-TerminalSize/2, TerminalSize, TerminalSize);
-    } else { // small gnd
-        /* The terminal-rect is centered at (0, -8) */
-        return QRectF(-2, -10, 4, 4);
     }
 }
 
@@ -564,7 +564,7 @@ void SchematicDevice::DrawGnd()
 
     // The terminal-rect is centered at (0, -vWire)
     // QRectF rect(-TerminalSize/2, -vWire-TerminalSize/2, TerminalSize, TerminalSize);
-    QRectF rect = GndTerminalRect(/*gnd*/true);
+    QRectF rect = GndTerminalRect(/*small gnd*/);
     SetTerminalRect(General, rect);
 }
 
@@ -589,7 +589,7 @@ void SchematicDevice::DrawSmallGnd()
     setPath(path);
 
     // The terminal-rect is centered at (0, -8)
-    QRectF rect = GndTerminalRect(/*gnd*/false);
+    QRectF rect = GndTerminalRect(/*small gnd*/true);
     SetTerminalRect(General, rect);
 }
 
@@ -712,7 +712,7 @@ void SchematicDevice::SetGndConnectTerminal(SchematicTerminal *ter)
 
 void SchematicDevice::SetAsSmallGnd(bool smallGnd)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << smallGnd << endl;
 #endif
 

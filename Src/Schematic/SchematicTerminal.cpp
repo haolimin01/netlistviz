@@ -75,3 +75,23 @@ QString SchematicTerminal::PrintString() const
     result += ("belongTo(" + m_device->Name() + ")");
     return result;
 }
+
+QString SchematicTerminal::DeviceName() const
+{
+    return m_device->Name();
+}
+
+int SchematicTerminal::SceneCol() const
+{
+    return m_device->SceneCol();
+}
+
+int SchematicTerminal::SceneRow() const
+{
+    return m_device->SceneRow();
+}
+
+int SchematicTerminal::GeometricalCol() const
+{
+    return m_device->GeometricalCol();
+}
