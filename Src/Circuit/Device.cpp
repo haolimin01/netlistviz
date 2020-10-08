@@ -111,6 +111,8 @@ void Device::ClassifyConnectDeviceByLevel()
     Device *cntDev = nullptr;
     int cntDevLevelId = 0;
     foreach (Connector *cd, m_connectors) {
+        if (cd->thisTerminal->NodeId() == 0) continue;
+
         cntDev = cd->connectDevice;
         cntDevLevelId = cntDev->LevelId();
         if (cntDevLevelId == m_levelId)
@@ -399,8 +401,16 @@ bool Device::MaybeVertical() const
             cntToGndCount++;
     }
 
-    // int sum = cntToPredCount + cntToGndCount;
+    bool nextRowFilled = false;
+    foreach (Device *dev, m_fellows)
+        if (dev->LogicalRow() == m_logRow + 1) {
+            nextRowFilled = true;
+            break;
+        }
+
     int sum = cntToPredCount;
+    if (NOT nextRowFilled)
+        sum += cntToGndCount;
 
     if (sum >= 2)
         return true;

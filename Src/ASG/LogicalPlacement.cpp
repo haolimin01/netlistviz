@@ -208,7 +208,7 @@ int ASG::ClassifyConnectDeviceByLevel()
     foreach (Device *dev, m_ckt->GetDeviceList())
         dev->ClassifyConnectDeviceByLevel();
 
-#ifdef DEBUGx
+#ifdef DEBUG
     foreach (Level *level, m_levels)
         level->PrintAllConnections();
 #endif
