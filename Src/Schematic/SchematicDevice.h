@@ -60,6 +60,7 @@ public:
     void         SetGeometricalPos(int col, int row);
     void         SetAsSmallGnd(bool smallGnd);
     void         AddConnector(SConnector *desp);
+    bool         Reverse() const { return m_reverse; }
 
     SchematicTerminal* GetTerminal(TerminalType type) const;
     SchematicTerminal* ConnectTerminal() const;

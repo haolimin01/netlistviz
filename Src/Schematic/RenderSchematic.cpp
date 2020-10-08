@@ -161,6 +161,7 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
     SchematicWire *wire = nullptr;
     SchematicTerminal *gndTer = nullptr;
     SConnector *scd = nullptr;
+    bool reverse = false;
 
     m_gndList.clear();
     m_hasGndWireList.clear();
@@ -175,8 +176,17 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                 terminal = device->GetTerminal(Positive);
                 if (terminal->ConnectToGnd()) {
                     devTerPos = terminal->ScenePos();
-                    gndPos.rx() = devTerPos.x();
-                    gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
+
+                    if (device->GetOrientation() == Vertical && device->Reverse()) {
+                        gndPos.rx() = devTerPos.x();
+                        gndPos.ry() = devTerPos.y() - DFT_GND_DIS * m_itemScale;
+                        reverse = true;
+                    } else {
+                        gndPos.rx() = devTerPos.x();
+                        gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
+                        reverse = false;
+                    }
+
                     gnd = InsertSchematicDevice(GND, gndPos);
 
                     scd = new SConnector(terminal, gnd->GetTerminal(General), gnd);
@@ -185,11 +195,11 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                     gnd->AddConnector(scd);
 
                     gnd->SetOrientation(Vertical);
+                    gnd->SetReverse(reverse);
                     gnd->SetScenePos(device->SceneCol(), 0);
 
                     gndTer = gnd->GetTerminal(General);
-                    wire = new SchematicWire(device, gnd,
-                            terminal, gndTer);
+                    wire = new SchematicWire(device, gnd, terminal, gndTer);
                     wire->SetTrack(-1);
                     m_gndList.push_back(gnd);
                     m_hasGndWireList.push_back(wire);
@@ -198,8 +208,17 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                 terminal = device->GetTerminal(Negative);
                 if (terminal->ConnectToGnd()) {
                     devTerPos = terminal->ScenePos();
-                    gndPos.rx() = devTerPos.x();
-                    gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
+
+                    if (device->GetOrientation() == Vertical && device->Reverse()) {
+                        gndPos.rx() = devTerPos.x();
+                        gndPos.ry() = devTerPos.y() - DFT_GND_DIS * m_itemScale;
+                        reverse = true;
+                    } else {
+                        gndPos.rx() = devTerPos.x();
+                        gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
+                        reverse = false;
+                    }
+
                     gnd = InsertSchematicDevice(GND, gndPos);
 
                     scd = new SConnector(terminal, gnd->GetTerminal(General), gnd);
@@ -208,11 +227,11 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                     gnd->AddConnector(scd);
 
                     gnd->SetOrientation(Vertical);
+                    gnd->SetReverse(reverse);
                     gnd->SetScenePos(device->SceneCol(), 0);
 
                     gndTer = gnd->GetTerminal(General);
-                    wire = new SchematicWire(device, gnd,
-                            terminal, gndTer);
+                    wire = new SchematicWire(device, gnd, terminal, gndTer);
                     wire->SetTrack(-1);
                     m_gndList.push_back(gnd);
                     m_hasGndWireList.push_back(wire);
