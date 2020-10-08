@@ -49,13 +49,14 @@ HEADERS += ./Src/Main/MainWindow.h\
            ./Src/Schematic/SchematicDot.h\
            ./Src/Schematic/ASGDialog.h\
            ./Src/Schematic/SchematicView.h\
+           ./Src/Schematic/SConnector.h\
            ./Src/Parser/CktParser.hpp\
            ./Src/Parser/MyParser.h\
            ./Src/Circuit/Node.h\
            ./Src/Circuit/Terminal.h\
            ./Src/Circuit/CircuitGraph.h\
            ./Src/Circuit/Device.h\
-           ./Src/Circuit/ConnectDescriptor.h\
+           ./Src/Circuit/Connector.h\
            ./Src/Define/Define.h\
            ./Src/Define/TypeDefine.h\
            ./Src/ASG/ASG.h\

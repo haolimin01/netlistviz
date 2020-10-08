@@ -9,7 +9,7 @@
 #include "Circuit/CircuitGraph.h"
 #include "Level.h"
 #include "Channel.h"
-#include "Circuit/ConnectDescriptor.h"
+#include "Circuit/Connector.h"
 #include "Terminal.h"
 
 
@@ -98,7 +98,7 @@ int ASG::LinkDevice()
 {
     /* Clear connections firstly */
     foreach (Device *dev, m_ckt->GetDeviceList())
-        dev->ClearConnectDesps();
+        dev->ClearConnectors();
 
     Node *node = nullptr;
     Device *fromDev = nullptr, *toDev = nullptr;
@@ -116,7 +116,7 @@ int ASG::LinkDevice()
     QString tmp = "";
     foreach (Device *dev, m_ckt->GetDeviceList()) {
         qDebug() << dev->Name();
-        foreach (ConnectDescriptor *cd, dev->ConnectDesps()) {
+        foreach (Connector *cd, dev->Connectors()) {
             tmp += ("thisTer(" + QString::number(cd->thisTerminal->Id()) + "), ");
             tmp += ("connectDev(" + cd->connectDevice->Name() + "), ");
             tmp += ("connectTer(" + QString::number(cd->connectTerminal->Id()) + ")");

@@ -10,8 +10,9 @@ class QGraphicsPixmapItem;
 class QGraphicsSceneMouseEvent;
 QT_END_NAMESPACE;
 
-class SchematicWire;
-class SchematicTerminal;
+class  SchematicWire;
+class  SchematicTerminal;
+struct SConnector;
 
 class SchematicDevice : public QGraphicsPathItem
 {
@@ -32,6 +33,7 @@ public:
     QPixmap      Image();
     int          type() const override { return Type; }
     QRectF       boundingRect() const override;
+    void         SetAnnotationVisible(bool show);
     void         SetDeviceType(DeviceType type) {m_deviceType = type; }
     DeviceType   GetDeviceType() const { return m_deviceType; }
     void         SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
@@ -57,15 +59,13 @@ public:
     int          GeometricalRow() const { return m_geoRow; }
     void         SetGeometricalPos(int col, int row);
     void         SetAsSmallGnd(bool smallGnd);
+    void         AddConnector(SConnector *desp);
+    bool         Reverse() const { return m_reverse; }
 
     SchematicTerminal* GetTerminal(TerminalType type) const;
+    SchematicTerminal* ConnectTerminal() const;
+    SchematicTerminal* ConnectTerminal(TerminalType type) const;
     STerminalTable     GetTerminalTable() const { return m_terminals; }
-
-
-    SchematicTerminal* GroundCapConnectTerminal() const;
-    SchematicTerminal* CoupledCapConnectTerminal(TerminalType type) const;
-    void               SetGndConnectTerminal(SchematicTerminal *ter);
-    SchematicTerminal* GndConnectTerminal() const { return m_gndConnectTerminal; }
 
     /* Print and Plot */
     void         Print() const;
@@ -90,6 +90,7 @@ private:
     void         CreateAnnotation(const QString &text);
     void         SetAnnotRelPos();
     QRectF       GndTerminalRect(bool smallGnd = false) const; // gnd or smallGnd rect
+    void         ClearConnectors();
 
     void         DrawResistor();
     void         DrawCapacitor();
@@ -123,16 +124,13 @@ private:
     int                m_sceneCol;
     int                m_sceneRow;
 
-
-
-    int                m_logCol;   // logical col
-    int                m_logRow;   // logical row
+    SConnectorList     m_connectors; // connect devices
 
     /* if device is ground or coupled cap */
-    STerminalTable     m_capConnectTerminalTable;
+    // STerminalTable     m_capConnectTerminalTable;
 
     /* if device is gnd */
-    SchematicTerminal *m_gndConnectTerminal;
+    // SchematicTerminal *m_gndConnectTerminal;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICDEVICE_H

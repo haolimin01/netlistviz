@@ -394,7 +394,7 @@ int ASG::DecideDeviceWhetherToReverse()
             dev->DecideReverseBySuccessors();
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Level *level, m_levels)
         level->PrintReverse();
 #endif

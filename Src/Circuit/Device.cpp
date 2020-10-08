@@ -1,11 +1,12 @@
 #include "Device.h"
 #include <sstream>
 #include <iostream>
+#include <QtMath>
 #include <QDebug>
 #include "Node.h"
 #include "Terminal.h"
 #include "ASG/Wire.h"
-#include "ConnectDescriptor.h"
+#include "Connector.h"
 
 Device::Device(DeviceType type, QString name)
 {
@@ -35,11 +36,11 @@ Device::~Device()
         delete it.value();
     m_terminals.clear();
 
-    m_connectDesps.clear();
+    m_connectors.clear();
     m_predecessors.clear();
     m_fellows.clear();
     m_successors.clear();
-    ClearConnectDesps();
+    ClearConnectors();
 }
 
 int Device::AddTerminal(Terminal *terminal, TerminalType type)
@@ -83,8 +84,8 @@ void Device::AddConnectDevice(Device *dev)
         otherCit = dev->m_terminals.constBegin();
         for (; otherCit != dev->m_terminals.constEnd(); ++ otherCit) {
             if (thisCit.value()->NodeId() == otherCit.value()->NodeId()) {
-                ConnectDescriptor *cd = new ConnectDescriptor(thisCit.value(), otherCit.value(), dev);
-                m_connectDesps.push_back(cd);
+                Connector *cd = new Connector(thisCit.value(), otherCit.value(), dev);
+                m_connectors.push_back(cd);
             }
         }
     }
@@ -104,12 +105,12 @@ void Device::ClassifyConnectDeviceByLevel()
     m_fellows.clear();
     m_successors.clear();
 
-    if (m_connectDesps.size() < 1)
+    if (m_connectors.size() < 1)
         return;
 
     Device *cntDev = nullptr;
     int cntDevLevelId = 0;
-    foreach (ConnectDescriptor *cd, m_connectDesps) {
+    foreach (Connector *cd, m_connectors) {
         cntDev = cd->connectDevice;
         cntDevLevelId = cntDev->LevelId();
         if (cntDevLevelId == m_levelId)
@@ -193,15 +194,15 @@ void Device::DecideReverseByPredecessors(IgnoreCap ignore)
 
         if (device->m_reverse) { // to predecessor's positive terminal
             Terminal *posTer = device->GetTerminal(Positive);
-            if (HasConnectionIgnoreGnd(posTer, Positive))
+            if (HasConnection(posTer, Positive))
                 connectionsAtPos++;
-            else if (HasConnectionIgnoreGnd(posTer, Negative))
+            else if (HasConnection(posTer, Negative))
                 connectionsAtNeg++;
         } else { // to predecessor's negative terminal
             Terminal *negTer = device->GetTerminal(Negative);
-            if (HasConnectionIgnoreGnd(negTer, Positive))
+            if (HasConnection(negTer, Positive))
                 connectionsAtPos++;
-            else if (HasConnectionIgnoreGnd(negTer, Negative))
+            else if (HasConnection(negTer, Negative))
                 connectionsAtNeg++;
         }
     }
@@ -216,47 +217,76 @@ void Device::DecideReverseByPredecessors(IgnoreCap ignore)
 /* Just consider R, L, C, V, I */
 void Device::DecideReverseByPredecessors()
 {
-    /* Horizontal */
-    if (m_orien == Horizontal) {
-        int cntAtPos = 0;
-        int cntAtNeg = 0;
-        Device *dev = nullptr;
+    qreal reverseLen = 0, noReverseLen = 0;
+    Device *dev = nullptr;
+    Terminal *posTer = nullptr, *negTer = nullptr;
 
+    if (m_orien == Horizontal) {
         foreach (dev, m_predecessors) {
-            if (dev->m_reverse) {
-                Terminal *posTer = dev->GetTerminal(Positive);
-                if (HasConnectionIgnoreGnd(posTer, Positive))
-                    cntAtPos++;
-                else if (HasConnectionIgnoreGnd(posTer, Negative))
-                    cntAtNeg++;
-            } else {
-                Terminal *negTer = dev->GetTerminal(Negative);
-                if (HasConnectionIgnoreGnd(negTer, Positive))
-                    cntAtPos++;
-                else if (HasConnectionIgnoreGnd(negTer, Negative))
-                    cntAtNeg++;
+            posTer = dev->GetTerminal(Positive);
+            if (HasConnection(posTer, Positive)) {
+                noReverseLen += 0.5;
+                reverseLen += 1.5;
+            } else if (HasConnection(posTer, Negative)) {
+                noReverseLen += 1.5;
+                reverseLen += 0.5;
+            }
+
+            negTer = dev->GetTerminal(Negative);
+            if (HasConnection(negTer, Positive)) {
+                noReverseLen += 0.5;
+                reverseLen += 1.5;
+            } else if (HasConnection(negTer, Negative)) {
+                noReverseLen += 1.5;
+                reverseLen += 0.5;
             }
         }
-        if (cntAtNeg > cntAtPos)
+
+        if (reverseLen < noReverseLen)
             m_reverse = true;
         else
             m_reverse = false;
-
         return;
     }
 
-    /* Vertical */
-    int rowSumAtPos = 0, rowSumAtNeg = 0;
-    Device *dev = nullptr;
-
+    /* vertical */
+    /* First, we assume no reverse */
+    m_reverse = false;
     foreach (dev, m_predecessors) {
-        if (HasConnectionIgnoreGnd(dev, Positive))
-            rowSumAtPos += dev->LogicalRow();
-        else if (HasConnectionIgnoreGnd(dev, Negative))
-            rowSumAtNeg += dev->LogicalRow();
+        posTer = dev->GetTerminal(Positive);
+        if (HasConnection(posTer, Positive)) {
+            noReverseLen += RowDistance(posTer, Positive);
+        } else if (HasConnection(posTer, Negative)) {
+            noReverseLen += RowDistance(posTer, Negative);
+        }
+
+        negTer = dev->GetTerminal(Negative);
+        if (HasConnection(negTer, Positive)) {
+            noReverseLen += RowDistance(negTer, Positive);
+        } else if (HasConnection(negTer, Negative)) {
+            noReverseLen += RowDistance(negTer, Negative);
+        }
     }
 
-    if (rowSumAtPos > rowSumAtNeg)
+    /* Second, we assume reverse */
+    m_reverse = true;
+    foreach (dev, m_predecessors) {
+        posTer = dev->GetTerminal(Positive);
+        if (HasConnection(posTer, Positive)) {
+            reverseLen += RowDistance(posTer, Positive);
+        } else if (HasConnection(posTer, Negative)) {
+            reverseLen += RowDistance(posTer, Negative); 
+        }
+
+        negTer = dev->GetTerminal(Negative);
+        if (HasConnection(negTer, Positive)) {
+            reverseLen += RowDistance(negTer, Positive); 
+        } else if (HasConnection(negTer, Negative)) {
+            reverseLen += RowDistance(negTer, Negative); 
+        }
+    }
+
+    if (reverseLen < noReverseLen)
         m_reverse = true;
     else
         m_reverse = false;
@@ -264,53 +294,82 @@ void Device::DecideReverseByPredecessors()
 
 void Device::DecideReverseBySuccessors()
 {
-    /* Horizontal */
-    if (m_orien == Horizontal) {
-        int cntAtPos = 0;
-        int cntAtNeg = 0;
-        Device *dev = nullptr;
+    qreal reverseLen = 0, noReverseLen = 0;
+    Device *dev = nullptr;
+    Terminal *posTer = nullptr, *negTer = nullptr;
 
+    if (m_orien == Horizontal) {
         foreach (dev, m_successors) {
-            if (dev->m_reverse) {
-                Terminal *negTer = dev->GetTerminal(Negative);
-                if (HasConnectionIgnoreGnd(negTer, Positive))
-                    cntAtPos++;
-                else if (HasConnectionIgnoreGnd(negTer, Negative))
-                    cntAtNeg++;
-            } else {
-                Terminal *posTer = dev->GetTerminal(Positive);
-                if (HasConnectionIgnoreGnd(posTer, Positive))
-                    cntAtPos++;
-                else if (HasConnectionIgnoreGnd(posTer, Negative))
-                    cntAtNeg++;
+            posTer = dev->GetTerminal(Positive);
+            if (HasConnection(posTer, Positive)) {
+                noReverseLen += 1.5;
+                reverseLen += 0.5;
+            } else if (HasConnection(posTer, Negative)) {
+                noReverseLen += 0.5;
+                reverseLen += 1.5;
+            }
+
+            negTer = dev->GetTerminal(Negative);
+            if (HasConnection(negTer, Positive)) {
+                noReverseLen += 1.5;
+                reverseLen += 0.5;
+            } else if (HasConnection(negTer, Negative)) {
+                noReverseLen += 0.5;
+                reverseLen += 1.5;
             }
         }
-        if (cntAtPos > cntAtNeg)
+
+        if (reverseLen < noReverseLen)
             m_reverse = true;
         else
             m_reverse = false;
-
         return;
     }
 
-    /* Vertical */
-    int rowSumAtPos = 0, rowSumAtNeg = 0;
-    Device *dev = nullptr;
+    /* vertical */
+    /* First, we assume no reverse */
+    m_reverse = false;
+    foreach (dev, m_predecessors) {
+        posTer = dev->GetTerminal(Positive);
+        if (HasConnection(posTer, Positive)) {
+            noReverseLen += RowDistance(posTer, Positive);
+        } else if (HasConnection(posTer, Negative)) {
+            noReverseLen += RowDistance(posTer, Negative);
+        }
 
-    foreach (dev, m_successors) {
-        if (HasConnectionIgnoreGnd(dev, Positive))
-            rowSumAtPos += dev->LogicalRow();
-        else if (HasConnectionIgnoreGnd(dev, Negative))
-            rowSumAtNeg += dev->LogicalRow();
+        negTer = dev->GetTerminal(Negative);
+        if (HasConnection(negTer, Positive)) {
+            noReverseLen += RowDistance(negTer, Positive);
+        } else if (HasConnection(negTer, Negative)) {
+            noReverseLen += RowDistance(negTer, Negative);
+        }
     }
 
-    if (rowSumAtPos > rowSumAtNeg)
+    /* Second, we assume reverse */
+    m_reverse = true;
+    foreach (dev, m_predecessors) {
+        posTer = dev->GetTerminal(Positive);
+        if (HasConnection(posTer, Positive)) {
+            reverseLen += RowDistance(posTer, Positive);
+        } else if (HasConnection(posTer, Negative)) {
+            reverseLen += RowDistance(posTer, Negative); 
+        }
+
+        negTer = dev->GetTerminal(Negative);
+        if (HasConnection(negTer, Positive)) {
+            reverseLen += RowDistance(negTer, Positive); 
+        } else if (HasConnection(negTer, Negative)) {
+            reverseLen += RowDistance(negTer, Negative); 
+        }
+    }
+
+    if (reverseLen < noReverseLen)
         m_reverse = true;
     else
         m_reverse = false;
 }
 
-bool Device::HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType) const
+bool Device::HasConnection(Terminal *otherTer, TerminalType thisType) const
 {
     bool has = false;
     Terminal *thisTer = m_terminals[thisType];
@@ -322,38 +381,12 @@ bool Device::HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType) c
     return has;
 }
 
-bool Device::HasConnectionIgnoreGnd(Device *otherDev, TerminalType type) const
+void Device::ClearConnectors()
 {
-    Terminal *thisTer = m_terminals[type];
-    foreach (ConnectDescriptor *cd, m_connectDesps) {
-        if (cd->connectTerminal->Id() == 0) continue;
-        if (cd->connectDevice == otherDev && cd->thisTerminal == thisTer) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void Device::ClearConnectDesps()
-{
-    foreach (ConnectDescriptor *cd, m_connectDesps)
+    foreach (Connector *cd, m_connectors)
         delete cd;
-    m_connectDesps.clear();
+    m_connectors.clear();
 }
-
-#if 0
-STerminalTable Device::CapConnectSTerminalTable() const
-{
-    STerminalTable table;
-    TerminalTable::const_iterator cit;
-    cit = m_capConnectTerminalTable.constBegin();
-    for (; cit != m_capConnectTerminalTable.constEnd(); ++ cit) {
-        table.insert(cit.key(), cit.value()->GetSchematicTerminal());
-    }
-    return table;
-}
-#endif
 
 /* R, L, V, V, I now */
 bool Device::MaybeVertical() const
@@ -381,6 +414,13 @@ void Device::DecideOrientationByPredecessors()
         m_orien = Vertical;
     else
         m_orien = Horizontal;
+}
+
+qreal Device::RowDistance(Terminal *otherTer, TerminalType thisType) const
+{
+    qreal dis = 0;
+    Terminal *thisTer = m_terminals[thisType];
+    return qFabs(otherTer->LogicalRelRow() - thisTer->LogicalRelRow());
 }
 
 void Device::Print() const

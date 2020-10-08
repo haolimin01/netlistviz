@@ -57,10 +57,10 @@ public:
     DeviceList   Predecessors() const      { return m_predecessors; }
     DeviceList   Successors() const        { return m_successors; }
     void         CalLogicalRowByPredecessors();
-    void         ClearConnectDesps();
+    void         ClearConnectors();
     void         SetMaybeAtFirstLevel(bool at) { m_maybeAtFirstLevel = at; }
     bool         MaybeAtFirstLevel() const     { return m_maybeAtFirstLevel; }
-    ConnectDespList ConnectDesps() const { return m_connectDesps; }
+    ConnectorList Connectors() const { return m_connectors; }
     bool         Reverse() const           { return m_reverse; }       
     void         DecideReverseByPredecessors();
     void         DecideReverseBySuccessors();
@@ -72,20 +72,16 @@ public:
 
     TerminalList GetTerminalList() const;
 
-
     /* For creating SchematicWire */
     void                SetSchematicDevice(SchematicDevice *sDevice) { m_sDevice=sDevice;}
     SchematicDevice*    GetSchematicDevice() const { return m_sDevice; } 
-
-    // DeviceList          CapConnectDeviceList() const { return m_capConnectDeviceList; }
-    // STerminalTable      CapConnectSTerminalTable() const;
 
     void Print() const;
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Device);
-    bool    HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType) const;
-    bool    HasConnectionIgnoreGnd(Device *otherDev, TerminalType thisType) const;
+    bool    HasConnection(Terminal *otherTer, TerminalType thisType) const;
+    qreal   RowDistance(Terminal *otherTer, TerminalType thisType) const;
     bool    MaybeVertical() const;
 
     TerminalTable                     m_terminals;
@@ -106,10 +102,8 @@ private:
     int                               m_geoRow;
     int                               m_geoCol;
     Orientation                       m_orien;        // orientation : Horizontal/Vertical
-    ConnectDespList                   m_connectDesps;
+    ConnectorList                     m_connectors;
 
-    // DeviceList                        m_capConnectDeviceList;    // for cap
-    // TerminalTable                     m_capConnectTerminalTable; // for cap
     SchematicDevice                  *m_sDevice; // For creating SchematicWire
 };
 

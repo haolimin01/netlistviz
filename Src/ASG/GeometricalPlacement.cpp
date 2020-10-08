@@ -3,10 +3,11 @@
 #include "Circuit/Device.h"
 #include "Circuit/Terminal.h"
 #include "Circuit/CircuitGraph.h"
+#include "Circuit/Connector.h"
 #include "Schematic/SchematicDevice.h"
 #include "Schematic/SchematicTerminal.h"
 #include "Schematic/SchematicScene.h"
-#include "SchematicWire.h"
+#include "Schematic/SConnector.h"
 #include "Level.h"
 #include "Channel.h"
 
@@ -84,12 +85,17 @@ int ASG::CalGeometricalRow()
     qInfo() << "Min LogicalRow =" << minLogRow;
 #endif
 
-    if (minLogRow >= 0)
+    int geoRow = 0;
+    if (minLogRow >= 0) {
+        foreach (Device *dev, devices) {
+            geoRow = dev->LogicalRow();
+            dev->SetGeometricalRow(geoRow);
+        }
         return OKAY;
+    }
 
     int shiftDown = -1 * minLogRow;
 
-    int geoRow = 0;
     foreach (Device *dev, devices) {
         geoRow = dev->LogicalRow() + shiftDown;
         dev->SetGeometricalRow(geoRow);
@@ -138,6 +144,12 @@ SchematicDevice* ASG::CreateSchematicDevice(Device *dev) const
     sdev->SetGeometricalPos(/*col*/dev->GeometricalCol(), /*row*/dev->GeometricalRow());
     sdev->SetOrientation(dev->GetOrientation()); 
     dev->SetSchematicDevice(sdev);
+
+    foreach (Connector *cd, dev->Connectors()) {
+        SConnector *scd = new SConnector(cd->thisTerminal->GetSchematicTerminal(),
+                cd->connectTerminal->GetSchematicTerminal(), cd->connectDevice->GetSchematicDevice());
+        sdev->AddConnector(scd);
+    }
 
     return sdev;
 }

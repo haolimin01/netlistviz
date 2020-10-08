@@ -5,7 +5,7 @@
 #include <QGraphicsScene>
 #include "SchematicTerminal.h"
 #include "SchematicWire.h"
-
+#include "SConnector.h"
 
 static const int TerminalSize = 8;
 static const int IMAG_LEN = 25;
@@ -61,6 +61,7 @@ SchematicDevice::~SchematicDevice()
     foreach (SchematicTerminal *ter, m_terminals.values())
         delete ter;
     m_terminals.clear();
+    ClearConnectors();
 }
 
 void SchematicDevice::Initialize()
@@ -106,7 +107,6 @@ void SchematicDevice::Initialize()
     m_imag = nullptr;
     m_showTerminal = false;
 
-    m_gndConnectTerminal = nullptr;
     m_sceneCol = 0;
     m_sceneRow = 0;
     m_smallGnd = false;
@@ -170,6 +170,13 @@ void SchematicDevice::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     // do nothing now.
 }
 
+void SchematicDevice::SetAnnotationVisible(bool show)
+{
+    if (NOT m_annotText)
+        return;
+    m_annotText->setVisible(show);
+}
+
 QRectF SchematicDevice::boundingRect() const
 {
     return QRectF(-BRECT_W, -BRECT_W, 2 * BRECT_W, 2 * BRECT_W);
@@ -183,15 +190,6 @@ QPainterPath SchematicDevice::shape() const
     cit = m_terminals.constBegin();
     for (; cit != m_terminals.constEnd(); ++ cit)
         path.addRect(cit.value()->Rect());
-#if 0
-    if (m_deviceType == GND) {
-        // int halfTerSize = TerminalSize / 2;
-        // path.addRect(QRectF(-12, -10 + halfTerSize, 24, (10 - halfTerSize) * 2));
-        path.addRect(QRectF(-3.5, -4, 6, 6));
-    } else {
-        path.addRect(DashRect());
-    }
-#endif
 
     path.addRect(DashRect());
 
@@ -686,28 +684,12 @@ void SchematicDevice::UpdateWirePosition()
     }
 }
 
-SchematicTerminal* SchematicDevice::GroundCapConnectTerminal() const
-{
-    return m_capConnectTerminalTable.first();
-}
-
-SchematicTerminal* SchematicDevice::CoupledCapConnectTerminal(TerminalType type) const
-{
-    return m_capConnectTerminalTable[type];
-}
-
 /* BUG */
 QPointF SchematicDevice::ScenePosByTerminalScenePos(SchematicTerminal *ter,
                             const QPointF &terScenePos) const
 {
     // return terScenePos - (ter->Rect().center()) * scale();
     return terScenePos;
-}
-
-void SchematicDevice::SetGndConnectTerminal(SchematicTerminal *ter)
-{
-    Q_ASSERT(ter);
-    m_gndConnectTerminal = ter;
 }
 
 void SchematicDevice::SetAsSmallGnd(bool smallGnd)
@@ -727,6 +709,47 @@ void SchematicDevice::SetAsSmallGnd(bool smallGnd)
         DrawGnd();
     }
     m_isDevice = false;
+}
+
+void SchematicDevice::ClearConnectors()
+{
+    foreach (SConnector *scd, m_connectors)
+        delete scd;
+    m_connectors.clear();
+}
+
+void SchematicDevice::AddConnector(SConnector *desp)
+{
+    m_connectors.push_back(desp);
+}
+
+SchematicTerminal* SchematicDevice::ConnectTerminal() const
+{
+    SchematicTerminal *terminal = nullptr;
+
+    foreach (SConnector *scd, m_connectors) {
+        terminal = scd->connectTerminal;
+        break;
+    }
+
+    Q_ASSERT(terminal);
+
+    return terminal;
+}
+
+SchematicTerminal* SchematicDevice::ConnectTerminal(TerminalType type) const
+{
+    SchematicTerminal *terminal = nullptr;
+
+    foreach (SConnector *scd, m_connectors)
+        if (scd->thisTerminal->GetTerminalType() == type) {
+            terminal = scd->connectTerminal;
+            break;
+        }
+
+    Q_ASSERT(terminal);
+
+    return terminal;
 }
 
 /* Print and Plot */

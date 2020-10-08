@@ -3,6 +3,7 @@
 #include "SchematicTerminal.h"
 #include "SchematicWire.h"
 #include "SchematicDot.h"
+#include "SConnector.h"
 
 int SchematicScene::RenderSchematicDevices(const SDeviceList &devices, int colCount,
                                            int rowCount, IgnoreCap ignore)
@@ -159,7 +160,9 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
     QPointF devTerPos, gndPos;
     SchematicWire *wire = nullptr;
     SchematicTerminal *gndTer = nullptr;
-    
+    SConnector *scd = nullptr;
+    bool reverse = false;
+
     m_gndList.clear();
     m_hasGndWireList.clear();
 
@@ -173,16 +176,30 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                 terminal = device->GetTerminal(Positive);
                 if (terminal->ConnectToGnd()) {
                     devTerPos = terminal->ScenePos();
-                    gndPos.rx() = devTerPos.x();
-                    gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
+
+                    if (device->GetOrientation() == Vertical && device->Reverse()) {
+                        gndPos.rx() = devTerPos.x();
+                        gndPos.ry() = devTerPos.y() - DFT_GND_DIS * m_itemScale;
+                        reverse = true;
+                    } else {
+                        gndPos.rx() = devTerPos.x();
+                        gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
+                        reverse = false;
+                    }
+
                     gnd = InsertSchematicDevice(GND, gndPos);
-                    gnd->SetGndConnectTerminal(terminal);
+
+                    scd = new SConnector(terminal, gnd->GetTerminal(General), gnd);
+                    device->AddConnector(scd);
+                    scd = new SConnector(gnd->GetTerminal(General), terminal, device);
+                    gnd->AddConnector(scd);
+
                     gnd->SetOrientation(Vertical);
+                    gnd->SetReverse(reverse);
                     gnd->SetScenePos(device->SceneCol(), 0);
 
                     gndTer = gnd->GetTerminal(General);
-                    wire = new SchematicWire(device, gnd,
-                            terminal, gndTer);
+                    wire = new SchematicWire(device, gnd, terminal, gndTer);
                     wire->SetTrack(-1);
                     m_gndList.push_back(gnd);
                     m_hasGndWireList.push_back(wire);
@@ -191,16 +208,30 @@ void SchematicScene::RenderFixedGnds(const SDeviceList &devices)
                 terminal = device->GetTerminal(Negative);
                 if (terminal->ConnectToGnd()) {
                     devTerPos = terminal->ScenePos();
-                    gndPos.rx() = devTerPos.x();
-                    gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
+
+                    if (device->GetOrientation() == Vertical && device->Reverse()) {
+                        gndPos.rx() = devTerPos.x();
+                        gndPos.ry() = devTerPos.y() - DFT_GND_DIS * m_itemScale;
+                        reverse = true;
+                    } else {
+                        gndPos.rx() = devTerPos.x();
+                        gndPos.ry() = devTerPos.y() + DFT_GND_DIS * m_itemScale;
+                        reverse = false;
+                    }
+
                     gnd = InsertSchematicDevice(GND, gndPos);
-                    gnd->SetGndConnectTerminal(terminal);
+
+                    scd = new SConnector(terminal, gnd->GetTerminal(General), gnd);
+                    device->AddConnector(scd);
+                    scd = new SConnector(gnd->GetTerminal(General), terminal, device);
+                    gnd->AddConnector(scd);
+
                     gnd->SetOrientation(Vertical);
+                    gnd->SetReverse(reverse);
                     gnd->SetScenePos(device->SceneCol(), 0);
 
                     gndTer = gnd->GetTerminal(General);
-                    wire = new SchematicWire(device, gnd,
-                            terminal, gndTer);
+                    wire = new SchematicWire(device, gnd, terminal, gndTer);
                     wire->SetTrack(-1);
                     m_gndList.push_back(gnd);
                     m_hasGndWireList.push_back(wire);
@@ -221,11 +252,11 @@ void SchematicScene::RenderGroundCaps(const SDeviceList &gcaps)
 
         capTer = cap->GetTerminal(Positive);
         if (NOT capTer->ConnectToGnd()) {
-            connectTer = cap->GroundCapConnectTerminal();
+            connectTer = cap->ConnectTerminal();
             connectTerPos = connectTer->ScenePos();
             capTerPos.rx() = connectTerPos.x();
             capTerPos.ry() = connectTerPos.y() + 2 * DFT_DIS * m_itemScale;
-            // capPos = cap->ScenePosByTerminalScenePos(capTer, capTerPos);
+            capPos = cap->ScenePosByTerminalScenePos(capTer, capTerPos);
             capPos = capTerPos;
             cap->SetOrientation(Vertical);
             SetDeviceAt(capPos, cap);
@@ -233,11 +264,11 @@ void SchematicScene::RenderGroundCaps(const SDeviceList &gcaps)
 
         capTer = cap->GetTerminal(Negative);
         if (NOT capTer->ConnectToGnd()) {
-            connectTer = cap->GroundCapConnectTerminal();
+            connectTer = cap->ConnectTerminal();
             connectTerPos = connectTer->ScenePos();
             capTerPos.rx() = connectTerPos.x();
             capTerPos.ry() = connectTerPos.y() + 2 * DFT_DIS * m_itemScale;
-            // capPos = cap->ScenePosByTerminalScenePos(capTer, capTerPos);
+            capPos = cap->ScenePosByTerminalScenePos(capTer, capTerPos);
             capPos = capTerPos;
             cap->SetOrientation(Vertical);
             SetDeviceAt(capPos, cap);
@@ -251,8 +282,8 @@ void SchematicScene::RenderCoupledCaps(const SDeviceList &ccaps)
     QPointF capPos, cntPosTerPos, cntNegTerPos;
 
     foreach (cap, ccaps) {
-        cntPosTerPos = cap->CoupledCapConnectTerminal(Positive)->ScenePos();
-        cntNegTerPos = cap->CoupledCapConnectTerminal(Negative)->ScenePos();
+        cntPosTerPos = cap->ConnectTerminal(Positive)->ScenePos();
+        cntNegTerPos = cap->ConnectTerminal(Negative)->ScenePos();
         capPos.rx() = (cntPosTerPos.x() + cntNegTerPos.x()) / 2;
         capPos.ry() = (cntPosTerPos.y() + cntNegTerPos.y()) / 2;
         cap->SetOrientation(Vertical);
@@ -281,8 +312,6 @@ int SchematicScene::RenderSchematicWires(const SWireList &wires)
     /* 1. assign geometrical col. */
     SchematicWire *wire = nullptr;
     foreach (wire, wires) {
-        // int geoCol = wire->LogicalCol() * 2 + 1;
-        // wire->SetGeometricalCol(geoCol);
         if (wire->HasGroundCap())  m_hasGCapWireList.push_back(wire);
         if (wire->HasCoupledCap()) m_hasCCapWireList.push_back(wire);
     }
@@ -373,9 +402,11 @@ QVector<QPointF> SchematicScene::CreateWirePathPoints(SchematicWire *wire) const
 
 void SchematicScene::HideGroundCaps(bool hide)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
+
+#if 0
     if (hide) {
 
         foreach (SchematicDevice *gcap, m_gCapDeviceList)
@@ -386,17 +417,31 @@ void SchematicScene::HideGroundCaps(bool hide)
 
     } else {
 
-        RenderGroundCaps(m_gCapDeviceList);
+        // RenderGroundCaps(m_gCapDeviceList);
+        foreach (SchematicDevice *cap, m_gCapDeviceList)
+            SetDeviceAt(cap->scenePos(), cap);
+
         AddWiresToScene(m_hasGCapWireList);
 
     }
+#endif
+
+    foreach (SchematicDevice *gcap, m_gCapDeviceList) {
+        gcap->setVisible(NOT hide);
+        gcap->SetAnnotationVisible(NOT hide);
+    }
+
+    foreach (SchematicWire *gwire, m_hasGCapWireList)
+        gwire->setVisible(NOT hide);
 }
 
 void SchematicScene::HideCoupledCaps(bool hide)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
+
+#if 0
     if (hide) {
 
         foreach (SchematicDevice *ccap, m_cCapDeviceList)
@@ -407,18 +452,30 @@ void SchematicScene::HideCoupledCaps(bool hide)
 
     } else {
 
-        RenderCoupledCaps(m_cCapDeviceList);
+        // RenderCoupledCaps(m_cCapDeviceList);
+        foreach (SchematicDevice *cap, m_cCapDeviceList)
+            SetDeviceAt(cap->scenePos(), cap);
+
         AddWiresToScene(m_hasCCapWireList);
 
     }
+#endif
+    foreach (SchematicDevice *ccap, m_cCapDeviceList) {
+        ccap->setVisible(NOT hide);
+        ccap->SetAnnotationVisible(NOT hide);
+    }
+
+    foreach (SchematicWire *cwire, m_hasCCapWireList)
+        cwire->setVisible(NOT hide);
 }
 
 void SchematicScene::HideGnds(bool hide)
 {
-#ifdef TRACE
+#ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
 
+#if 0
     if (hide) {
 
         foreach (SchematicDevice *gnd, m_gndList)
@@ -431,7 +488,7 @@ void SchematicScene::HideGnds(bool hide)
 
         QPointF terPos, gndPos;
         foreach (SchematicDevice *gnd, m_gndList) {
-            terPos = gnd->GndConnectTerminal()->ScenePos();
+            terPos = gnd->ConnectTerminal()->ScenePos();
             gndPos.rx() = terPos.x();
             gndPos.ry() = terPos.y() + DFT_DIS * m_itemScale;
             SetDeviceAt(gndPos, gnd);
@@ -440,6 +497,13 @@ void SchematicScene::HideGnds(bool hide)
         AddWiresToScene(m_hasGndWireList);
 
     }
+#endif
+
+    foreach (SchematicDevice *gnd, m_gndList)
+        gnd->setVisible(NOT hide);
+
+    foreach (SchematicWire *wire, m_hasGndWireList)
+        wire->setVisible(NOT hide);
 }
 
 int SchematicScene::RenderSchematicDots(const SDotList &dots)
