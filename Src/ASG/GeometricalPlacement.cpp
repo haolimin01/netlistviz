@@ -85,12 +85,17 @@ int ASG::CalGeometricalRow()
     qInfo() << "Min LogicalRow =" << minLogRow;
 #endif
 
-    if (minLogRow >= 0)
+    int geoRow = 0;
+    if (minLogRow >= 0) {
+        foreach (Device *dev, devices) {
+            geoRow = dev->LogicalRow();
+            dev->SetGeometricalRow(geoRow);
+        }
         return OKAY;
+    }
 
     int shiftDown = -1 * minLogRow;
 
-    int geoRow = 0;
     foreach (Device *dev, devices) {
         geoRow = dev->LogicalRow() + shiftDown;
         dev->SetGeometricalRow(geoRow);

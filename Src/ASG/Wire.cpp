@@ -81,33 +81,6 @@ bool Wire::HasCCap() const
 
 bool Wire::IsHorizontal() const
 {
-#if 0
-    int fromDevRow = m_fromDevice->LogicalRow();
-    int toDevRow = m_toDevice->LogicalRow();
-
-    if (fromDevRow != toDevRow)
-        return false;
-
-    Orientation fromDevOrien = m_fromDevice->GetOrientation();
-    Orientation toDevOrien = m_toDevice->GetOrientation();
-
-    if (fromDevOrien != toDevOrien)
-        return false;
-
-    Orientation orien = fromDevOrien; // = toDevOrien
-
-    if (orien == Horizontal)
-        return true;
-
-    if (m_fromTerminal->Above() && m_toTerminal->Above())
-        return true;
-
-    if (m_fromTerminal->Below() && m_toTerminal->Below())
-        return true;
-
-    return false;
-#endif
-
     qreal fromTerRow = m_fromTerminal->LogicalRelRow();
     qreal toTerRow = m_toTerminal->LogicalRelRow();
 
@@ -132,19 +105,6 @@ bool Wire::HasCross(Wire *otherWire) const
 
     if (m1 == 0) // could be merged
         return false;
-
-#if 0
-    int m2 = 0;
-    if (thisFromTerRow < otherFromTerRow) {
-        m2 = otherToTerRow - thisFromTerRow;
-    } else {
-        m2 = thisToTerRow - otherFromTerRow;
-    }
-    if (m2 <= 0)
-        return true;
-    else
-        return false;
-#endif
 
     int m2 = (thisFromTerRow - otherToTerRow) * (otherFromTerRow - thisToTerRow);
     if (m2 >= 0)
@@ -211,6 +171,12 @@ Terminal* Wire::SameTerminal(Wire *otherWire) const
         terminal = m_fromTerminal;
     else if (thisToTerRow == otherToTerRow)
         terminal = m_toTerminal;
+
+#ifdef DEBUGx
+    qDebug() << Name() << " and " << otherWire->Name();
+    qDebug() << thisFromTerRow << " and " << otherFromTerRow;
+    qDebug() << thisToTerRow << " and " << otherToTerRow;
+#endif
 
     Q_ASSERT(terminal);
 

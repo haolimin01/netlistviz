@@ -80,8 +80,8 @@ public:
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Device);
-    bool    HasConnectionIgnoreGnd(Terminal *otherTer, TerminalType thisType) const;
-    bool    HasConnectionIgnoreGnd(Device *otherDev, TerminalType thisType) const;
+    bool    HasConnection(Terminal *otherTer, TerminalType thisType) const;
+    qreal   RowDistance(Terminal *otherTer, TerminalType thisType) const;
     bool    MaybeVertical() const;
 
     TerminalTable                     m_terminals;

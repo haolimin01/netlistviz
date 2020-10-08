@@ -61,7 +61,7 @@ void Level::AssignDeviceLogicalRow()
     /* 2. Sort by Logical row */
     SortByLogicalRow(m_devices);
 
-#ifdef DEBUG
+#ifdef DEBUGx
     qInfo() << "Before Assign Logical Row in Level";
     PrintLogicalPos();
 #endif
@@ -104,7 +104,7 @@ void Level::AssignDeviceLogicalRow()
     for (int i = 0; i < m_rows.size(); ++ i)
         m_devices[i]->SetLogicalRow(m_rows.at(i));
 
-#ifdef DEBUG
+#ifdef DEBUGx
     qInfo() << "After Assign Logical Row in Level";
     PrintLogicalPos();
 #endif
