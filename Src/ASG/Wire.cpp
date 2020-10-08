@@ -13,6 +13,7 @@ Wire::Wire(Device *fromDevice, Terminal *fromTerminal,
     m_track = -1;
     m_channelId = 0;
     m_trackGiven = false;
+    m_swire = nullptr;
 }
 
 Wire::~Wire()

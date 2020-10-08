@@ -51,7 +51,6 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
         return;
 
     /* First, tag horizontal wire */
-    int id = 0;
     Wire *wire = nullptr;
     foreach (wire, m_wires) {
         if (wire->IsHorizontal()) {
@@ -150,8 +149,9 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
 void Channel::CreateDots(const QVector<WireList> &mergedWireList)
 {
     m_dots.clear();
-    std::set<int> dotSet;
+    QMap<int, Dot*> dotMap;
     Terminal *terminal = nullptr;
+    Dot *dot = nullptr;
 
     /* First, cross points with horizontal wires */
     foreach (Wire *thisWire, m_wires) {
@@ -161,25 +161,26 @@ void Channel::CreateDots(const QVector<WireList> &mergedWireList)
 
             if (thisWire->CouldBeMerged(otherWire)) {
                 terminal = thisWire->SameTerminal(otherWire);
-                if (NOT SetContains(dotSet, terminal->Id())) {
-                    // new dot
-                    Dot *newDot = new Dot(m_id, otherWire->Track(), terminal);
-                    m_dots.push_back(newDot);
+
+                dot = dotMap.value(terminal->Id(), nullptr);
+                if (NOT dot) {
+                    dot = new Dot(m_id, otherWire->Track(), terminal);
+                    dotMap.insert(terminal->Id(), dot);
+                    m_dots.push_back(dot);
                 }
+
+                dot->AddWire(thisWire);
+                dot->AddWire(otherWire);
+
             }
         }
     }
 
 #ifdef DEBUGx
     printf("--------------- Channel %d ---------------\n", m_id);
-
-    // std::set<int>::const_iterator cit = dotSet.cbegin();
-    // for (; cit != dotSet.cend(); ++ cit)
-    //     qInfo() << *cit;
-
     printf("========== Dots with horizontal wires ==========\n");
     foreach (Dot *dot, m_dots) {
-        qInfo() << dot->Track() << dot->DeviceName() << dot->TerminalId();
+        qInfo() << dot->Track() << dot->DeviceName() << dot->TerminalId() << dot->Wires();
     }
 #endif
 
@@ -195,38 +196,30 @@ void Channel::CreateDots(const QVector<WireList> &mergedWireList)
                 Q_ASSERT(thisWire->Track() == otherWire->Track());
 
                 terminal = thisWire->SameTerminal(otherWire);
-                if (NOT SetContains(dotSet, terminal->Id())) {
-                    // new dot
-                    Dot *newDot = new Dot(m_id, thisWire->Track(), terminal);
-                    m_dots.push_back(newDot);
+
+                dot = dotMap.value(terminal->Id(), nullptr);
+                if (NOT dot) {
+                    dot = new Dot(m_id, thisWire->Track(), terminal);
+                    dotMap.insert(terminal->Id(), dot);
+                    m_dots.push_back(dot);
                 }
+
+                dot->AddWire(thisWire);
+                dot->AddWire(otherWire);
+
             }
         }
     }
 
 #ifdef DEBUGx
     printf("=================== All Dots ===================\n");
-    // std::set<int>::const_iterator cit = dotSet.cbegin();
-    // cit = dotSet.cbegin();
-    // for (; cit != dotSet.cend(); ++ cit)
-    //     qInfo() << *cit;
     foreach (Dot *dot, m_dots) {
-        qInfo() << dot->Track() << dot->DeviceName() << dot->TerminalId();
+        qInfo() << dot->Track() << dot->DeviceName() << dot->TerminalId() << dot->Wires();
     }
 
     printf("------------------------------------------\n");
 #endif
 
-}
-
-bool Channel::SetContains(std::set<int> &Set, int key) const
-{
-    std::set<int>::const_iterator finder = Set.find(key);
-    if (finder != Set.cend())
-        return true;
-
-    Set.insert(key);
-    return false;
 }
 
 bool Channel::CouldBeSameTrackWithWires(const WireList &wires, Wire *wire) const

@@ -433,6 +433,8 @@ void SchematicScene::HideGroundCaps(bool hide)
 
     foreach (SchematicWire *gwire, m_hasGCapWireList)
         gwire->setVisible(NOT hide);
+
+    UpdateDots();
 }
 
 void SchematicScene::HideCoupledCaps(bool hide)
@@ -467,6 +469,8 @@ void SchematicScene::HideCoupledCaps(bool hide)
 
     foreach (SchematicWire *cwire, m_hasCCapWireList)
         cwire->setVisible(NOT hide);
+
+    UpdateDots();
 }
 
 void SchematicScene::HideGnds(bool hide)
@@ -504,6 +508,8 @@ void SchematicScene::HideGnds(bool hide)
 
     foreach (SchematicWire *wire, m_hasGndWireList)
         wire->setVisible(NOT hide);
+
+    UpdateDots();
 }
 
 int SchematicScene::RenderSchematicDots(const SDotList &dots)
@@ -516,6 +522,9 @@ int SchematicScene::RenderSchematicDots(const SDotList &dots)
         dot->setPos(pos);
         addItem(dot);
     }
+
+    m_dotList.clear();
+    m_dotList = dots;
 
     return OKAY;
 }
@@ -542,4 +551,24 @@ QPointF SchematicScene::SeekDotScenePos(SchematicDot *dot) const
     qreal sceneY = ter->ScenePos().y();
 
     return QPointF(sceneX, sceneY);
+}
+
+void SchematicScene::UpdateDots()
+{
+    SchematicWire *wire = nullptr;
+    int count = 0;
+
+    foreach (SchematicDot *dot, m_dotList) {
+        foreach (wire, dot->Wires()) {
+            if (wire->isVisible())
+                count++;
+        }
+
+        if (count >= 2)
+            dot->show();
+        else
+            dot->hide();
+
+        count = 0;
+    }
 }

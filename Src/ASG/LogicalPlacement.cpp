@@ -376,7 +376,7 @@ int ASG::DecideDeviceOrientation()
     foreach (Device *dev, m_ckt->GetDeviceList())
         dev->DecideOrientationByPredecessors();
 
-#ifdef DEBUGx
+#ifdef DEBUG
     foreach (Level *level, m_levels)
         level->PrintOrientation();
 #endif
@@ -394,7 +394,7 @@ int ASG::DecideDeviceWhetherToReverse()
             dev->DecideReverseBySuccessors();
     }
 
-#ifdef DEBUGx
+#ifdef DEBUG
     foreach (Level *level, m_levels)
         level->PrintReverse();
 #endif

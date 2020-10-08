@@ -96,6 +96,7 @@ private:
     void     AddWiresToScene(const SWireList &wires);
     QPointF  SeekDotScenePos(SchematicDot *dot) const;
     QVector<QPointF> CreateWirePathPoints(SchematicWire *wire) const;
+    void     UpdateDots();
     /*---------------------------------------- */
 
     SchematicDevice*   InsertSchematicDevice(DeviceType, const QPointF &);
@@ -136,6 +137,8 @@ private:
     SWireList                   m_hasGCapWireList;
     SWireList                   m_hasCCapWireList;
     SWireList                   m_hasGndWireList;
+
+    SDotList                    m_dotList;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATICSCENE_H

@@ -69,6 +69,7 @@ SchematicWire* ASG::CreateSchematicWire(Wire *wire) const
     SchematicWire *swire = new SchematicWire(wire->FromSDevice(), wire->ToSDevice(),
             wire->FromSTerminal(), wire->ToSTerminal());
     swire->SetTrack(wire->Track());
+    wire->SetSchematicWire(swire);
 
     return swire;
 }
@@ -117,6 +118,10 @@ SchematicDot* ASG::CreateSchematicDot(Dot *dot) const
     sdot->SetTerminal(dot->STerminal());
     sdot->SetTrack(dot->Track());
     sdot->SetGeometricalCol(dot->GeometricalCol());
+
+    foreach (Wire *wire, dot->Wires()) {
+        sdot->AddWire(wire->GetSchematicWire());
+    }
 
     return sdot;
 }
