@@ -33,6 +33,7 @@ public:
     QPixmap      Image();
     int          type() const override { return Type; }
     QRectF       boundingRect() const override;
+    void         SetAnnotationVisible(bool show);
     void         SetDeviceType(DeviceType type) {m_deviceType = type; }
     DeviceType   GetDeviceType() const { return m_deviceType; }
     void         SetContextMenu(QMenu *contextMenu) { m_contextMenu = contextMenu; }
@@ -64,12 +65,6 @@ public:
     SchematicTerminal* ConnectTerminal() const;
     SchematicTerminal* ConnectTerminal(TerminalType type) const;
     STerminalTable     GetTerminalTable() const { return m_terminals; }
-
-
-    // SchematicTerminal* GroundCapConnectTerminal() const;
-    // SchematicTerminal* CoupledCapConnectTerminal(TerminalType type) const;
-    // void               SetGndConnectTerminal(SchematicTerminal *ter);
-    // SchematicTerminal* GndConnectTerminal() const { return m_gndConnectTerminal; }
 
     /* Print and Plot */
     void         Print() const;

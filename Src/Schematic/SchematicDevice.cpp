@@ -170,6 +170,13 @@ void SchematicDevice::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     // do nothing now.
 }
 
+void SchematicDevice::SetAnnotationVisible(bool show)
+{
+    if (NOT m_annotText)
+        return;
+    m_annotText->setVisible(show);
+}
+
 QRectF SchematicDevice::boundingRect() const
 {
     return QRectF(-BRECT_W, -BRECT_W, 2 * BRECT_W, 2 * BRECT_W);
@@ -183,15 +190,6 @@ QPainterPath SchematicDevice::shape() const
     cit = m_terminals.constBegin();
     for (; cit != m_terminals.constEnd(); ++ cit)
         path.addRect(cit.value()->Rect());
-#if 0
-    if (m_deviceType == GND) {
-        // int halfTerSize = TerminalSize / 2;
-        // path.addRect(QRectF(-12, -10 + halfTerSize, 24, (10 - halfTerSize) * 2));
-        path.addRect(QRectF(-3.5, -4, 6, 6));
-    } else {
-        path.addRect(DashRect());
-    }
-#endif
 
     path.addRect(DashRect());
 

@@ -386,6 +386,8 @@ void SchematicScene::HideGroundCaps(bool hide)
 #ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
+
+#if 0
     if (hide) {
 
         foreach (SchematicDevice *gcap, m_gCapDeviceList)
@@ -403,6 +405,15 @@ void SchematicScene::HideGroundCaps(bool hide)
         AddWiresToScene(m_hasGCapWireList);
 
     }
+#endif
+
+    foreach (SchematicDevice *gcap, m_gCapDeviceList) {
+        gcap->setVisible(NOT hide);
+        gcap->SetAnnotationVisible(NOT hide);
+    }
+
+    foreach (SchematicWire *gwire, m_hasGCapWireList)
+        gwire->setVisible(NOT hide);
 }
 
 void SchematicScene::HideCoupledCaps(bool hide)
@@ -410,6 +421,8 @@ void SchematicScene::HideCoupledCaps(bool hide)
 #ifdef TRACEx
     qInfo() << LINE_INFO << endl;
 #endif
+
+#if 0
     if (hide) {
 
         foreach (SchematicDevice *ccap, m_cCapDeviceList)
@@ -427,6 +440,14 @@ void SchematicScene::HideCoupledCaps(bool hide)
         AddWiresToScene(m_hasCCapWireList);
 
     }
+#endif
+    foreach (SchematicDevice *ccap, m_cCapDeviceList) {
+        ccap->setVisible(NOT hide);
+        ccap->SetAnnotationVisible(NOT hide);
+    }
+
+    foreach (SchematicWire *cwire, m_hasCCapWireList)
+        cwire->setVisible(NOT hide);
 }
 
 void SchematicScene::HideGnds(bool hide)
@@ -435,6 +456,7 @@ void SchematicScene::HideGnds(bool hide)
     qInfo() << LINE_INFO << endl;
 #endif
 
+#if 0
     if (hide) {
 
         foreach (SchematicDevice *gnd, m_gndList)
@@ -456,6 +478,13 @@ void SchematicScene::HideGnds(bool hide)
         AddWiresToScene(m_hasGndWireList);
 
     }
+#endif
+
+    foreach (SchematicDevice *gnd, m_gndList)
+        gnd->setVisible(NOT hide);
+
+    foreach (SchematicWire *wire, m_hasGndWireList)
+        wire->setVisible(NOT hide);
 }
 
 int SchematicScene::RenderSchematicDots(const SDotList &dots)
