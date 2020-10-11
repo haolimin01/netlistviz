@@ -26,7 +26,7 @@ SchematicDot::SchematicDot()
 
 SchematicDot::~SchematicDot()
 {
-
+    m_wires.clear();
 }
 
 QRectF SchematicDot::boundingRect() const
@@ -85,6 +85,11 @@ void SchematicDot::DrawDot()
 QRectF SchematicDot::DashRect() const
 {
     return QRectF(-BRECT_LEN/2, -BRECT_LEN/2, BRECT_LEN, BRECT_LEN);
+}
+
+void SchematicDot::AddWire(SchematicWire *wire)
+{
+    m_wires.push_back(wire);
 }
 
 void SchematicDot::Print() const

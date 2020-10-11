@@ -11,8 +11,10 @@
 
 #include <QGraphicsPathItem>
 #include "Define/Define.h"
+#include "Define/TypeDefine.h"
 
 class SchematicTerminal;
+class SchematicWire;
 
 class SchematicDot : public QGraphicsPathItem
 {
@@ -38,6 +40,8 @@ public:
     int       HoldColCount() const       { return m_holdColCount; }
     SchematicTerminal* GetSchematicTerminal() const { return m_terminal; }
     void      SetScenePos(int col, int row) { m_sceneCol = col; m_sceneRow = row; }
+    void      AddWire(SchematicWire *wire);
+    SWireList Wires() const { return m_wires; }
 
     void      Print() const;
 
@@ -62,6 +66,7 @@ private:
     int                m_holdColCount;
     int                m_sceneCol;
     int                m_sceneRow;
+    SWireList          m_wires;
 };
 
 #endif // NETLISTVIZ_SCHEMATIC_SCHEMATIC_DOT_H

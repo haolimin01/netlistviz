@@ -12,7 +12,7 @@
 
 #include "Define/Define.h"
 #include "Define/TypeDefine.h"
-#include <set>
+#include <QMap>
 
 class Wire;
 
@@ -41,9 +41,9 @@ private:
     DISALLOW_COPY_AND_ASSIGN(Channel);
 
     bool      CouldBeSameTrackWithWires(const WireList &wires, Wire *wire) const;
+    bool      CouldBeMergedWithWires(const WireList &wl, Wire *wire) const;
     bool      HaveCrossBetweenWires(const WireList &wl1, const WireList &wl2) const;
     void      CreateDots(const QVector<WireList> &mergedWireList);
-    bool      SetContains(std::set<int> &Set, int key) const;
 
     WireList   m_wires;
     int        m_id;

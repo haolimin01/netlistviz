@@ -21,7 +21,7 @@ Dot::Dot(const Dot& otherDot)
 
 Dot::~Dot()
 {
-
+    m_wires.clear();
 }
 
 int Dot::TerminalId() const
@@ -37,4 +37,20 @@ QString Dot::DeviceName() const
 SchematicTerminal* Dot::STerminal() const
 {
     return m_terminal->GetSchematicTerminal();
+}
+
+void Dot::AddWire(Wire *wire)
+{
+    Wire *existWire = m_wires.value(wire, nullptr);
+    if (NOT existWire)
+        m_wires.insert(wire, wire);
+}
+
+WireList Dot::Wires() const
+{
+    WireList ret;
+    foreach (Wire *wire, m_wires.keys())
+        ret.push_back(wire);
+
+    return ret;
 }

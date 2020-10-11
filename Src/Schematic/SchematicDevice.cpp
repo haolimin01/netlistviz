@@ -71,32 +71,26 @@ void SchematicDevice::Initialize()
     
     switch (m_deviceType) {
         case RESISTOR:
-            m_devOrien = Vertical;
             DrawResistor();
             m_isDevice = true;
             break;
         case CAPACITOR:
-            m_devOrien = Vertical;
             DrawCapacitor();
             m_isDevice = true;
             break;
         case INDUCTOR:
-            m_devOrien = Vertical;
             DrawInductor();
             m_isDevice = true;
             break;
         case ISRC:
-            m_devOrien = Vertical;
             DrawIsrc();
             m_isDevice = true;
             break;
         case VSRC:
-            m_devOrien = Vertical;
             DrawVsrc();
             m_isDevice = true;
             break;
         case GND:
-            m_devOrien = Vertical;
             DrawGnd();
             // DrawSmallGnd();
             m_isDevice = false;
@@ -761,6 +755,8 @@ void SchematicDevice::Print() const
     tmp += ("id(" + QString::number(m_id) + "), ");
     tmp += ("geoCol(" + QString::number(m_geoCol) + "), ");
     tmp += ("geoRow(" + QString::number(m_geoRow) + "), ");
+    tmp += ((m_devOrien == Horizontal)? "orien(H), " : "orien(V), ");
+    tmp += ((m_reverse) ? "reverse(yes)" : "reverse(no)");
     qInfo() << tmp;
     qInfo() << "Terminals";
     foreach (SchematicTerminal *ter, m_terminals.values())

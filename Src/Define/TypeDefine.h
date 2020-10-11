@@ -41,6 +41,7 @@ typedef QVector<Node*>                  NodeList;
 typedef QMap<TerminalType, Terminal*>   TerminalTable;
 typedef QVector<Terminal*>              TerminalList;
 typedef QVector<Wire*>                  WireList;
+typedef QMap<QString, Wire*>            WireTable;
 typedef QVector<Connector*>             ConnectorList;
 typedef QVector<Channel*>               ChannelList;
 typedef QVector<Level*>                 LevelList;

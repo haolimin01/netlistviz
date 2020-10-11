@@ -331,6 +331,15 @@ int ASG::EstimateLogicalRowGap()
         currLevel->SetRowGap(backLevel->RowGap() * ratio);
     }
 
+#ifdef DEBUGx
+    printf("--------------- Row Gap ---------------\n");
+
+    foreach (Level *l, m_levels)
+        qInfo() << l->Id() << "rowGap(" << l->RowGap() << ")";
+
+    printf("---------------------------------------\n");
+#endif
+
     return OKAY;
 }
 

@@ -11,6 +11,8 @@
 
 
 #include "Define/Define.h"
+#include "Define/TypeDefine.h"
+#include <QMap>
 
 class QString;
 class Terminal;
@@ -23,20 +25,23 @@ public:
     Dot(const Dot& otherDot);
     ~Dot();
 
-    int     Track() const { return m_track; }
-    int     TerminalId() const;
-    QString DeviceName() const;
-    void    SetGeometricalCol(int col) { m_geoCol = col; }
-    int     GeometricalCol() const     { return m_geoCol; }
+    int       Track() const { return m_track; }
+    int       TerminalId() const;
+    QString   DeviceName() const;
+    void      SetGeometricalCol(int col) { m_geoCol = col; }
+    int       GeometricalCol() const     { return m_geoCol; }
+    void      AddWire(Wire *wire);
+    WireList  Wires() const;
     SchematicTerminal* STerminal() const;
 
 private:
 
-    int       m_channelId;
-    int       m_geoCol;
-    Terminal *m_terminal;
+    int                 m_channelId;
+    int                 m_geoCol;
+    Terminal           *m_terminal;
+    QMap<Wire*, Wire*>  m_wires; // deduplication
 
-    int       m_track;
+    int                 m_track;
 };
 
 

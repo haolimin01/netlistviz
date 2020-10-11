@@ -39,11 +39,16 @@ public:
     bool      CouldBeSameTrack(Wire *otherWire) const;
     Terminal* SameTerminal(Wire *otherWire) const;
     QString   Name() const;
+    int       FromDeviceId() const { return m_fromDevice->Id(); }
+    int       ToDeviceId() const { return m_toDevice->Id(); }
 
     SchematicDevice*    FromSDevice() const;
     SchematicDevice*    ToSDevice() const;
     SchematicTerminal*  FromSTerminal() const;
     SchematicTerminal*  ToSTerminal() const;
+
+    void           SetSchematicWire(SchematicWire *swire) { m_swire = swire; }
+    SchematicWire* GetSchematicWire() const { return m_swire; }
 
 private:
     DISALLOW_COPY_AND_ASSIGN(Wire);
@@ -57,6 +62,9 @@ private:
 
     int         m_channelId;
     bool        m_trackGiven;
+
+    /* for creating SchematicDot */
+    SchematicWire *m_swire;
 
     friend class Channel;
 };
