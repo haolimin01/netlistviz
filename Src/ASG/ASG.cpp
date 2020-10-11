@@ -59,7 +59,8 @@ ASG::~ASG()
     m_channels.clear();
 
     m_sdeviceList.clear();
-    m_swireList.clear();
+    m_inChannelSWireList.clear();
+    m_inLevelSWireList.clear();
     m_sdotList.clear();
 }
 

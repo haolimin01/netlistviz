@@ -1,6 +1,7 @@
 #include "Level.h"
 #include <QDebug>
 #include "Circuit/Device.h"
+#include "Wire.h"
 
 Level::Level(int id)
 {
@@ -79,8 +80,8 @@ void Level::AssignDeviceLogicalRow()
 
         if (row < currMaxRow) {
             RowsFlexibleShiftUpBy(m_rows, (currMaxRow - row) / 2);
-            // row = m_rows.back() + m_rowGap;
-            row = currMaxRow + m_rowGap;
+            row = m_rows.back() + m_rowGap;
+            // row = currMaxRow + m_rowGap;
             currMaxRow = row;
             m_rows.push_back(currMaxRow);
             continue;
@@ -148,6 +149,41 @@ void Level::AssignDeviceGeometricalCol(int col)
     foreach (Device *dev, m_devices) {
         dev->SetGeometricalCol(col);
     }
+}
+
+void Level::CollectWires()
+{
+    m_wires.clear();
+
+    foreach (Device *dev, m_devices) {
+        foreach (Wire *wire, dev->WiresToFellows())
+            AddWire(wire);
+    }
+}
+
+void Level::AddWire(Wire *wire)
+{
+    int fromId = wire->FromDeviceId();
+    int toId = wire->ToDeviceId();
+
+    QString key = QString::number(fromId) + " " + QString::number(toId);
+    if (toId < fromId)
+        key = QString::number(toId) + " " + QString::number(fromId);
+
+    bool found = m_wires.contains(key);
+    if (NOT found)
+        m_wires.insert(key, wire);
+}
+
+WireList Level::Wires()
+{
+    CollectWires();
+
+    WireList wires;
+    foreach (Wire *wire, m_wires.values())
+        wires.push_back(wire);
+    
+    return wires;
 }
 
 void Level::PrintAllDevices() const

@@ -124,7 +124,7 @@ int ASG::CreateSchematicDevices()
         m_sdeviceList.push_back(sdevice);
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (sdevice, m_sdeviceList)
         sdevice->Print();
 #endif

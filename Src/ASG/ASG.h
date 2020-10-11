@@ -109,7 +109,8 @@ private:
     TablePlotter      *m_levelPlotter;
 
     SDeviceList        m_sdeviceList;
-    SWireList          m_swireList;
+    SWireList          m_inChannelSWireList;
+    SWireList          m_inLevelSWireList;
     SDotList           m_sdotList;
 
     bool               m_logDataDestroyed;

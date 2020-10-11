@@ -33,6 +33,7 @@ public:
     void       AssignDeviceGeometricalCol(int col);
     void       SetRowGap(int gap) { m_rowGap = gap; };
     int        RowGap() const { return m_rowGap; }
+    WireList   Wires();
 
     void       PrintAllDevices() const;
     void       PrintAllConnections() const;
@@ -49,12 +50,15 @@ private:
     void SortByLogicalRow(DeviceList &devList) const;
     void RowsShiftUpBy(QVector<int> &rows, int n) const;
     void RowsFlexibleShiftUpBy(QVector<int> &rows, int n) const;
+    void CollectWires();
+    void AddWire(Wire *wire);
 
-    DeviceList    m_devices;
-    int           m_id;
-    QVector<int>  m_rows;
+    DeviceList           m_devices;
+    int                  m_id;
+    QVector<int>         m_rows;
+    QMap<QString, Wire*> m_wires; // deduplication
 
-    int           m_rowGap;
+    int                  m_rowGap;
 };
 
 #endif // NETLISTVIZ_ASG_LEVEL_H

@@ -60,7 +60,7 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
 
     /* Second, sort wires by toDevice row */
     qSort(m_wires.begin(), m_wires.end(),
-            [](Wire *w1, Wire *w2) {return w1->m_toDevice->LogicalRow() > w2->m_toDevice->LogicalRow();});
+            [](Wire *w1, Wire *w2) {return w1->m_toDevice->LogicalRow() < w2->m_toDevice->LogicalRow();});
 
     /* Third, put could be merged wires together */
     QVector<WireList> mergedWireList;
@@ -71,7 +71,7 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
 
         for (int i = 0; i < mergedWireList.size(); ++ i) {
             WireList &wl = mergedWireList[i];
-            if (wire->CouldBeMerged(wl.front())) {
+            if (CouldBeMergedWithWires(wl, wire)) {
                 wl.push_back(wire);
                 merged = true;
                 break;
@@ -146,6 +146,16 @@ void Channel::AssignTrackNumber(IgnoreCap ignore)
     CreateDots(mergedWireList);
 }
 
+bool Channel::CouldBeMergedWithWires(const WireList &wl, Wire *wire) const
+{
+    foreach (Wire *thisWire, wl) {
+        if (NOT thisWire->CouldBeMerged(wire))
+            return false;
+    }
+
+    return true;
+}
+
 void Channel::CreateDots(const QVector<WireList> &mergedWireList)
 {
     m_dots.clear();
@@ -196,6 +206,7 @@ void Channel::CreateDots(const QVector<WireList> &mergedWireList)
                 Q_ASSERT(thisWire->Track() == otherWire->Track());
 
                 terminal = thisWire->SameTerminal(otherWire);
+                if (NOT terminal) continue;
 
                 dot = dotMap.value(terminal->Id(), nullptr);
                 if (NOT dot) {

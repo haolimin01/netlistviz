@@ -6,6 +6,7 @@
 #include "Schematic/SchematicDot.h"
 #include "Wire.h"
 #include "Dot.h"
+#include "Level.h"
 
 int ASG::GeometricalRouting(SchematicScene *scene)
 {
@@ -40,8 +41,8 @@ int ASG::CreateSchematicWires()
     qInfo() << LINE_INFO << endl;
 #endif
 
-    m_swireList.clear();
-
+    /* In Channel */
+    m_inChannelSWireList.clear();
     Channel *channel = nullptr;
     Wire *wire = nullptr;
     SchematicWire *swire = nullptr;
@@ -51,15 +52,36 @@ int ASG::CreateSchematicWires()
             swire = CreateSchematicWire(wire);
             swire->SetTrackCount(channel->TrackCount());
             swire->SetHoldColCount(channel->HoldColCount());
-            m_swireList.push_back(swire);
+            m_inChannelSWireList.push_back(swire);
         }
     }
 
 #ifdef DEBUGx
-    foreach (SchematicWire *w, m_swireList) {
+    printf("---------- Wires in Channel ----------\n");
+    foreach (SchematicWire *w, m_inChannelSWireList) {
         w->Print();
     }
-#endif    return OKAY;
+    printf("--------------------------------------\n");
+#endif
+
+    /* In Level */
+    m_inLevelSWireList.clear();
+    Level *level = nullptr;
+    foreach (level, m_levels) {
+        foreach (wire, level->Wires()) {
+            swire = CreateSchematicWire(wire);
+            m_inLevelSWireList.push_back(swire);
+        }
+    }
+
+#ifdef DEBUGx
+    printf("---------- Wires in Level ----------\n");
+    foreach (SchematicWire *w, m_inLevelSWireList)
+        w->Print();
+    printf("------------------------------------\n");
+#endif
+
+    return OKAY;
 }
 
 SchematicWire* ASG::CreateSchematicWire(Wire *wire) const
@@ -76,7 +98,12 @@ SchematicWire* ASG::CreateSchematicWire(Wire *wire) const
 
 int ASG::RenderSchematicWires(SchematicScene *scene)
 {
-    return scene->RenderSchematicWires(m_swireList);
+    int error = scene->RenderSchematicWiresInChannel(m_inChannelSWireList);
+    if (error)
+        return ERROR;
+
+    error = scene->RenderSchematicWiresInLevel(m_inLevelSWireList);
+    return error;
 }
 
 int ASG::CreateSchematicDots()

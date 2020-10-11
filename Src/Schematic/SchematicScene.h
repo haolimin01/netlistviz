@@ -45,7 +45,8 @@ public:
     // total column count (devices + channels), total row count (devices + spaces)
     // int  RenderSchematicDevices(const SDeviceList &devices, int colCount, int rowCount, bool ignoreGroundCap);
     int  RenderSchematicDevices(const SDeviceList &devices, int colCount, int rowCount, IgnoreCap ignore);
-    int  RenderSchematicWires(const SWireList &wires);
+    int  RenderSchematicWiresInChannel(const SWireList &wires);
+    int  RenderSchematicWiresInLevel(const SWireList &wires);
     int  RenderSchematicDots(const SDotList &dots);
     /* --------------------------------------- */
 

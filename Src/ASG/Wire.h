@@ -39,6 +39,8 @@ public:
     bool      CouldBeSameTrack(Wire *otherWire) const;
     Terminal* SameTerminal(Wire *otherWire) const;
     QString   Name() const;
+    int       FromDeviceId() const { return m_fromDevice->Id(); }
+    int       ToDeviceId() const { return m_toDevice->Id(); }
 
     SchematicDevice*    FromSDevice() const;
     SchematicDevice*    ToSDevice() const;

@@ -291,7 +291,7 @@ void SchematicScene::RenderCoupledCaps(const SDeviceList &ccaps)
     }
 }
 
-int SchematicScene::RenderSchematicWires(const SWireList &wires)
+int SchematicScene::RenderSchematicWiresInChannel(const SWireList &wires)
 {
 #ifdef TRACE
     qInfo() << LINE_INFO << endl;
@@ -571,4 +571,29 @@ void SchematicScene::UpdateDots()
 
         count = 0;
     }
+}
+
+int SchematicScene::RenderSchematicWiresInLevel(const SWireList &wires)
+{
+    SchematicWire *wire = nullptr;
+    SchematicTerminal *terminal = nullptr;
+    QVector<QPointF> wirePathPoints;
+
+    foreach (wire, wires) {
+        if (wire->HasGroundCap())  m_hasGCapWireList.push_back(wire);
+        if (wire->HasCoupledCap()) m_hasCCapWireList.push_back(wire);
+
+        terminal = wire->StartTerminal();
+        terminal->AddWire(wire);
+        wirePathPoints.push_back(terminal->ScenePos());
+
+        terminal = wire->EndTerminal();
+        terminal->AddWire(wire);
+        wirePathPoints.push_back(terminal->ScenePos());
+
+        wire->SetWirePathPoints(wirePathPoints);
+        wire->SetScale(m_itemScale);
+        addItem(wire);
+    }
+    return OKAY;
 }

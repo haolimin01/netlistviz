@@ -111,8 +111,6 @@ void Device::ClassifyConnectDeviceByLevel()
     Device *cntDev = nullptr;
     int cntDevLevelId = 0;
     foreach (Connector *cd, m_connectors) {
-        if (cd->thisTerminal->NodeId() == 0) continue;
-
         cntDev = cd->connectDevice;
         cntDevLevelId = cntDev->LevelId();
         if (cntDevLevelId == m_levelId)
@@ -126,30 +124,22 @@ void Device::ClassifyConnectDeviceByLevel()
 
 WireList Device::WiresFromPredecessors() const
 {
-    WireList result;
-    Wire *newWire = nullptr;
+    WireList wires;
+    Terminal *thisTer = nullptr, *cntTer = nullptr;
+    Device *cntDev = nullptr;
 
-    TerminalTable::const_iterator thisCit;
-    TerminalTable::const_iterator otherCit;
-
-    foreach (Device *dev, m_predecessors) {
-        otherCit = dev->m_terminals.constBegin();
-        for (; otherCit != dev->m_terminals.constEnd(); ++ otherCit) {
-            thisCit = m_terminals.constBegin();
-            for (; thisCit != m_terminals.constEnd(); ++ thisCit) {
-                if (thisCit.value()->NodeId() == 0) continue;
-                if (otherCit.value()->NodeId() == thisCit.value()->NodeId()) {
-                    // new Wire
-                    newWire = new Wire(dev, otherCit.value(),
-                                       const_cast<Device*>(this), thisCit.value());
-                    result.push_back(newWire);
-                }
-            }
-        }
-
+    foreach (Connector *ct, m_connectors) {
+        thisTer = ct->thisTerminal;
+        if (thisTer->NodeIsGnd()) continue;
+        cntDev = ct->connectDevice;
+        if ((cntDev->LevelId() + 1) != m_levelId) continue;
+        cntTer = ct->connectTerminal;
+        // new wire
+        Wire *newWire = new Wire(cntDev, cntTer, const_cast<Device*>(this), thisTer);
+        wires.push_back(newWire);
     }
 
-    return result;
+    return wires;
 }
 
 TerminalList Device::GetTerminalList() const
@@ -393,26 +383,42 @@ void Device::ClearConnectors()
 /* R, L, V, V, I now */
 bool Device::MaybeVertical() const
 {
-    int cntToPredCount = m_predecessors.size();
+    TerminalTable cntToPredTers;
+    Terminal *thisTer = nullptr;
+    Device *cntDev = nullptr;
     int cntToGndCount = 0;
-    
-    foreach (Terminal *ter, m_terminals.values()) {
-        if (ter->NodeId() == 0)
+
+    foreach (Connector *cd, m_connectors) {
+        cntDev = cd->connectDevice;
+        if ((cntDev->LevelId() + 1) != m_levelId) continue; // predecessor
+        thisTer = cd->thisTerminal;
+        if (thisTer->NodeIsGnd()) {
             cntToGndCount++;
+            continue;
+        }
+        cntToPredTers.insert(thisTer->GetTerminalType(), thisTer);
     }
 
+#ifdef DEBUGx
+    qDebug() << cntToPredTers;
+#endif
+
+    int count = cntToPredTers.size();
+    if (count >= 2)
+        return true;
+    
+    count += cntToGndCount;
+    if (count < 2)
+        return false;
+    
     bool nextRowFilled = false;
     foreach (Device *dev, m_fellows)
         if (dev->LogicalRow() == m_logRow + 1) {
             nextRowFilled = true;
             break;
         }
-
-    int sum = cntToPredCount;
+    
     if (NOT nextRowFilled)
-        sum += cntToGndCount;
-
-    if (sum >= 2)
         return true;
     else
         return false;
@@ -428,9 +434,57 @@ void Device::DecideOrientationByPredecessors()
 
 qreal Device::RowDistance(Terminal *otherTer, TerminalType thisType) const
 {
-    qreal dis = 0;
     Terminal *thisTer = m_terminals[thisType];
     return qFabs(otherTer->LogicalRelRow() - thisTer->LogicalRelRow());
+}
+
+WireList Device::WiresToFellows() const
+{
+    WireList wires;
+    Terminal *thisTer = nullptr, *cntTer = nullptr;
+    Device *cntDev = nullptr;
+    Node *node = nullptr;
+
+    DeviceTable fellowTable;
+    foreach (Device *dev, m_fellows)
+        fellowTable.insert(dev->Name(), dev);
+    bool isFellow = false;
+
+    foreach (Connector *ct, m_connectors) {
+        thisTer = ct->thisTerminal;
+        if (thisTer->NodeIsGnd()) continue;
+        cntDev = ct->connectDevice;
+        if (cntDev->LevelId() != m_levelId) continue;
+
+        node = thisTer->GetNode();
+        isFellow = false;
+        foreach (Device *dev, node->ConnectDeviceList()) {
+            if (dev == this) continue;
+            isFellow = fellowTable.contains(dev->Name());
+            if (NOT isFellow)
+                break;
+        }
+
+        if (NOT isFellow) continue;
+
+        cntTer = ct->connectTerminal;
+        // new wire
+        Wire *newWire = new Wire(const_cast<Device*>(this), thisTer, cntDev, cntTer);
+        wires.push_back(newWire);
+    }
+
+#ifdef DEBUGx
+    printf("---------- Wires To Fellows ----------\n");
+
+    qInfo() << "Device " << m_name;
+    foreach (Wire *wire, wires) {
+        qInfo() << wire->Name();
+    }
+
+    printf("--------------------------------------\n");
+#endif
+
+    return wires;
 }
 
 void Device::Print() const

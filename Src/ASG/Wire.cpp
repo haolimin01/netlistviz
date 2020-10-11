@@ -122,7 +122,16 @@ bool Wire::CouldBeMerged(Wire *otherWire) const
     qreal otherFromTerRow = otherWire->m_fromTerminal->LogicalRelRow();
     qreal otherToTerRow = otherWire->m_toTerminal->LogicalRelRow();
 
-    int m = (thisFromTerRow - otherFromTerRow) * (thisToTerRow - otherToTerRow);
+    qreal m = (thisFromTerRow - otherFromTerRow) * (thisToTerRow - otherToTerRow);
+
+#ifdef DEBUGx
+    qInfo() << Name() << "and" << otherWire->Name();
+    qInfo() << "F1(" << thisFromTerRow << "), "
+            << "T1(" << thisToTerRow << "), "
+            << "F2(" << otherFromTerRow << "), "
+            << "T2(" << otherToTerRow << "), "
+            << "m=" << m;
+#endif
 
     if (m == 0)
         return true;

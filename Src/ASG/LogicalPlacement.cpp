@@ -208,7 +208,7 @@ int ASG::ClassifyConnectDeviceByLevel()
     foreach (Device *dev, m_ckt->GetDeviceList())
         dev->ClassifyConnectDeviceByLevel();
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Level *level, m_levels)
         level->PrintAllConnections();
 #endif
@@ -331,6 +331,15 @@ int ASG::EstimateLogicalRowGap()
         currLevel->SetRowGap(backLevel->RowGap() * ratio);
     }
 
+#ifdef DEBUGx
+    printf("--------------- Row Gap ---------------\n");
+
+    foreach (Level *l, m_levels)
+        qInfo() << l->Id() << "rowGap(" << l->RowGap() << ")";
+
+    printf("---------------------------------------\n");
+#endif
+
     return OKAY;
 }
 
@@ -376,7 +385,7 @@ int ASG::DecideDeviceOrientation()
     foreach (Device *dev, m_ckt->GetDeviceList())
         dev->DecideOrientationByPredecessors();
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Level *level, m_levels)
         level->PrintOrientation();
 #endif
@@ -394,7 +403,7 @@ int ASG::DecideDeviceWhetherToReverse()
             dev->DecideReverseBySuccessors();
     }
 
-#ifdef DEBUG
+#ifdef DEBUGx
     foreach (Level *level, m_levels)
         level->PrintReverse();
 #endif

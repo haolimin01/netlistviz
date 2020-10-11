@@ -41,6 +41,7 @@ private:
     DISALLOW_COPY_AND_ASSIGN(Channel);
 
     bool      CouldBeSameTrackWithWires(const WireList &wires, Wire *wire) const;
+    bool      CouldBeMergedWithWires(const WireList &wl, Wire *wire) const;
     bool      HaveCrossBetweenWires(const WireList &wl1, const WireList &wl2) const;
     void      CreateDots(const QVector<WireList> &mergedWireList);
 
