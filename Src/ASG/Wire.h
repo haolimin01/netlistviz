@@ -40,7 +40,9 @@ public:
     Terminal* SameTerminal(Wire *otherWire) const;
     QString   Name() const;
     int       FromDeviceId() const { return m_fromDevice->Id(); }
-    int       ToDeviceId() const { return m_toDevice->Id(); }
+    int       ToDeviceId() const   { return m_toDevice->Id(); }
+    Terminal* FromTerminal() const { return m_fromTerminal; }
+    Terminal* ToTerminal() const   { return m_toTerminal; }
 
     SchematicDevice*    FromSDevice() const;
     SchematicDevice*    ToSDevice() const;

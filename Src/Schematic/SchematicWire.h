@@ -45,7 +45,7 @@ public:
     void      SetWirePathPoints(const QVector<QPointF> &points);
     void      SetTrack(int track) { m_track = track; }
     int       Track() const { return m_track; }
-    int       SetTrackCount(int n) { Q_ASSERT(n >= 0); m_trackCount = n; }
+    void      SetTrackCount(int n) { Q_ASSERT(n > 0); m_trackCount = n; }
     int       TrackCount() const { return m_trackCount; }
     void      SetSceneCol(int col) { m_sceneCol = col; }
     void      SetHoldColCount(int count) { m_holdColCount = count; }

@@ -1,7 +1,10 @@
 #include "Level.h"
 #include <QDebug>
+#include <QPointF>
 #include "Circuit/Device.h"
+#include "Circuit/Terminal.h"
 #include "Wire.h"
+#include "Channel.h"
 
 Level::Level(int id)
 {
@@ -128,7 +131,7 @@ void Level::RowsFlexibleShiftUpBy(QVector<int> &rows, int n) const
 {
     if (rows.size() == 0)
         return;
-    
+
     int curr = 0, prev = 0;
 
     for (int i = rows.size() - 1; i > 0; -- i) {
@@ -182,8 +185,42 @@ WireList Level::Wires()
     WireList wires;
     foreach (Wire *wire, m_wires.values())
         wires.push_back(wire);
-    
+
     return wires;
+}
+
+void Level::TryPutDeviceIntoChannel(Channel *ch)
+{
+    QVector<QPointF> occupiedPos;
+    Wire *wire = nullptr;
+    foreach (wire, ch->Wires()) {
+        QPointF p(wire->FromTerminal()->LogicalRelRow(), wire->ToTerminal()->LogicalRelRow());
+        occupiedPos.push_back(p);
+    }
+
+    bool translate = true;
+    qreal devRow = 0;
+
+    foreach (Device *dev, m_devices) {
+        devRow = dev->LogicalRow();
+        foreach (const QPointF &p, occupiedPos) {
+            if ((p.x() - devRow) * (p.y() - devRow) <= 0) {
+                translate = false;
+                break;
+            }
+        }
+
+        if (translate) {
+            dev->SetGeometricalCol(ch->GeometricalCol());
+
+#ifdef DEBUGx
+            qInfo() << dev->Name() << "translate to the former channel";
+#endif
+
+        }
+
+        translate = true;
+    }
 }
 
 void Level::PrintAllDevices() const

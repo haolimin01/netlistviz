@@ -33,7 +33,7 @@ int ASG::LogicalPlacement()
     
     error = CalLogicalRow();
 
-#ifdef DEBUG
+#ifdef DEBUGx
     PlotLevels(QObject::tr("After CalLogicalRow"));
 #endif
 
@@ -77,7 +77,7 @@ int ASG::BuildIncidenceMatrix()
             default:;
         }
     }
-#ifdef DEBUG
+#ifdef DEBUGx
     // m_matrix->Print();
     m_matrix->Plot();
 #endif
@@ -359,6 +359,8 @@ int ASG::DetermineFirstLevelLogicalRow()
 #ifdef DEBUGx
     firstLevel->PrintLogicalPos();
 #endif
+
+    return OKAY;
 }
 
 int ASG::ForwardPropagateLogicalRow()

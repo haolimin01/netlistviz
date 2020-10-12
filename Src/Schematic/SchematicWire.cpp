@@ -44,7 +44,7 @@ QRectF SchematicWire::boundingRect() const
     qreal minX, minY, maxX, maxY;
     if (m_wirePathPoints.isEmpty())
         return QRectF(0, 0, 0, 0);
-    
+
     minX = maxX = m_wirePathPoints.at(0).x();
     minY = maxY = m_wirePathPoints.at(0).y();
 
