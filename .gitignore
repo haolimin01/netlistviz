@@ -87,3 +87,6 @@ Src/waste
 # core
 core
 .fuse_hidden*
+
+# bih case
+Netlist/Mesh/*

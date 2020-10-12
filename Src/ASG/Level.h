@@ -13,6 +13,7 @@
 #include "Define/TypeDefine.h"
 
 class Device;
+class Channel;
 
 class Level
 {
@@ -34,6 +35,7 @@ public:
     void       SetRowGap(int gap) { m_rowGap = gap; };
     int        RowGap() const { return m_rowGap; }
     WireList   Wires();
+    void       TryPutDeviceIntoChannel(Channel *ch);
 
     void       PrintAllDevices() const;
     void       PrintAllConnections() const;

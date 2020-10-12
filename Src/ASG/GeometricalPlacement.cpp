@@ -22,6 +22,10 @@ int ASG::GeometricalPlacement(SchematicScene *scene)
     if (error)
         return ERROR;
 
+    error = TryPutDeviceIntoChannel();
+    if (error)
+        return ERROR;
+
     error = CalGeometricalRow();
     if (error)
         return ERROR;
@@ -57,11 +61,28 @@ int ASG::CalGeometricalCol()
         colIndex++;
         ch = m_channels.at(i);
         /* Assign dots geometrical col, as to m_dots (same pointer) */
-        ch->AssignDotGeometricalCol(colIndex);
+        ch->AssignGeometricalCol(colIndex);
         colIndex += ch->HoldColCount();
     }
 
     m_levels.back()->AssignDeviceGeometricalCol(colIndex);
+
+    return OKAY;
+}
+
+int ASG::TryPutDeviceIntoChannel()
+{
+#ifdef TRACE
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    Level *level = nullptr;
+    Channel *ch = nullptr;
+    for (int i = 0; i < m_channels.size(); ++ i) {
+        ch = m_channels.at(i);    // the former channel
+        level = m_levels.at(i+1);
+        level->TryPutDeviceIntoChannel(ch);
+    }
 
     return OKAY;
 }

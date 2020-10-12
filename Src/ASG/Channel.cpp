@@ -8,11 +8,15 @@
 Channel::Channel(int id)
 {
     m_id = id;
+    m_geoCol = 0;
+    m_holdColCount = 0;
 }
 
 Channel::Channel()
 {
     m_id = 0;
+    m_geoCol = 0;
+    m_holdColCount = 0;
 }
 
 Channel::~Channel()
@@ -257,18 +261,26 @@ bool Channel::HaveCrossBetweenWires(const WireList &wl1, const WireList &wl2) co
     return false;
 }
 
-int Channel::HoldColCount() const
+int Channel::HoldColCount()
 {
+    if (m_holdColCount > 0)
+        return m_holdColCount;
+
     int count = m_trackCount * 1.0 / MAX_ONE_COL_WIRE_COUNT + 0.5;
     if (count < 1)
         count = 1;
+
+    m_holdColCount = count;
+
     return count;
 }
 
-void Channel::AssignDotGeometricalCol(int col)
+void Channel::AssignGeometricalCol(int col)
 {
     foreach (Dot *dot, m_dots)
         dot->SetGeometricalCol(col);
+
+    m_geoCol = col;
 }
 
 void Channel::Print() const
@@ -283,7 +295,7 @@ void Channel::Print() const
         tmp = "";
     }
     qInfo() << "trackCount(" << m_trackCount << ")";
-    qInfo() << "holdColCount(" << HoldColCount() << ")";
+    qInfo() << "holdColCount(" << m_holdColCount << ")";
     qInfo() << "wireCount(" << m_wires.size() << ")";
 
     printf("------------------------------------------\n");

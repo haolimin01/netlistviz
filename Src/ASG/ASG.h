@@ -77,6 +77,7 @@ private:
 
     /* -------- Geometrical Placement -------- */
     int                CalGeometricalCol();
+    int                TryPutDeviceIntoChannel();
     int                CalGeometricalRow();
     int                CreateSchematicDevices();
     int                RenderSchematicDevices(SchematicScene *scene);
