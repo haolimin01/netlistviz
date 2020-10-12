@@ -12,7 +12,7 @@
 SchematicScene::SchematicScene(QMenu *itemMenu, QObject *parent)
     : QGraphicsScene(parent)
 {
-    m_itemMenu = itemMenu;
+    m_deviceMenu = itemMenu;
 
     InitVariables();
 }
@@ -233,10 +233,11 @@ void SchematicScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
 SchematicDevice* SchematicScene::InsertSchematicDevice(DeviceType type,
                                  const QPointF &pos)
 {
-    SchematicDevice *dev = new SchematicDevice(type, m_itemMenu);
+    SchematicDevice *dev = new SchematicDevice(type, m_deviceMenu);
     dev->setPos(pos);
     dev->SetShowTerminal(m_showTerminal);
     dev->setScale(m_itemScale);
+    dev->SetContextMenu(m_deviceMenu);
     if (type == GND)
         dev->SetAsSmallGnd(m_showSmallGnd);
     addItem(dev);

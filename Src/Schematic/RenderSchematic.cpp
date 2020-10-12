@@ -142,6 +142,7 @@ void SchematicScene::SetDeviceAt(int col, int row, SchematicDevice *device)
     device->setPos(xPos, yPos);
     device->SetShowTerminal(m_showTerminal);
     device->SetScale(m_itemScale);
+    device->SetContextMenu(m_deviceMenu);
     addItem(device);
 }
 
@@ -150,6 +151,7 @@ void SchematicScene::SetDeviceAt(const QPointF &pos, SchematicDevice *device)
     device->setPos(pos);
     device->SetShowTerminal(m_showTerminal);
     device->SetScale(m_itemScale);
+    device->SetContextMenu(m_deviceMenu);
     addItem(device);
 }
 

@@ -10,6 +10,7 @@ Channel::Channel(int id)
     m_id = id;
     m_geoCol = 0;
     m_holdColCount = 0;
+    m_trackCount = 0;
 }
 
 Channel::Channel()
@@ -17,6 +18,7 @@ Channel::Channel()
     m_id = 0;
     m_geoCol = 0;
     m_holdColCount = 0;
+    m_trackCount = 0;
 }
 
 Channel::~Channel()

@@ -61,6 +61,7 @@ public:
     void         SetAsSmallGnd(bool smallGnd);
     void         AddConnector(SConnector *desp);
     bool         Reverse() const { return m_reverse; }
+    void         Rotate(qreal angle);
 
     SchematicTerminal* GetTerminal(TerminalType type) const;
     SchematicTerminal* ConnectTerminal() const;

@@ -31,5 +31,6 @@
     <file>images/hide_gnd.png</file>
     <file>images/netlistviz.png</file>
     <file>images/small_gnd.png</file>
+    <file>images/rotate.png</file>
 </qresource>
 </RCC>

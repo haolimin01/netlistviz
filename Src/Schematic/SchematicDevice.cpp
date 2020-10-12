@@ -3,6 +3,8 @@
 #include <QPen>
 #include <QDebug>
 #include <QGraphicsScene>
+#include <QGraphicsSceneContextMenuEvent>
+#include <QMenu>
 #include "SchematicTerminal.h"
 #include "SchematicWire.h"
 #include "SConnector.h"
@@ -161,7 +163,15 @@ QPixmap SchematicDevice::Image()
 
 void SchematicDevice::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
-    // do nothing now.
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    setSelected(true);
+
+    if (m_contextMenu) {
+        m_contextMenu->exec(event->screenPos());
+    }
 }
 
 void SchematicDevice::SetAnnotationVisible(bool show)
@@ -762,4 +772,33 @@ void SchematicDevice::Print() const
     foreach (SchematicTerminal *ter, m_terminals.values())
         qInfo() << ter->PrintString();
     printf("-------------------------\n");
+}
+
+void SchematicDevice::Rotate(qreal angle)
+{
+    angle += rotation();
+
+    if (angle >= 360)
+        angle = (int)(angle) % 360;
+    
+    Orientation orien = Vertical;
+    bool reverse = false;
+
+    if (angle == 0) {
+        orien = Vertical;
+        reverse = false;
+    } else if (angle == 90) {
+        orien = Horizontal;
+        reverse = true;
+    } else if (angle == 180) {
+        orien = Vertical;
+        reverse = true;
+    } else if (angle == 270) {
+        orien = Horizontal;
+        reverse = false;
+    }
+
+    SetOrientation(orien);
+    SetReverse(reverse);
+    UpdateWirePosition();
 }

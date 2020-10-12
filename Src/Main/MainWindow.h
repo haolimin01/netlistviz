@@ -130,6 +130,9 @@ private slots:
     /* Parse Netlist to m_data */
     void ParseNetlist();
 
+    /* clockwise rotate item */
+    void RotateItem();
+
     /* For ASG */
     void ASGPropertyTriggered();
     void LogicalPlacement();
@@ -198,6 +201,7 @@ private:
 
     QAction            *m_exitAction;
     QAction            *m_deleteAction;
+    QAction            *m_rotateAction; // clock-wise
 
     QAction            *m_toFrontAction;
     QAction            *m_sendBackAction;
@@ -212,6 +216,7 @@ private:
     QToolBar           *m_fileToolBar;
     QToolBar           *m_textToolBar;
     QToolBar           *m_editToolBar;
+    QToolBar           *m_viewToolBar;
     QToolBar           *m_colorToolBar;
     QToolBar           *m_pointerToolBar;
     QToolBar           *m_asgToolBar;

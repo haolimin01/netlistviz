@@ -106,7 +106,7 @@ private:
                         SchematicTerminal *, SchematicTerminal *, const QVector<QPointF> &);
 
 
-    QMenu                      *m_itemMenu;
+    QMenu                      *m_deviceMenu;
     Mode                        m_mode;
     QFont                       m_font;
     DeviceType                  m_deviceType;

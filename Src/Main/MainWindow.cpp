@@ -360,6 +360,10 @@ void MainWindow::CreateActions()
     m_deleteAction->setStatusTip(tr("Delete item from Scene"));
     connect(m_deleteAction, &QAction::triggered, this, &MainWindow::DeleteItem);
 
+    m_rotateAction = new QAction(QIcon(":/images/rotate.png"), tr("&Rotate"), this);
+    m_rotateAction->setStatusTip(tr("Clockwise rotate"));
+    connect(m_rotateAction, &QAction::triggered, this, &MainWindow::RotateItem);
+
     m_exitAction = new QAction(tr("E&xit"), this);
     m_exitAction->setShortcuts(QKeySequence::Quit);
     m_exitAction->setStatusTip(tr("Quit netlisviz"));
@@ -485,6 +489,7 @@ void MainWindow::CreateMenus()
     m_fileMenu->addAction(m_exitAction);
 
     m_editMenu = menuBar()->addMenu(tr("&Edit"));
+    m_editMenu->addAction(m_rotateAction);
     m_editMenu->addAction(m_deleteAction);
     m_editMenu->addSeparator();
     m_editMenu->addAction(m_toFrontAction);
@@ -523,17 +528,20 @@ void MainWindow::CreateToolBars()
     // m_fileToolBar->addAction(m_saveAsSchematicFileAction);
 
     m_editToolBar = addToolBar(tr("Edit"));
+    m_editToolBar->addAction(m_rotateAction);
     m_editToolBar->addAction(m_deleteAction);
     m_editToolBar->addAction(m_toFrontAction);
     m_editToolBar->addAction(m_sendBackAction);
-    m_editToolBar->addAction(m_showTerminalAction);
-    m_editToolBar->addAction(m_showGridAction);
-    m_editToolBar->addAction(m_zoomAction);
-    m_editToolBar->addAction(m_moveToCenterAction);
-    m_editToolBar->addAction(m_scaleToOriginAction);
-    m_editToolBar->addAction(m_hideGCapAction);
-    m_editToolBar->addAction(m_hideCCapAction);
-    m_editToolBar->addAction(m_hideGndAction);
+
+    m_viewToolBar = addToolBar(tr("View"));
+    m_viewToolBar->addAction(m_showTerminalAction);
+    m_viewToolBar->addAction(m_showGridAction);
+    m_viewToolBar->addAction(m_zoomAction);
+    m_viewToolBar->addAction(m_moveToCenterAction);
+    m_viewToolBar->addAction(m_scaleToOriginAction);
+    m_viewToolBar->addAction(m_hideGCapAction);
+    m_viewToolBar->addAction(m_hideCCapAction);
+    m_viewToolBar->addAction(m_hideGndAction);
 
     m_fontCombo = new QFontComboBox();
     connect(m_fontCombo, &QFontComboBox::currentFontChanged,
@@ -1020,4 +1028,21 @@ void MainWindow::ShowSmallGndToggled(bool showSmall)
     qInfo() << LINE_INFO << endl;
 #endif
     m_scene->SetShowSmallGnd(showSmall);
+}
+
+void MainWindow::RotateItem()
+{
+#ifdef TRACEx
+    qInfo() << LINE_INFO << endl;
+#endif
+
+    /* we only rotate device now */
+
+    SchematicDevice *dev = nullptr;
+    foreach (QGraphicsItem *item, m_scene->selectedItems()) {
+        if (item->type() == SchematicDevice::Type) {
+            dev = qgraphicsitem_cast<SchematicDevice*> (item);
+            dev->Rotate(90);
+        }
+    }
 }
